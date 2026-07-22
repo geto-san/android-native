@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1015092528863",
+    "project_id": "wildwatch-82abc",
+    "storage_bucket": "wildwatch-82abc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1015092528863:android:e1291f0e1e8a3ec0b5cb6a",
+        "android_client_info": {
+          "package_name": "com.silverback.sentry"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsq5vIKHCCslWxwzwkXnpFygA7tzrPQ2s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

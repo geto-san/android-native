@@ -1,0 +1,13 @@
+*.iml
+.gradle/
+local.properties
+/.idea/
+.DS_Store
+# Every module's build output dir (root build/ AND app/build/, any future module/*),
+# not just the root one.
+**/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab

@@ -1,0 +1,10 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. Compose owns all in-app theming (see ui/theme/Theme.kt);
+         this XML theme only governs the window before Compose content is set (launch
+         background, status/nav bar) and satisfies the manifest's theme reference. -->
+    <style name="Theme.SilverBackSentry" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor" tools:targetApi="21">@color/background</item>
+        <item name="android:navigationBarColor" tools:targetApi="21">@color/background</item>
+    </style>
+</resources>

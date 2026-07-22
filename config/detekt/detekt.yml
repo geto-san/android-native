@@ -1,0 +1,25 @@
+complexity:
+  # Compose screen functions are naturally long, declarative bodies - length
+  # alone isn't a useful complexity signal for them the way it is for regular
+  # functions.
+  LongMethod:
+    threshold: 80
+    ignoreAnnotated: ["Composable"]
+  LongParameterList:
+    functionThreshold: 8
+    constructorThreshold: 8
+
+naming:
+  # Composable functions are PascalCase by Compose convention (they act like
+  # components), which the default lowerCamelCase function-naming rule doesn't
+  # know about.
+  FunctionNaming:
+    ignoreAnnotated: ["Composable"]
+
+style:
+  MagicNumber:
+    active: false
+  # @Preview composables are invoked by Android Studio tooling, not by other
+  # code, so they always look "unused" to static analysis.
+  UnusedPrivateMember:
+    ignoreAnnotated: ["Preview"]
