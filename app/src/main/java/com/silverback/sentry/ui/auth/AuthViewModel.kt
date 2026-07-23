@@ -17,7 +17,7 @@ data class AuthUiState(
     val errorMessage: String? = null,
 )
 
-// Per guardrail G7, LoginScreen/SignUpScreen only ever call this ViewModel - never
+// Per guardrail G7, AuthScreen only ever calls this ViewModel - never
 // AuthRepository or FirebaseAuth directly.
 @HiltViewModel
 class AuthViewModel @Inject constructor(

@@ -13,9 +13,8 @@ import androidx.navigation.compose.rememberNavController
 import com.silverback.sentry.ui.addsighting.AddSightingScreen
 import com.silverback.sentry.ui.addsighting.AddSightingViewModel
 import com.silverback.sentry.ui.addsighting.CameraCaptureScreen
+import com.silverback.sentry.ui.auth.AuthScreen
 import com.silverback.sentry.ui.auth.AuthViewModel
-import com.silverback.sentry.ui.auth.LoginScreen
-import com.silverback.sentry.ui.auth.SignUpScreen
 import com.silverback.sentry.ui.feed.FeedScreen
 import com.silverback.sentry.ui.home.HomeScreen
 import com.silverback.sentry.ui.splash.SplashScreen
@@ -34,35 +33,28 @@ fun SentryNavHost(navController: NavHostController = rememberNavController()) {
             // synchronously (see AuthRepositoryImpl's initialValue), so this fires
             // on first composition rather than waiting for a real state change.
             LaunchedEffect(currentUser) {
-                val destination = if (currentUser != null) Route.Main else Route.Login
+                val destination = if (currentUser != null) Route.Main else Route.Auth
                 navController.navigate(destination) {
                     popUpTo(Route.Splash) { inclusive = true }
                 }
             }
         }
 
-        composable<Route.Login> {
+        composable<Route.Auth> {
             LaunchedEffect(currentUser) {
                 if (currentUser != null) {
-                    navController.navigate(Route.Main) { popUpTo(Route.Login) { inclusive = true } }
+                    navController.navigate(Route.Main) { popUpTo(Route.Auth) { inclusive = true } }
                 }
             }
-            LoginScreen(onNavigateToSignUp = { navController.navigate(Route.SignUp) })
-        }
-
-        composable<Route.SignUp> {
-            LaunchedEffect(currentUser) {
-                if (currentUser != null) {
-                    navController.navigate(Route.Main) { popUpTo(Route.Splash) { inclusive = true } }
-                }
-            }
-            SignUpScreen(onNavigateToLogin = { navController.popBackStack() })
+            // Login/Register are a single screen with an in-place segmented tab
+            // (see AuthScreen), not separate routes - matches the wireframe.
+            AuthScreen(viewModel = authViewModel)
         }
 
         composable<Route.Main> {
             LaunchedEffect(currentUser) {
                 if (currentUser == null) {
-                    navController.navigate(Route.Login) { popUpTo(Route.Main) { inclusive = true } }
+                    navController.navigate(Route.Auth) { popUpTo(Route.Main) { inclusive = true } }
                 }
             }
             // Stands in for the real tab shell (Map/Chat/Assistant/Diagnostics/
