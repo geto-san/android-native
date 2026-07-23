@@ -4,21 +4,21 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.silverback.sentry.ui.auth.AuthViewModel
 import com.silverback.sentry.ui.nav.SentryNavHost
 import com.silverback.sentry.ui.theme.SilverBackSentryTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        enableEdgeToEdge()
-//        setContent {
-//            SilverBackSentryTheme {
-//                SentryNavHost()
-//            }
-//        }
-
         // installSplashScreen() must run before super.onCreate(): it reads the
         // windowSplashScreenBackground/AnimatedIcon set on this activity's manifest
         // theme (Theme.SilverBackSentry.Starting) and takes over drawing them
@@ -60,6 +60,5 @@ class MainActivity : ComponentActivity() {
                 SentryNavHost()
             }
         }
-
     }
 }
