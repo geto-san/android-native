@@ -12,23 +12,36 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val LightColors = lightColorScheme(
-    primary = SentryGreen,
-    onPrimary = Color.White,
-    secondary = SentryBlue,
-    tertiary = SentryPurple,
-    background = SurfaceLight,
-    surface = Color.White,
-    error = SentryRed,
+    primary = ForestPrimary,
+    onPrimary = OnDark,
+    primaryContainer = SurfaceSecondary,
+    onPrimaryContainer = ForegroundPrimary,
+    secondary = SavannaAccent,
+    onSecondary = ForegroundPrimary,
+    tertiary = StatusInfo,
+    background = SurfaceBackground,
+    onBackground = ForegroundPrimary,
+    surface = SurfaceCard,
+    onSurface = ForegroundPrimary,
+    surfaceVariant = SurfaceMuted,
+    onSurfaceVariant = ForegroundMuted,
+    outline = SurfaceBorder,
+    error = StatusDestructive,
+    onError = OnDark,
 )
 
 private val DarkColors = darkColorScheme(
-    primary = SentryGreen,
-    onPrimary = Color.White,
-    secondary = SentryBlue,
-    tertiary = SentryPurple,
-    background = SentryNavy,
-    surface = SentryNavyLight,
-    error = SentryRed,
+    primary = ForestPrimaryGlow,
+    onPrimary = ForegroundPrimary,
+    secondary = SavannaAccent,
+    onSecondary = ForegroundPrimary,
+    tertiary = StatusInfo,
+    background = SurfaceBackgroundDark,
+    onBackground = OnDark,
+    surface = SurfaceCardDark,
+    onSurface = OnDark,
+    error = StatusDestructive,
+    onError = OnDark,
 )
 
 // Dynamic color (Material You) is available from Android 12+; we opt out of it by

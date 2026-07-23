@@ -7,4 +7,20 @@
         <item name="android:statusBarColor" tools:targetApi="21">@color/background</item>
         <item name="android:navigationBarColor" tools:targetApi="21">@color/background</item>
     </style>
+
+    <!-- OS-level splash theme (androidx.core.splashscreen's Theme.SplashScreen parent
+         works back to API 21 via the compat library, not just API 31+). MainActivity is
+         given this theme in the manifest and calls installSplashScreen() before
+         super.onCreate(); the library reads windowSplashScreenBackground/AnimatedIcon
+         from here to draw the branded splash immediately at cold start - replacing
+         the OS's default fallback (launcher icon centered on a plain background) that
+         was showing before this screen existed - then swaps to postSplashScreenTheme
+         once MainActivity releases the keep-on-screen condition. -->
+    <style name="Theme.SilverBackSentry.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_leaf</item>
+        <item name="postSplashScreenTheme">@style/Theme.SilverBackSentry</item>
+    </style>
+
+
 </resources>

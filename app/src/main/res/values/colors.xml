@@ -2,4 +2,7 @@
     <!-- Pre-Compose window chrome color only (launch background / status bar before
          Compose content is set). All in-app theming lives in ui/theme/Theme.kt. -->
     <color name="background">#1A1A2E</color>
+
+<!--    <color name="background">#FCFAF4</color>-->
+    <color name="splash_background">#0C3D22</color>
 </resources>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Icon shown by the OS-level SplashScreen (see themes.xml's Theme.SilverBackSentry.Starting
+  and MainActivity's installSplashScreen() call) - this is what replaces Android's default
+  "launcher icon on a plain background" splash. Deliberately padded well inside the 200x200
+  viewport (content sits in the inner ~55%) per Android's splash-icon safe-zone guidance, so
+  it isn't clipped by the OS's circular/rounded mask on any device shape.
+  Placeholder leaf mark matching the Compose splash screen's Icons.Filled.Park glyph and the
+  Wildwatch savanna-accent color - swap for real brand artwork whenever it's ready, same as
+  the existing ic_launcher_foreground.xml placeholder note.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- Leaf body -->
+    <path
+        android:fillColor="#EE921A"
+        android:pathData="M60,140 C60,140 55,95 85,65 C115,35 150,40 150,40 C150,40 155,85 125,115 C95,145 60,140 60,140 Z" />
+    <!-- Center vein -->
+    <path
+        android:fillColor="#0C3D22"
+        android:strokeColor="#0C3D22"
+        android:strokeWidth="3"
+        android:pathData="M65,135 L140,50" />
+</vector>
