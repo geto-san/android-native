@@ -3,7 +3,7 @@ package com.wildwatch.app.di
 import com.wildwatch.app.data.alert.AlertRepository
 import com.wildwatch.app.data.alert.AlertRepositoryImpl
 import com.wildwatch.app.data.auth.AuthRepository
-import com.wildwatch.app.data.auth.OfflineAuthRepositoryImpl
+import com.wildwatch.app.data.auth.AuthRepositoryImpl
 import com.wildwatch.app.data.claim.ClaimRemoteDataSource
 import com.wildwatch.app.data.claim.ClaimRemoteDataSourceImpl
 import com.wildwatch.app.data.claim.ClaimRepository
@@ -30,13 +30,11 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
 
-    // TEMPORARY: bound to the offline, DataStore-backed implementation while
-    // this environment has no internet access to reach Firebase Auth. Revert
-    // to `impl: AuthRepositoryImpl` (see its own class, still intact and
-    // unused below) once connectivity is back - see OfflineAuthRepositoryImpl's
-    // doc comment for the full revert note.
+    // Live Firebase-backed implementation. OfflineAuthRepositoryImpl (DataStore-based)
+    // remains in the codebase as a fallback for offline/no-connectivity dev sandboxes -
+    // swap the binding below back to it if testing without network access.
     @Binds
-    abstract fun bindAuthRepository(impl: OfflineAuthRepositoryImpl): AuthRepository
+    abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
 
     @Binds
     abstract fun bindIncidentRepository(impl: IncidentRepositoryImpl): IncidentRepository
