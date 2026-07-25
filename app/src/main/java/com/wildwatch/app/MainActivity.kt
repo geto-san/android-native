@@ -7,7 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.wildwatch.app.ui.nav.WildWatchNavHost
-import com.wildwatch.app.ui.theme.WildWatchTheme
+import com.wildwatch.app.core.ui.theme.WildWatchTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

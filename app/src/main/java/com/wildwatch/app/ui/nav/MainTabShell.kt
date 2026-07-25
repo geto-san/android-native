@@ -6,48 +6,53 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Newspaper
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Newspaper
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.wildwatch.app.R
-import com.wildwatch.app.domain.model.UserRole
-import com.wildwatch.app.ui.dashboard.DashboardScreen
-import com.wildwatch.app.ui.dashboard.HomeScreen
-import com.wildwatch.app.ui.feed.FeedScreen
-import com.wildwatch.app.ui.sos.SosScreen
-import com.wildwatch.app.ui.theme.Destructive
-import com.wildwatch.app.ui.tracking.TrackingScreen
+import com.wildwatch.app.core.model.UserRole
+import com.wildwatch.app.feature.dashboard.DashboardScreen
+import com.wildwatch.app.feature.dashboard.HomeScreen
+import com.wildwatch.app.feature.feed.FeedScreen
+import com.wildwatch.app.feature.sos.SosScreen
+import com.wildwatch.app.core.ui.theme.Destructive
+import com.wildwatch.app.feature.tracking.TrackingScreen
 
-private enum class MainTab(@StringRes val labelRes: Int) {
-    Home(R.string.nav_home),
-    Feed(R.string.nav_feed),
-    Sos(R.string.nav_sos),
-    Dashboard(R.string.nav_dashboard),
-    Tracking(R.string.nav_tracking)
+private enum class MainTab {
+    Home,
+    Feed,
+    Sos,
+    Dashboard,
+    Tracking,
+    Profile
 }
 
-// A single Scaffold + NavigationBar with local tab-selection state, rather
-// than a nested Navigation Compose graph - none of the 3 tabs need their own
-// independent back stack. Everything else pushes onto the outer NavHost (see
-// WildWatchNavHost.kt) via the callbacks below, from whichever tab is
-// currently showing.
 @Composable
 fun MainTabShell(
     userRole: UserRole,
@@ -60,9 +65,9 @@ fun MainTabShell(
     onOpenCommunityMap: () -> Unit,
 ) {
     val tabs = if (userRole == UserRole.RANGER) {
-        listOf(MainTab.Dashboard, MainTab.Tracking, MainTab.Sos)
+        listOf(MainTab.Dashboard, MainTab.Tracking, MainTab.Sos, MainTab.Profile)
     } else {
-        listOf(MainTab.Home, MainTab.Feed, MainTab.Sos)
+        listOf(MainTab.Home, MainTab.Feed, MainTab.Sos, MainTab.Profile)
     }
 
     var selectedTab by rememberSaveable {
@@ -71,33 +76,49 @@ fun MainTabShell(
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                tabs.forEach { tab ->
-                    val icon = when (tab) {
-                        MainTab.Home -> Icons.Filled.Home
-                        MainTab.Feed -> Icons.Filled.Newspaper
-                        MainTab.Sos -> Icons.Filled.WarningAmber
-                        MainTab.Dashboard -> Icons.Filled.Home
-                        MainTab.Tracking -> Icons.Filled.LocationOn
+            Column {
+                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline)
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    tonalElevation = 0.dp,
+                    modifier = Modifier.padding(top = 0.dp)
+                ) {
+                    tabs.forEach { tab ->
+                        val isSelected = selectedTab == tab
+                        val icon = when (tab) {
+                            MainTab.Home -> if (isSelected) Icons.Filled.Home else Icons.Outlined.Home
+                            MainTab.Feed -> if (isSelected) Icons.Filled.Newspaper else Icons.Outlined.Newspaper
+                            MainTab.Sos -> if (isSelected) Icons.Filled.WarningAmber else Icons.Outlined.WarningAmber
+                            MainTab.Dashboard -> if (isSelected) Icons.Filled.Home else Icons.Outlined.Home
+                            MainTab.Tracking -> if (isSelected) Icons.Filled.LocationOn else Icons.Outlined.LocationOn
+                            MainTab.Profile -> if (isSelected) Icons.Filled.Person else Icons.Outlined.Person
+                        }
+                        
+                        NavigationBarItem(
+                            selected = isSelected,
+                            onClick = { 
+                                if (tab == MainTab.Profile) {
+                                    onProfileClick()
+                                } else {
+                                    selectedTab = tab 
+                                }
+                            },
+                            icon = {
+                                Icon(
+                                    icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(26.dp),
+                                    tint = if (tab == MainTab.Sos && isSelected) Destructive 
+                                           else if (isSelected) MaterialTheme.colorScheme.onBackground 
+                                           else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                                )
+                            },
+                            label = null, // Instagram style: no labels
+                            colors = NavigationBarItemDefaults.colors(
+                                indicatorColor = Color.Transparent, // Instagram style: no pill indicator
+                            ),
+                        )
                     }
-                    val label = stringResource(tab.labelRes)
-                    NavigationBarItem(
-                        selected = selectedTab == tab,
-                        onClick = { selectedTab = tab },
-                        icon = {
-                            Icon(
-                                icon,
-                                contentDescription = label,
-                                tint = if ((tab == MainTab.Sos) && (selectedTab == tab)) Destructive
-                                else if (selectedTab == tab) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        },
-                        label = { Text(label) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = if (tab == MainTab.Sos) Destructive else MaterialTheme.colorScheme.primary
-                        ),
-                    )
                 }
             }
         },
@@ -125,6 +146,7 @@ fun MainTabShell(
                         onProfileClick = onProfileClick,
                     )
                     MainTab.Tracking -> TrackingScreen()
+                    MainTab.Profile -> Box(modifier = Modifier) // Navigation handled by callback
                 }
             }
         }

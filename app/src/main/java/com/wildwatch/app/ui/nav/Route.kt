@@ -18,16 +18,10 @@ import kotlinx.serialization.Serializable
 // layer behind the new design system.
 sealed interface Route {
     @Serializable
-    data object Splash : Route
-
-    @Serializable
     data object Welcome : Route
 
     @Serializable
     data class Auth(val startOnSignIn: Boolean) : Route
-
-    @Serializable
-    data object LocationPermission : Route
 
     @Serializable
     data object Main : Route

@@ -11,38 +11,42 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.wildwatch.app.domain.model.UserRole
-import com.wildwatch.app.ui.alerts.CommunityAlertsScreen
-import com.wildwatch.app.ui.auth.AuthScreen
-import com.wildwatch.app.ui.auth.AuthViewModel
-import com.wildwatch.app.ui.claims.CompensationClaimScreen
-import com.wildwatch.app.ui.claims.NewClaimScreen
-import com.wildwatch.app.data.local.db.ClaimCategory
-import com.wildwatch.app.ui.incidentdetail.IncidentDetailScreen
-import com.wildwatch.app.ui.map.CommunityMapScreen
-import com.wildwatch.app.ui.onboarding.LocationPermissionScreen
-import com.wildwatch.app.ui.profile.ProfileScreen
-import com.wildwatch.app.ui.reportincident.CameraCaptureScreen
-import com.wildwatch.app.ui.reportincident.ConflictReportScreen
-import com.wildwatch.app.ui.reportincident.ReportIncidentViewModel
-import com.wildwatch.app.ui.reportincident.ReportSubmittedScreen
-import com.wildwatch.app.ui.reportincident.WildlifeSightingReportScreen
-import com.wildwatch.app.ui.welcome.WelcomeScreen
+import com.wildwatch.app.core.model.UserRole
+import com.wildwatch.app.feature.alerts.CommunityAlertsScreen
+import com.wildwatch.app.feature.auth.AuthScreen
+import com.wildwatch.app.feature.auth.AuthViewModel
+import com.wildwatch.app.feature.claims.CompensationClaimScreen
+import com.wildwatch.app.feature.claims.NewClaimScreen
+import com.wildwatch.app.core.database.ClaimCategory
+import com.wildwatch.app.feature.incidentdetail.IncidentDetailScreen
+import com.wildwatch.app.feature.map.CommunityMapScreen
+import com.wildwatch.app.feature.profile.ProfileScreen
+import com.wildwatch.app.feature.report.CameraCaptureScreen
+import com.wildwatch.app.feature.report.ConflictReportScreen
+import com.wildwatch.app.feature.report.ReportIncidentViewModel
+import com.wildwatch.app.feature.report.ReportSubmittedScreen
+import com.wildwatch.app.feature.report.WildlifeSightingReportScreen
+import com.wildwatch.app.feature.welcome.WelcomeScreen
 
 @Composable
 fun WildWatchNavHost(navController: NavHostController = rememberNavController()) {
-    // Hoisted here (rather than per-screen) so auth state drives top-level
-    // navigation decisions from one place.
     val authViewModel: AuthViewModel = hiltViewModel()
     val currentUser by authViewModel.currentUser.collectAsStateWithLifecycle()
 
-    NavHost(navController = navController, startDestination = Route.Main) {
-        // We skip Splash route because we use the system splash screen which
-        // waits in MainActivity before starting the app.
-        // But we still need a way to decide the start destination.
-        // Actually, NIA uses a single destination and decides what to show.
-        // Let's keep Main as start and handle auth redirection there.
+    LaunchedEffect(currentUser) {
+        if (currentUser == null) {
+            navController.navigate(Route.Welcome) {
+                popUpTo(0) { inclusive = true }
+            }
+        } else if (navController.currentDestination?.route == Route.Welcome::class.qualifiedName ||
+                   navController.currentDestination?.route?.contains("Auth") == true) {
+            navController.navigate(Route.Main) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
+    NavHost(navController = navController, startDestination = Route.Welcome) {
         composable<Route.Welcome> {
             WelcomeScreen(
                 onGetStarted = { navController.navigate(Route.Auth(startOnSignIn = false)) },
@@ -52,32 +56,10 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
 
         composable<Route.Auth> { backStackEntry ->
             val args = backStackEntry.toRoute<Route.Auth>()
-            LaunchedEffect(currentUser) {
-                if (currentUser != null) {
-                    navController.navigate(Route.LocationPermission) {
-                        popUpTo(Route.Welcome) { inclusive = true }
-                    }
-                }
-            }
             AuthScreen(startOnSignIn = args.startOnSignIn)
         }
 
-        composable<Route.LocationPermission> {
-            LocationPermissionScreen(
-                onContinue = {
-                    navController.navigate(Route.Main) {
-                        popUpTo(Route.Splash) { inclusive = true }
-                    }
-                },
-            )
-        }
-
         composable<Route.Main> {
-            LaunchedEffect(currentUser) {
-                if (currentUser == null) {
-                    navController.navigate(Route.Welcome) { popUpTo(Route.Main) { inclusive = true } }
-                }
-            }
             MainTabShell(
                 userRole = currentUser?.role ?: UserRole.COMMUNITY,
                 onIncidentClick = { id -> navController.navigate(Route.IncidentDetail(id)) },
@@ -144,9 +126,6 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
 
         composable<Route.CameraCapture> { backStackEntry ->
             val args = backStackEntry.toRoute<Route.CameraCapture>()
-            // Scoped to the report form's own back stack entry so both screens share
-            // the same ViewModel instance - a captured photo needs to land back
-            // in the form's photo list without a separate result-passing channel.
             val parentEntry = remember(backStackEntry) {
                 if (args.source == "conflict") {
                     navController.getBackStackEntry(Route.ConflictReport)
