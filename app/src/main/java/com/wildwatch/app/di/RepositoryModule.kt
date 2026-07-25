@@ -14,6 +14,8 @@ import com.wildwatch.app.data.feed.ArticleRepository
 import com.wildwatch.app.data.feed.ArticleRepositoryImpl
 import com.wildwatch.app.data.location.LocationRepository
 import com.wildwatch.app.data.location.LocationRepositoryImpl
+import com.wildwatch.app.data.notification.NotificationRepository
+import com.wildwatch.app.data.notification.NotificationRepositoryImpl
 import com.wildwatch.app.data.incident.IncidentRemoteDataSource
 import com.wildwatch.app.data.incident.IncidentRemoteDataSourceImpl
 import com.wildwatch.app.data.incident.IncidentRepository
@@ -59,4 +61,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindArticleRepository(impl: ArticleRepositoryImpl): ArticleRepository
+
+    @Binds
+    abstract fun bindNotificationRepository(impl: NotificationRepositoryImpl): NotificationRepository
 }

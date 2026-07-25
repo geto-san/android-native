@@ -22,11 +22,13 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Forest
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -85,6 +87,7 @@ fun HomeScreen(
     onReportCompensation: () -> Unit,
     onCommunityAlertsClick: () -> Unit,
     onOpenCommunityMap: () -> Unit,
+    onNotificationsClick: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
     mapViewModel: MapViewModel = hiltViewModel(),
 ) {
@@ -99,7 +102,7 @@ fun HomeScreen(
                         Box(modifier = Modifier.clickable(onClick = onProfileClick)) {
                             InitialsAvatar(initials = initialsFor(uiState.displayName))
                         }
-                        Column(modifier = Modifier.padding(start = 12.dp)) {
+                        Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
                             Text(
                                 stringResource(R.string.home_welcome_back, uiState.displayName.substringBefore(' ')),
                                 style = MaterialTheme.typography.titleLarge,
@@ -110,6 +113,24 @@ fun HomeScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Cream.copy(alpha = 0.8f),
                             )
+                        }
+                        Box {
+                            IconButton(onClick = onNotificationsClick) {
+                                Icon(
+                                    Icons.Filled.Notifications,
+                                    contentDescription = stringResource(R.string.nav_notifications),
+                                    tint = Cream,
+                                )
+                            }
+                            if (uiState.unreadNotificationCount > 0) {
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(top = 6.dp, end = 6.dp)
+                                        .size(8.dp)
+                                        .background(SunsetAmber, CircleShape),
+                                )
+                            }
                         }
                     }
 

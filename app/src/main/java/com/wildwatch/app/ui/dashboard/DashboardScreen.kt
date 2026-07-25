@@ -1,15 +1,20 @@
 package com.wildwatch.app.ui.dashboard
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,6 +43,7 @@ import com.wildwatch.app.domain.model.Incident
 fun DashboardScreen(
     onIncidentClick: (String) -> Unit,
     onProfileClick: () -> Unit,
+    onNotificationsClick: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -47,6 +53,20 @@ fun DashboardScreen(
             TopAppBar(
                 title = { Text("Dashboard") },
                 actions = {
+                    Box {
+                        IconButton(onClick = onNotificationsClick) {
+                            Icon(Icons.Filled.Notifications, contentDescription = stringResource(R.string.nav_notifications))
+                        }
+                        if (uiState.unreadNotificationCount > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(top = 10.dp, end = 10.dp)
+                                    .size(8.dp)
+                                    .background(MaterialTheme.colorScheme.error, CircleShape),
+                            )
+                        }
+                    }
                     IconButton(onClick = onProfileClick) {
                         Icon(Icons.Filled.Person, contentDescription = "Profile")
                     }

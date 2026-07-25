@@ -7,6 +7,7 @@
     <string name="nav_sos">SOS</string>
     <string name="nav_dashboard">Dashboard</string>
     <string name="nav_tracking">Tracking</string>
+    <string name="nav_notifications">Notifications</string>
 
     <!-- Auth -->
     <string name="auth_sign_in">Sign In</string>

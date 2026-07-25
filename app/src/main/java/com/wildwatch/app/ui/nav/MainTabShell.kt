@@ -58,6 +58,7 @@ fun MainTabShell(
     onReportCompensation: () -> Unit,
     onCommunityAlertsClick: () -> Unit,
     onOpenCommunityMap: () -> Unit,
+    onNotificationsClick: () -> Unit,
 ) {
     val tabs = if (userRole == UserRole.RANGER) {
         listOf(MainTab.Dashboard, MainTab.Tracking, MainTab.Sos)
@@ -117,12 +118,14 @@ fun MainTabShell(
                         onReportCompensation = onReportCompensation,
                         onCommunityAlertsClick = onCommunityAlertsClick,
                         onOpenCommunityMap = onOpenCommunityMap,
+                        onNotificationsClick = onNotificationsClick,
                     )
                     MainTab.Feed -> FeedScreen()
                     MainTab.Sos -> SosScreen()
                     MainTab.Dashboard -> DashboardScreen(
                         onIncidentClick = onIncidentClick,
                         onProfileClick = onProfileClick,
+                        onNotificationsClick = onNotificationsClick,
                     )
                     MainTab.Tracking -> TrackingScreen()
                 }

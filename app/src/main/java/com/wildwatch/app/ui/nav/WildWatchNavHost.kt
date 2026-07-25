@@ -20,6 +20,7 @@ import com.wildwatch.app.ui.claims.NewClaimScreen
 import com.wildwatch.app.data.local.db.ClaimCategory
 import com.wildwatch.app.ui.incidentdetail.IncidentDetailScreen
 import com.wildwatch.app.ui.map.CommunityMapScreen
+import com.wildwatch.app.ui.notifications.NotificationsScreen
 import com.wildwatch.app.ui.onboarding.LocationPermissionScreen
 import com.wildwatch.app.ui.profile.ProfileScreen
 import com.wildwatch.app.ui.reportincident.CameraCaptureScreen
@@ -87,6 +88,7 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
                 onReportCompensation = { navController.navigate(Route.CompensationClaim) },
                 onCommunityAlertsClick = { navController.navigate(Route.CommunityAlerts) },
                 onOpenCommunityMap = { navController.navigate(Route.CommunityMap) },
+                onNotificationsClick = { navController.navigate(Route.Notifications) },
             )
         }
 
@@ -189,6 +191,10 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
                 onBack = { navController.popBackStack() },
                 onReportSighting = { navController.navigate(Route.WildlifeSightingReport) },
             )
+        }
+
+        composable<Route.Notifications> {
+            NotificationsScreen(onBack = { navController.popBackStack() })
         }
     }
 }
