@@ -1,0 +1,5 @@
+- `[/]` Commit and Push Changes
+- `[ ]` Fix HomeScreen header position
+- `[ ]` Define Magfio FontFamily in Type.kt
+- `[ ]` Redesign WelcomeScreen (Nature/Minimalist)
+- `[ ]` Verify changes on device

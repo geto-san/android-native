@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wildwatch.app.core.ui.component.WildWatchLogoMark
+import com.wildwatch.app.core.ui.theme.Cream
 import com.wildwatch.app.core.ui.theme.Grey500
 
 @Composable
@@ -36,17 +37,17 @@ fun WelcomeScreen(
             verticalArrangement = Arrangement.Center
         ) {
             WildWatchLogoMark(size = 80.dp)
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             Text(
                 "WildWatch",
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold
             )
-            
+
             Spacer(modifier = Modifier.height(40.dp))
-            
+
             Text(
                 "Protecting wildlife through community reporting and real-time alerts.",
                 style = MaterialTheme.typography.bodyLarge,
@@ -54,20 +55,34 @@ fun WelcomeScreen(
                 lineHeight = 24.sp,
                 color = Grey500
             )
-            
+
             Spacer(modifier = Modifier.height(64.dp))
-            
+
             Button(
                 onClick = onGetStarted,
                 modifier = Modifier.fillMaxWidth().height(44.dp),
                 shape = MaterialTheme.shapes.small
             ) {
-                Text("Create New Account", fontWeight = FontWeight.Bold)
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            TextButton(onClick = onAlreadyHaveAccount) {
+                WildWatchLogoMark(size = 120.dp)
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Text(
+                    "WildWatch",
+                    style = MaterialTheme.typography.displayMedium,
+                    color = Cream,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    "COMMUNITY",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Cream.copy(alpha = 0.7f),
+                    letterSpacing = 4.sp
+                )
+
+                Spacer(modifier = Modifier.height(48.dp))
+
                 Text(
                     "Log In",
                     color = MaterialTheme.colorScheme.primary,

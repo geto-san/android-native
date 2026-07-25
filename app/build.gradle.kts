@@ -136,6 +136,10 @@ dependencies {
     implementation(libs.camerax.lifecycle)
     implementation(libs.camerax.view)
 
+    implementation(libs.credentials)
+    implementation(libs.credentials.play.services.auth)
+    implementation(libs.googleid)
+
     implementation(libs.biometric)
 
     implementation(libs.kotlinx.coroutines.android)

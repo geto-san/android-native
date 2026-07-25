@@ -21,6 +21,8 @@ mapsCompose = "8.4.0"
 playServicesMaps = "20.0.0"
 camerax = "1.6.1"
 biometric = "1.1.0"
+credentials = "1.6.0"
+googleid = "1.2.0"
 coroutines = "1.11.0"
 junit = "4.13.2"
 androidxTestExtJunit = "1.3.0"
@@ -85,6 +87,10 @@ camerax-core = { group = "androidx.camera", name = "camera-core", version.ref = 
 camerax-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
 camerax-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
 camerax-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
+
+credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
+credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
+googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
 
 biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 

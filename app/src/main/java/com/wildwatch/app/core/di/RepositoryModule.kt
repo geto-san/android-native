@@ -4,10 +4,6 @@ import com.wildwatch.app.core.data.alert.AlertRepository
 import com.wildwatch.app.core.data.alert.AlertRepositoryImpl
 import com.wildwatch.app.core.data.auth.AuthRepository
 import com.wildwatch.app.core.data.auth.AuthRepositoryImpl
-import com.wildwatch.app.core.data.claim.ClaimRemoteDataSource
-import com.wildwatch.app.core.data.claim.ClaimRemoteDataSourceImpl
-import com.wildwatch.app.core.data.claim.ClaimRepository
-import com.wildwatch.app.core.data.claim.ClaimRepositoryImpl
 import com.wildwatch.app.core.data.connectivity.ConnectivityObserver
 import com.wildwatch.app.core.data.connectivity.ConnectivityObserverImpl
 import com.wildwatch.app.core.data.feed.ArticleRepository
@@ -16,6 +12,8 @@ import com.wildwatch.app.core.data.location.LocationRepository
 import com.wildwatch.app.core.data.location.LocationRepositoryImpl
 import com.wildwatch.app.core.data.notification.NotificationRepository
 import com.wildwatch.app.core.data.notification.NotificationRepositoryImpl
+import com.wildwatch.app.core.data.user.UserDataRepository
+import com.wildwatch.app.core.data.user.UserDataRepositoryImpl
 import com.wildwatch.app.core.data.incident.IncidentRemoteDataSource
 import com.wildwatch.app.core.data.incident.IncidentRemoteDataSourceImpl
 import com.wildwatch.app.core.data.incident.IncidentRepository
@@ -45,12 +43,6 @@ abstract class RepositoryModule {
     abstract fun bindConnectivityObserver(impl: ConnectivityObserverImpl): ConnectivityObserver
 
     @Binds
-    abstract fun bindClaimRepository(impl: ClaimRepositoryImpl): ClaimRepository
-
-    @Binds
-    abstract fun bindClaimRemoteDataSource(impl: ClaimRemoteDataSourceImpl): ClaimRemoteDataSource
-
-    @Binds
     abstract fun bindAlertRepository(impl: AlertRepositoryImpl): AlertRepository
 
     @Binds
@@ -58,4 +50,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindNotificationRepository(impl: NotificationRepositoryImpl): NotificationRepository
+
+    @Binds
+    abstract fun bindUserDataRepository(impl: UserDataRepositoryImpl): UserDataRepository
 }

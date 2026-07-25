@@ -65,6 +65,20 @@ class OfflineAuthRepositoryImpl @Inject constructor(
         return Result.success(Unit)
     }
 
+    override suspend fun signInWithGoogle(idToken: String): Result<Unit> {
+        // Mock a Google sign-in by just activating the session if an account exists,
+        // or creating a default mock one if not.
+        dataStore.edit { prefs ->
+            if (prefs[KEY_UID] == null) {
+                prefs[KEY_UID] = "mock-google-uid"
+                prefs[KEY_EMAIL] = "google-user@example.com"
+                prefs[KEY_DISPLAY_NAME] = "Google User"
+            }
+            prefs[KEY_SESSION_ACTIVE] = true
+        }
+        return Result.success(Unit)
+    }
+
     override suspend fun signUp(email: String, password: String, displayName: String): Result<Unit> {
         dataStore.edit { prefs ->
             prefs[KEY_UID] = UUID.randomUUID().toString()

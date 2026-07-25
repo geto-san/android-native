@@ -20,13 +20,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.AddBox
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.NotificationsNone
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -53,11 +58,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.wildwatch.app.R
 import com.wildwatch.app.core.model.Incident
+import com.wildwatch.app.core.ui.component.IncidentListItem
+import com.wildwatch.app.core.ui.component.QuickReportCard
 import com.wildwatch.app.core.ui.theme.Grey100
 import com.wildwatch.app.core.ui.theme.Grey200
 import com.wildwatch.app.core.ui.theme.Grey300
 import com.wildwatch.app.core.ui.theme.Grey500
 import com.wildwatch.app.core.ui.theme.InstaBlue
+import com.wildwatch.app.core.ui.theme.Success
+import com.wildwatch.app.core.ui.theme.Warning
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -69,9 +78,9 @@ fun HomeScreen(
     onProfileClick: () -> Unit,
     onReportSighting: () -> Unit,
     onReportConflict: () -> Unit,
-    onReportCompensation: () -> Unit,
     onCommunityAlertsClick: () -> Unit,
     onOpenCommunityMap: () -> Unit,
+    onNotificationsClick: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -88,11 +97,11 @@ fun HomeScreen(
                     )
                 },
                 actions = {
-                    IconButton(onClick = onReportSighting) {
-                        Icon(Icons.Filled.AddBox, contentDescription = "New Sighting")
+                    IconButton(onClick = onNotificationsClick) {
+                        Icon(Icons.Outlined.FavoriteBorder, contentDescription = "Notifications")
                     }
-                    IconButton(onClick = onCommunityAlertsClick) {
-                        Icon(Icons.Filled.NotificationsNone, contentDescription = "Alerts")
+                    IconButton(onClick = onProfileClick) {
+                        Icon(Icons.Filled.MoreVert, contentDescription = "Profile")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -105,23 +114,88 @@ fun HomeScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // "Stories" - Active Zones / Communities
+            // Community Alerts Card
             item {
-                ActiveZonesRow(uiState.zones)
-                HorizontalDivider(thickness = 0.5.dp, color = Grey200)
+                CommunityAlertsCard(
+                    alertCount = 3, // Mock count
+                    parkName = "Bwindi Impenetrable",
+                    onClick = onCommunityAlertsClick
+                )
             }
 
-            // Feed
+            // Quick Report Section
+            item {
+                Column {
+                    Text(
+                        text = "Quick report",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        QuickReportCard(
+                            title = "Wildlife Sighting",
+                            icon = Icons.Filled.AddAPhoto,
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            onClick = onReportSighting,
+                            modifier = Modifier.weight(1f)
+                        )
+                        QuickReportCard(
+                            title = "Human-Wildlife Conflict",
+                            icon = Icons.Filled.Warning,
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                            onClick = onReportConflict,
+                            modifier = Modifier.weight(1f)
+                        )
+                        // Spacer to maintain 3-column structural balance if needed, or just 2
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+
+            // Recent Reports Section
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "My recent reports",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "See all",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable { /* See all */ }
+                    )
+                }
+            }
+
             if (uiState.recentReports.isEmpty()) {
                 item {
                     EmptyFeedState()
                 }
             } else {
                 items(uiState.recentReports, key = { it.id }) { incident ->
-                    FeedItem(
-                        incident = incident,
+                    IncidentListItem(
+                        title = incident.species,
+                        subtitle = "${relativeDay(incident.reportedAt)} · ${incident.locationName ?: incident.community}",
+                        status = incident.status.name,
+                        statusColor = if (incident.status.name == "RESOLVED") Success else Warning,
+                        icon = Icons.Filled.AddAPhoto,
+                        iconContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                         onClick = { onIncidentClick(incident.id) }
                     )
                 }
@@ -131,166 +205,67 @@ fun HomeScreen(
 }
 
 @Composable
-private fun ActiveZonesRow(zones: List<String>) {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item {
-            StoryItem(label = "Your Report", isLive = false)
-        }
-        items(zones) { zone ->
-            StoryItem(label = zone, isLive = true)
-        }
-    }
-}
-
-@Composable
-private fun StoryItem(label: String, isLive: Boolean) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(72.dp)
+private fun CommunityAlertsCard(
+    alertCount: Int,
+    parkName: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(64.dp)
+                .size(48.dp)
                 .clip(CircleShape)
-                .then(
-                    if (isLive) {
-                        Modifier.border(
-                            width = 2.dp,
-                            brush = Brush.linearGradient(listOf(InstaBlue, Color.Cyan)),
-                            shape = CircleShape
-                        )
-                    } else {
-                        Modifier.border(1.dp, Grey300, CircleShape)
-                    }
-                )
-                .padding(3.dp)
-                .clip(CircleShape)
-                .background(Grey200),
+                .background(MaterialTheme.colorScheme.primary),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                if (label == "Your Report") Icons.Filled.AddBox else Icons.Filled.NotificationsNone,
+                Icons.Filled.NotificationsNone,
                 contentDescription = null,
-                tint = Grey500,
+                tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(24.dp)
             )
         }
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            maxLines = 1,
-            modifier = Modifier.padding(top = 4.dp),
-            color = MaterialTheme.colorScheme.onBackground
-        )
-    }
-}
-
-@Composable
-private fun FeedItem(incident: Incident, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-    ) {
-        // Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(Grey200)
-            )
-            Column(modifier = Modifier.padding(start = 8.dp).weight(1f)) {
-                Text(
-                    text = incident.userName ?: "Anonymous",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = incident.locationName ?: incident.community,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Grey500
-                )
-            }
-            IconButton(onClick = {}) {
-                Icon(Icons.Filled.MoreVert, contentDescription = null, modifier = Modifier.size(20.dp))
-            }
-        }
-
-        // Image / Content Area
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
-                .background(Grey100),
-            contentAlignment = Alignment.Center
-        ) {
-            if (incident.evidencePhotoUrls.isNotEmpty()) {
-                AsyncImage(
-                    model = incident.evidencePhotoUrls.first(),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Text(
-                    incident.species,
-                    style = MaterialTheme.typography.displaySmall,
-                    color = Grey300,
-                    fontWeight = FontWeight.Black
-                )
-            }
-        }
-
-        // Actions
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = {}) {
-                Icon(Icons.Filled.FavoriteBorder, contentDescription = "Verify", modifier = Modifier.size(28.dp))
-            }
-            IconButton(onClick = {}) {
-                Icon(Icons.Outlined.ChatBubbleOutline, contentDescription = "Comment", modifier = Modifier.size(24.dp))
-            }
-            IconButton(onClick = {}) {
-                Icon(Icons.AutoMirrored.Outlined.Send, contentDescription = "Dispatch", modifier = Modifier.size(24.dp))
-            }
-            Spacer(modifier = Modifier.weight(1f))
-        }
-
-        // Caption
-        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "${incident.severity.name} severity incident reported.",
-                style = MaterialTheme.typography.bodySmall,
+                text = "Community Alerts",
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )
-            incident.summary?.let {
-                if (it.isNotBlank()) {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                }
-            }
             Text(
-                text = relativeDay(incident.reportedAt),
-                style = MaterialTheme.typography.labelSmall,
-                color = Grey500,
-                modifier = Modifier.padding(top = 4.dp)
+                text = "$alertCount new alerts in $parkName",
+                style = MaterialTheme.typography.bodySmall,
+                color = Grey500
             )
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.error),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = alertCount.toString(),
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Icon(
+            Icons.Filled.ChevronRight,
+            contentDescription = null,
+            tint = Grey300,
+            modifier = Modifier.padding(start = 8.dp)
+        )
     }
 }
 
@@ -303,7 +278,7 @@ private fun EmptyFeedState() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            stringResource(R.string.home_no_reports),
+            text = "No reports yet - use Quick report above to submit one.",
             style = MaterialTheme.typography.bodyMedium,
             color = Grey500,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center

@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -44,6 +45,7 @@ fun AuthScreen(
     viewModel: AuthViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var signInSelected by remember { mutableStateOf(startOnSignIn) }
     var fullName by remember { mutableStateOf("") }
     var emailOrPhone by remember { mutableStateOf("ranger@wildwatch.com") }
@@ -153,7 +155,7 @@ fun AuthScreen(
                 HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outline)
             }
 
-            TextButton(onClick = {}) {
+            TextButton(onClick = { viewModel.onGoogleSignInClick(context) }) {
                 Text(
                     "Continue with Google",
                     color = MaterialTheme.colorScheme.primary,

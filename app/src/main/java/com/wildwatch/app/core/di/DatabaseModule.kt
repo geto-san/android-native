@@ -5,7 +5,6 @@ import androidx.room.Room
 import com.wildwatch.app.core.database.AlertDao
 import com.wildwatch.app.core.database.AppDatabase
 import com.wildwatch.app.core.database.ArticleDao
-import com.wildwatch.app.core.database.ClaimDao
 import com.wildwatch.app.core.database.IncidentDao
 import com.wildwatch.app.core.database.NotificationDao
 import dagger.Module
@@ -33,9 +32,6 @@ object DatabaseModule {
 
     @Provides
     fun providesIncidentDao(database: AppDatabase): IncidentDao = database.incidentDao()
-
-    @Provides
-    fun providesClaimDao(database: AppDatabase): ClaimDao = database.claimDao()
 
     @Provides
     fun providesAlertDao(database: AppDatabase): AlertDao = database.alertDao()

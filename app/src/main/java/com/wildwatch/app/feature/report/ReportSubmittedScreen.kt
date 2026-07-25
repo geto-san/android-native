@@ -32,7 +32,6 @@ import com.wildwatch.app.core.ui.theme.Success
 
 @Composable
 fun ReportSubmittedScreen(
-    onFileCompensationClaim: () -> Unit,
     onReturnHome: () -> Unit,
 ) {
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -75,16 +74,6 @@ fun ReportSubmittedScreen(
                 shape = MaterialTheme.shapes.extraSmall
             ) {
                 Text("Return to Feed", fontWeight = FontWeight.Bold)
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            TextButton(onClick = onFileCompensationClaim) {
-                Text(
-                    "Need compensation for damage?", 
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
             }
         }
     }

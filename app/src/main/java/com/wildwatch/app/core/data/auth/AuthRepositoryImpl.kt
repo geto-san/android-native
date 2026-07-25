@@ -1,6 +1,7 @@
 package com.wildwatch.app.core.data.auth
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.userProfileChangeRequest
 import com.wildwatch.app.core.di.ApplicationScope
 import com.wildwatch.app.core.model.User
@@ -45,6 +46,12 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun signIn(email: String, password: String): Result<Unit> = runCatching {
         firebaseAuth.signInWithEmailAndPassword(email, password).await()
+        Unit
+    }
+
+    override suspend fun signInWithGoogle(idToken: String): Result<Unit> = runCatching {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        firebaseAuth.signInWithCredential(credential).await()
         Unit
     }
 

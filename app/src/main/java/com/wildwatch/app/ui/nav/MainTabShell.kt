@@ -1,41 +1,46 @@
 package com.wildwatch.app.ui.nav
 
-import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Newspaper
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Newspaper
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.wildwatch.app.R
 import com.wildwatch.app.core.model.UserRole
 import com.wildwatch.app.feature.dashboard.DashboardScreen
 import com.wildwatch.app.feature.dashboard.HomeScreen
@@ -60,15 +65,14 @@ fun MainTabShell(
     onProfileClick: () -> Unit,
     onReportSighting: () -> Unit,
     onReportConflict: () -> Unit,
-    onReportCompensation: () -> Unit,
     onCommunityAlertsClick: () -> Unit,
     onOpenCommunityMap: () -> Unit,
     onNotificationsClick: () -> Unit,
 ) {
     val tabs = if (userRole == UserRole.RANGER) {
-        listOf(MainTab.Dashboard, MainTab.Tracking, MainTab.Sos, MainTab.Profile)
+        listOf(MainTab.Dashboard, MainTab.Tracking, MainTab.Sos)
     } else {
-        listOf(MainTab.Home, MainTab.Feed, MainTab.Sos, MainTab.Profile)
+        listOf(MainTab.Home, MainTab.Feed, MainTab.Sos)
     }
 
     var selectedTab by rememberSaveable {
@@ -77,48 +81,68 @@ fun MainTabShell(
 
     Scaffold(
         bottomBar = {
-            Column {
-                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline)
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    tonalElevation = 0.dp,
-                    modifier = Modifier.padding(top = 0.dp)
-                ) {
-                    tabs.forEach { tab ->
-                        val isSelected = selectedTab == tab
-                        val icon = when (tab) {
-                            MainTab.Home -> if (isSelected) Icons.Filled.Home else Icons.Outlined.Home
-                            MainTab.Feed -> if (isSelected) Icons.Filled.Newspaper else Icons.Outlined.Newspaper
-                            MainTab.Sos -> if (isSelected) Icons.Filled.WarningAmber else Icons.Outlined.WarningAmber
-                            MainTab.Dashboard -> if (isSelected) Icons.Filled.Home else Icons.Outlined.Home
-                            MainTab.Tracking -> if (isSelected) Icons.Filled.LocationOn else Icons.Outlined.LocationOn
-                            MainTab.Profile -> if (isSelected) Icons.Filled.Person else Icons.Outlined.Person
-                        }
-                        
-                        NavigationBarItem(
-                            selected = isSelected,
-                            onClick = { 
-                                if (tab == MainTab.Profile) {
-                                    onProfileClick()
-                                } else {
-                                    selectedTab = tab 
+            Surface(
+                color = MaterialTheme.colorScheme.background,
+                tonalElevation = 0.dp
+            ) {
+                Column {
+                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .navigationBarsPadding()
+                            .height(80.dp)
+                            .padding(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        tabs.forEach { tab ->
+                            val isSelected = selectedTab == tab
+                            if (tab == MainTab.Sos) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(56.dp)
+                                        .clip(CircleShape)
+                                        .background(Destructive)
+                                        .clickable { selectedTab = MainTab.Sos },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Filled.WarningAmber,
+                                        contentDescription = "SOS",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(28.dp)
+                                    )
                                 }
-                            },
-                            icon = {
-                                Icon(
-                                    icon,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(26.dp),
-                                    tint = if (tab == MainTab.Sos && isSelected) Destructive 
-                                           else if (isSelected) MaterialTheme.colorScheme.onBackground 
-                                           else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                                )
-                            },
-                            label = null, // Instagram style: no labels
-                            colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = Color.Transparent, // Instagram style: no pill indicator
-                            ),
-                        )
+                            } else {
+                                val icon = when (tab) {
+                                    MainTab.Home -> if (isSelected) Icons.Filled.Home else Icons.Outlined.Home
+                                    MainTab.Feed -> if (isSelected) Icons.Filled.Newspaper else Icons.Outlined.Newspaper
+                                    MainTab.Dashboard -> if (isSelected) Icons.Filled.Home else Icons.Outlined.Home
+                                    MainTab.Tracking -> if (isSelected) Icons.Filled.LocationOn else Icons.Outlined.LocationOn
+                                    else -> Icons.Filled.Home
+                                }
+                                
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.clickable { selectedTab = tab }
+                                ) {
+                                    Icon(
+                                        icon,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(26.dp),
+                                        tint = if (isSelected) MaterialTheme.colorScheme.onBackground 
+                                               else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                                    )
+                                    Text(
+                                        text = tab.name,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (isSelected) MaterialTheme.colorScheme.onBackground 
+                                                else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -136,7 +160,6 @@ fun MainTabShell(
                         onProfileClick = onProfileClick,
                         onReportSighting = onReportSighting,
                         onReportConflict = onReportConflict,
-                        onReportCompensation = onReportCompensation,
                         onCommunityAlertsClick = onCommunityAlertsClick,
                         onOpenCommunityMap = onOpenCommunityMap,
                         onNotificationsClick = onNotificationsClick,

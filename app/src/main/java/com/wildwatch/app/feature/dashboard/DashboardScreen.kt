@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -49,6 +50,7 @@ import com.wildwatch.app.core.ui.theme.Grey500
 fun DashboardScreen(
     onIncidentClick: (String) -> Unit,
     onProfileClick: () -> Unit,
+    onNotificationsClick: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -64,6 +66,9 @@ fun DashboardScreen(
                     ) 
                 },
                 actions = {
+                    IconButton(onClick = onNotificationsClick) {
+                        Icon(Icons.Filled.NotificationsNone, contentDescription = "Notifications")
+                    }
                     IconButton(onClick = onProfileClick) {
                         Icon(Icons.Filled.Settings, contentDescription = null)
                     }

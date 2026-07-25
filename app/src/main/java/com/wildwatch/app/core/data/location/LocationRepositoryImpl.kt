@@ -59,6 +59,21 @@ class LocationRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getParkFromLocation(latitude: Double, longitude: Double): String? {
+        // Rough bounding boxes for Uganda National Parks
+        return when {
+            // Bwindi Impenetrable (approx)
+            latitude in -1.2..-0.8 && longitude in 29.5..29.9 -> "Bwindi Impenetrable"
+            // Queen Elizabeth (approx)
+            latitude in -0.5..0.2 && longitude in 29.7..30.3 -> "Queen Elizabeth"
+            // Murchison Falls (approx)
+            latitude in 1.8..2.5 && longitude in 31.3..32.3 -> "Murchison Falls"
+            // Kibale (approx)
+            latitude in 0.3..0.7 && longitude in 30.2..30.6 -> "Kibale"
+            else -> "Uganda Wildlife Reserve"
+        }
+    }
+
     // API 33+ deprecated the synchronous getFromLocation() in favor of this
     // listener-based overload.
     private suspend fun geocodeAsync(geocoder: Geocoder, latitude: Double, longitude: Double): Address? =

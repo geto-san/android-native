@@ -15,9 +15,6 @@ import com.wildwatch.app.core.model.UserRole
 import com.wildwatch.app.feature.alerts.CommunityAlertsScreen
 import com.wildwatch.app.feature.auth.AuthScreen
 import com.wildwatch.app.feature.auth.AuthViewModel
-import com.wildwatch.app.feature.claims.CompensationClaimScreen
-import com.wildwatch.app.feature.claims.NewClaimScreen
-import com.wildwatch.app.core.database.ClaimCategory
 import com.wildwatch.app.feature.incidentdetail.IncidentDetailScreen
 import com.wildwatch.app.feature.map.CommunityMapScreen
 import com.wildwatch.app.feature.notifications.NotificationsScreen
@@ -33,11 +30,18 @@ import com.wildwatch.app.feature.welcome.WelcomeScreen
 fun WildWatchNavHost(navController: NavHostController = rememberNavController()) {
     val authViewModel: AuthViewModel = hiltViewModel()
     val currentUser by authViewModel.currentUser.collectAsStateWithLifecycle()
+    val shouldShowWelcomeScreen by authViewModel.shouldShowWelcomeScreen.collectAsStateWithLifecycle()
 
-    LaunchedEffect(currentUser) {
+    LaunchedEffect(currentUser, shouldShowWelcomeScreen) {
         if (currentUser == null) {
-            navController.navigate(Route.Welcome) {
-                popUpTo(0) { inclusive = true }
+            if (shouldShowWelcomeScreen) {
+                navController.navigate(Route.Welcome) {
+                    popUpTo(0) { inclusive = true }
+                }
+            } else {
+                navController.navigate(Route.Auth(startOnSignIn = true)) {
+                    popUpTo(0) { inclusive = true }
+                }
             }
         } else if (navController.currentDestination?.route == Route.Welcome::class.qualifiedName ||
                    navController.currentDestination?.route?.contains("Auth") == true) {
@@ -50,8 +54,14 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
     NavHost(navController = navController, startDestination = Route.Welcome) {
         composable<Route.Welcome> {
             WelcomeScreen(
-                onGetStarted = { navController.navigate(Route.Auth(startOnSignIn = false)) },
-                onAlreadyHaveAccount = { navController.navigate(Route.Auth(startOnSignIn = true)) },
+                onGetStarted = {
+                    authViewModel.dismissWelcomeScreen()
+                    navController.navigate(Route.Auth(startOnSignIn = false))
+                },
+                onAlreadyHaveAccount = {
+                    authViewModel.dismissWelcomeScreen()
+                    navController.navigate(Route.Auth(startOnSignIn = true))
+                },
             )
         }
 
@@ -67,7 +77,6 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
                 onProfileClick = { navController.navigate(Route.Profile) },
                 onReportSighting = { navController.navigate(Route.WildlifeSightingReport) },
                 onReportConflict = { navController.navigate(Route.ConflictReport) },
-                onReportCompensation = { navController.navigate(Route.CompensationClaim) },
                 onCommunityAlertsClick = { navController.navigate(Route.CommunityAlerts) },
                 onOpenCommunityMap = { navController.navigate(Route.CommunityMap) },
                 onNotificationsClick = { navController.navigate(Route.Notifications) }
@@ -115,11 +124,6 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
 
         composable<Route.ReportSubmitted> {
             ReportSubmittedScreen(
-                onFileCompensationClaim = {
-                    navController.navigate(Route.CompensationClaim) {
-                        popUpTo(Route.Main) { inclusive = false }
-                    }
-                },
                 onReturnHome = {
                     navController.popBackStack(Route.Main, inclusive = false)
                 },
@@ -147,22 +151,6 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
 
         composable<Route.CommunityAlerts> {
             CommunityAlertsScreen(onBack = { navController.popBackStack() })
-        }
-
-        composable<Route.CompensationClaim> {
-            CompensationClaimScreen(
-                onBack = { navController.popBackStack() },
-                onCategoryClick = { category -> navController.navigate(Route.NewClaim(category.name)) },
-            )
-        }
-
-        composable<Route.NewClaim> { backStackEntry ->
-            val args = backStackEntry.toRoute<Route.NewClaim>()
-            NewClaimScreen(
-                category = ClaimCategory.valueOf(args.category),
-                onBack = { navController.popBackStack() },
-                onSubmitted = { navController.popBackStack() },
-            )
         }
 
         composable<Route.CommunityMap> {

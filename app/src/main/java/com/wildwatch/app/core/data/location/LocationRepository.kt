@@ -10,4 +10,5 @@ data class GeoLocation(val latitude: Double, val longitude: Double, val accuracy
 interface LocationRepository {
     suspend fun getCurrentLocation(): Result<GeoLocation>
     suspend fun reverseGeocode(latitude: Double, longitude: Double): String?
+    fun getParkFromLocation(latitude: Double, longitude: Double): String?
 }

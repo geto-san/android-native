@@ -29,7 +29,6 @@
     <string name="home_quick_report">Quick report</string>
     <string name="home_wildlife_sighting">Wildlife Sighting</string>
     <string name="home_conflict_report">Human-Wildlife Conflict</string>
-    <string name="home_compensation_claim">Compensation Claim</string>
     <string name="home_recent_reports">My recent reports</string>
     <string name="home_see_all">See all</string>
     <string name="home_no_reports">No reports yet - use Quick report above to submit one.</string>

@@ -14,8 +14,6 @@ import javax.inject.Singleton
 
 private const val PERIODIC_SYNC_WORK_NAME = "incident_periodic_sync"
 private const val IMMEDIATE_SYNC_WORK_NAME = "incident_immediate_sync"
-private const val CLAIM_PERIODIC_SYNC_WORK_NAME = "claim_periodic_sync"
-private const val CLAIM_IMMEDIATE_SYNC_WORK_NAME = "claim_immediate_sync"
 private const val PERIODIC_SYNC_INTERVAL_MINUTES = 15L
 
 @Singleton
@@ -40,19 +38,6 @@ class SyncScheduler @Inject constructor(private val workManager: WorkManager) {
             ExistingPeriodicWorkPolicy.KEEP,
             request,
         )
-
-        val claimRequest = PeriodicWorkRequestBuilder<ClaimSyncWorker>(
-            PERIODIC_SYNC_INTERVAL_MINUTES,
-            TimeUnit.MINUTES,
-        )
-            .setConstraints(networkConnectedConstraint())
-            .build()
-
-        workManager.enqueueUniquePeriodicWork(
-            CLAIM_PERIODIC_SYNC_WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP,
-            claimRequest,
-        )
     }
 
     // For "sync right now" moments (e.g. right after creating an incident
@@ -67,23 +52,6 @@ class SyncScheduler @Inject constructor(private val workManager: WorkManager) {
 
         workManager.enqueueUniqueWork(
             IMMEDIATE_SYNC_WORK_NAME,
-            ExistingWorkPolicy.REPLACE,
-            request,
-        )
-    }
-
-    // Same "sync right now" escape hatch as triggerImmediateSync(), for claims
-    // instead of incidents - kept as a separate call (rather than folding into
-    // triggerImmediateSync()) since a claim submission and an incident report
-    // are different user actions that shouldn't force each other's sync.
-    fun triggerImmediateClaimSync() {
-        val request = OneTimeWorkRequestBuilder<ClaimSyncWorker>()
-            .setConstraints(networkConnectedConstraint())
-            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
-            .build()
-
-        workManager.enqueueUniqueWork(
-            CLAIM_IMMEDIATE_SYNC_WORK_NAME,
             ExistingWorkPolicy.REPLACE,
             request,
         )
