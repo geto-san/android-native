@@ -14,6 +14,8 @@ import com.wildwatch.app.core.data.feed.ArticleRepository
 import com.wildwatch.app.core.data.feed.ArticleRepositoryImpl
 import com.wildwatch.app.core.data.location.LocationRepository
 import com.wildwatch.app.core.data.location.LocationRepositoryImpl
+import com.wildwatch.app.core.data.notification.NotificationRepository
+import com.wildwatch.app.core.data.notification.NotificationRepositoryImpl
 import com.wildwatch.app.core.data.incident.IncidentRemoteDataSource
 import com.wildwatch.app.core.data.incident.IncidentRemoteDataSourceImpl
 import com.wildwatch.app.core.data.incident.IncidentRepository
@@ -23,18 +25,10 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 
-// @Binds wiring from repository interfaces to their single implementation. Each
-// phase that adds a repository (ChatRepository in Phase 10, ...) adds one @Binds
-// method here rather than a new module per repository.
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
 
-    // TEMPORARY: bound to the offline, DataStore-backed implementation while
-    // this environment has no internet access to reach Firebase Auth. Revert
-    // to `impl: AuthRepositoryImpl` (see its own class, still intact and
-    // unused below) once connectivity is back - see OfflineAuthRepositoryImpl's
-    // doc comment for the full revert note.
     @Binds
     abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
 
@@ -61,4 +55,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindArticleRepository(impl: ArticleRepositoryImpl): ArticleRepository
+
+    @Binds
+    abstract fun bindNotificationRepository(impl: NotificationRepositoryImpl): NotificationRepository
 }

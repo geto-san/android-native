@@ -61,4 +61,7 @@ sealed interface Route {
 
     @Serializable
     data object CommunityMap : Route
+
+    @Serializable
+    data object Notifications : Route
 }

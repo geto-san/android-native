@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wildwatch.app.core.data.connectivity.ConnectivityObserver
 import com.wildwatch.app.core.data.incident.IncidentRepository
+import com.wildwatch.app.core.data.notification.NotificationRepository
 import com.wildwatch.app.core.database.IncidentStatus
 import com.wildwatch.app.core.domain.usecase.GetIncidentsUseCase
 import com.wildwatch.app.core.model.Incident
@@ -25,20 +26,15 @@ data class DashboardUiState(
     val activeIncidents: List<Incident> = emptyList(),
     val activeAlerts: List<Incident> = emptyList(),
     val isOnline: Boolean = true,
+    val unreadNotificationCount: Int = 0,
 )
 
-// Pure derivation over the Room-backed incident Flow (guardrail G7: no Room/
-// Firestore touched directly here). "Active alerts" are unassigned OPEN
-// incidents - a filtered view of the same stream, not a separate entity (per
-// the domain-pivot's alerts-modeling decision), so assigning one to self is a
-// real IncidentRepository mutation, not local-only UI state. "Active
-// incidents" are ones already claimed and being worked (IN_PROGRESS) - the
-// two lists don't overlap: alerts need an owner, incidents already have one.
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val getIncidentsUseCase: GetIncidentsUseCase,
     private val incidentRepository: IncidentRepository,
     connectivityObserver: ConnectivityObserver,
+    notificationRepository: NotificationRepository,
 ) : ViewModel() {
 
     private val selectedZone = MutableStateFlow<String?>(null)
@@ -47,7 +43,8 @@ class DashboardViewModel @Inject constructor(
         getIncidentsUseCase(),
         selectedZone,
         connectivityObserver.isOnline,
-    ) { incidents, zone, online ->
+        notificationRepository.observeUnreadCount(),
+    ) { incidents, zone, online, unreadNotifications ->
         val scoped = if (zone == null) incidents else incidents.filter { it.community == zone }
         DashboardUiState(
             resolvedCount = incidents.count { it.status == IncidentStatus.RESOLVED },
@@ -62,6 +59,7 @@ class DashboardViewModel @Inject constructor(
             activeIncidents = scoped.filter { it.status == IncidentStatus.IN_PROGRESS },
             activeAlerts = scoped.filter { it.status == IncidentStatus.OPEN && it.assignedTo == null },
             isOnline = online,
+            unreadNotificationCount = unreadNotifications,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState())
 

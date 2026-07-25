@@ -26,19 +26,17 @@ private val KEY_PASSWORD_HASH = stringPreferencesKey("offline_auth_password_hash
 private val KEY_DISPLAY_NAME = stringPreferencesKey("offline_auth_display_name")
 private val KEY_SESSION_ACTIVE = booleanPreferencesKey("offline_auth_session_active")
 
-// TEMPORARY: stands in for AuthRepositoryImpl while this environment has no
-// internet access to reach Firebase Auth. Persists a single local account +
-// session flag to DataStore instead of calling FirebaseAuth, so sign up/sign
-// in/sign out and the rest of the app (which only depends on the
-// AuthRepository interface, never Firebase directly) keep working for
-// on-device testing.
+// Fallback stand-in for AuthRepositoryImpl for dev sandboxes with no internet
+// access to reach Firebase Auth. Persists a single local account + session flag
+// to DataStore instead of calling FirebaseAuth, so sign up/sign in/sign out and
+// the rest of the app (which only depends on the AuthRepository interface,
+// never Firebase directly) keep working for on-device/offline testing.
 //
-// TO REVERT once real connectivity/Firebase config is confirmed working:
-// in di/RepositoryModule.kt, change
-//   fun bindAuthRepository(impl: OfflineAuthRepositoryImpl): AuthRepository
-// back to
+// NOT bound by default - di/RepositoryModule.kt binds the live AuthRepositoryImpl.
+// To use this instead (e.g. no network in the current environment), change
 //   fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
-// This file and AuthRepositoryImpl.kt can both stay in the codebase either way.
+// to
+//   fun bindAuthRepository(impl: OfflineAuthRepositoryImpl): AuthRepository
 @Singleton
 class OfflineAuthRepositoryImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>,

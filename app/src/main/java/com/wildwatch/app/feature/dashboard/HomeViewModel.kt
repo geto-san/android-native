@@ -1,6 +1,7 @@
 package com.wildwatch.app.feature.dashboard
 
 import com.wildwatch.app.core.data.alert.AlertRepository
+import com.wildwatch.app.core.data.notification.NotificationRepository
 import com.wildwatch.app.core.domain.usecase.GetIncidentsUseCase
 import com.wildwatch.app.core.domain.usecase.ObserveUserUseCase
 import com.wildwatch.app.core.database.IncidentStatus
@@ -23,6 +24,7 @@ data class HomeUiState(
     val reportsThisMonth: Int = 0,
     val resolvedThisMonth: Int = 0,
     val unreadAlertCount: Int = 0,
+    val unreadNotificationCount: Int = 0,
     val recentReports: List<Incident> = emptyList(),
     val zones: List<String> = emptyList(),
 )
@@ -32,13 +34,15 @@ class HomeViewModel @Inject constructor(
     observeUserUseCase: ObserveUserUseCase,
     getIncidentsUseCase: GetIncidentsUseCase,
     alertRepository: AlertRepository,
+    notificationRepository: NotificationRepository,
 ) : ViewModel() {
 
     val uiState: StateFlow<HomeUiState> = combine(
         observeUserUseCase(),
         getIncidentsUseCase(),
         alertRepository.observeAll(),
-    ) { user, incidents, alerts ->
+        notificationRepository.observeUnreadCount(),
+    ) { user, incidents, alerts, unreadNotifications ->
         val startOfMonth = Instant.now()
             .atZone(ZoneId.systemDefault())
             .toLocalDate()
@@ -53,6 +57,7 @@ class HomeViewModel @Inject constructor(
             reportsThisMonth = thisMonth.size,
             resolvedThisMonth = thisMonth.count { it.status == IncidentStatus.RESOLVED },
             unreadAlertCount = alerts.size,
+            unreadNotificationCount = unreadNotifications,
             recentReports = incidents
                 .sortedByDescending { runCatching { Instant.parse(it.reportedAt) }.getOrNull() ?: Instant.EPOCH }
                 .take(10), // Take more for the Instagram feel
