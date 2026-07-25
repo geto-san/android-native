@@ -2,8 +2,16 @@ package com.wildwatch.app.core.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.wildwatch.app.R
+
+val MagilioFontFamily = FontFamily(
+    Font(R.font.magilio, FontWeight.Normal),
+    Font(R.font.magilio, FontWeight.Bold)
+)
 
 // Default Material3 type ramp with the RN app's bold-headline feel preserved on
 // the two most visible styles. Extend with a custom FontFamily later if the brand

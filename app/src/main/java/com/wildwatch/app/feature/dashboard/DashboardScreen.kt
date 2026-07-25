@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -44,6 +46,7 @@ import com.wildwatch.app.R
 import com.wildwatch.app.core.model.Incident
 import com.wildwatch.app.core.ui.theme.Grey200
 import com.wildwatch.app.core.ui.theme.Grey500
+import com.wildwatch.app.core.ui.theme.MagilioFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +64,9 @@ fun DashboardScreen(
                 title = { 
                     Text(
                         "Professional Dashboard", 
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontFamily = MagilioFontFamily
+                        ),
                         fontWeight = FontWeight.Bold
                     ) 
                 },
@@ -75,10 +80,12 @@ fun DashboardScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
-                )
+                ),
+                windowInsets = WindowInsets.statusBars
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier

@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -65,6 +67,7 @@ import com.wildwatch.app.core.ui.theme.Grey200
 import com.wildwatch.app.core.ui.theme.Grey300
 import com.wildwatch.app.core.ui.theme.Grey500
 import com.wildwatch.app.core.ui.theme.InstaBlue
+import com.wildwatch.app.core.ui.theme.MagilioFontFamily
 import com.wildwatch.app.core.ui.theme.Success
 import com.wildwatch.app.core.ui.theme.Warning
 import java.time.Instant
@@ -91,7 +94,9 @@ fun HomeScreen(
                 title = {
                     Text(
                         "WildWatch",
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontFamily = MagilioFontFamily
+                        ),
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
                     )
@@ -106,10 +111,12 @@ fun HomeScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
-                )
+                ),
+                windowInsets = WindowInsets.statusBars
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
