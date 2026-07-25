@@ -38,6 +38,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wildwatch.app.core.ui.component.WildWatchLogoMark
 import com.wildwatch.app.core.ui.component.WildWatchTextField
 import com.wildwatch.app.core.ui.theme.Grey500
+import com.wildwatch.app.core.ui.theme.MagilioFontFamily
 
 @Composable
 fun AuthScreen(
@@ -64,7 +65,9 @@ fun AuthScreen(
             WildWatchLogoMark(size = 64.dp)
             Text(
                 "WildWatch",
-                style = MaterialTheme.typography.displaySmall,
+                style = MaterialTheme.typography.displaySmall.copy(
+                    fontFamily = MagilioFontFamily
+                ),
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 16.dp, bottom = 40.dp)
             )

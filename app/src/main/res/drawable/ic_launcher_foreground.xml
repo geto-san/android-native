@@ -3,10 +3,17 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- Geometric "W" Logo (Nature/Watch) -->
     <path
-        android:fillColor="#185B37"
-        android:pathData="M54,12C36.33,12 22,26.33 22,44C22,66 54,96 54,96C54,96 86,66 86,44C86,26.33 71.67,12 54,12ZM54,58C46.27,58 40,51.73 40,44C40,36.27 46.27,30 54,30C61.73,30 68,36.27 68,44C68,51.73 61.73,58 54,58Z" />
+        android:strokeColor="#EE921A"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M22,76 L48,32 L74,76" />
     <path
-        android:fillColor="#298646"
-        android:pathData="M54,34C48.48,34 44,38.48 44,44C44,49.52 48.48,54 54,54C59.52,54 64,49.52 64,44C64,38.48 59.52,34 54,34Z" />
+        android:strokeColor="#EE921A"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M58,76 L80,48 L102,76" />
 </vector>

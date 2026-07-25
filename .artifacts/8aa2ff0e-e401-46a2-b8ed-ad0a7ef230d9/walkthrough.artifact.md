@@ -1,34 +1,38 @@
-# Walkthrough: Build Fix & Navigation Refinement
+# Walkthrough: UI Polish & Redesign
 
-I have resolved the compilation errors in `SyncScheduler.kt` and refined the app's onboarding and logout routing logic.
+I have completed the UI polish and redesign, including fixing the header alignment on the main screens and creating a new nature-inspired, minimalist `WelcomeScreen` using the custom "Magilio" font.
 
 ## Changes Made
 
-### 1. Build Fix
-- **[SyncScheduler.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/core/sync/SyncScheduler.kt)**: Removed all leftover references to `ClaimSyncWorker` following the removal of the Claims feature. This resolved the "Inapplicable candidate" errors for `PeriodicWorkRequestBuilder`.
+### 1. Version Control
+- All pending changes (UI enrichment, project cleanup, build fixes, and Google Sign-In integration) have been **committed and pushed** to the remote repository.
 
-### 2. Onboarding State Tracking
-- **[NEW] [UserDataRepository.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/core/data/user/UserDataRepository.kt)**: Implemented a new repository using `DataStore` to track whether the user has seen the welcome screen.
-- **[RepositoryModule.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/core/di/RepositoryModule.kt)**: Bound the new `UserDataRepository` for dependency injection.
+### 2. Header Alignment Fix
+- **[MainTabShell.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/ui/nav/MainTabShell.kt)**: Set `contentWindowInsets` to 0 to prevent the outer shell from pushing inner content down.
+- **[HomeScreen.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/feature/dashboard/HomeScreen.kt)**:
+    - Set `windowInsets = WindowInsets.statusBars` on the `TopAppBar` to ensure it starts exactly below the status bar.
+    - Set `contentWindowInsets = WindowInsets(0, 0, 0, 0)` on the `Scaffold` to remove redundant internal padding.
+    - Applied the **Magilio** font to the "WildWatch" branding title.
+- **[DashboardScreen.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/feature/dashboard/DashboardScreen.kt)**: Applied similar header alignment fixes and branding font updates.
 
-### 3. Navigation & Routing
-- **[WildWatchNavHost.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/ui/nav/WildWatchNavHost.kt)**:
-    - Updated routing logic to check both `currentUser` (auth state) and `shouldShowWelcomeScreen` (onboarding state).
-    - If a user is not logged in:
-        - If they haven't seen the welcome screen, they are routed to `Welcome`.
-        - If they *have* already seen it (e.g., after logout or app restart), they are routed directly to the **Login** screen.
-    - Updated `WelcomeScreen` callbacks to dismiss the welcome screen state upon proceeding.
+### 3. Branding & Typography
+- **[Type.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/core/ui/theme/Type.kt)**: Defined `MagilioFontFamily` using the provided font files.
+- **Resource Management**: Renamed the font files to `magilio.ttf` (lowercase) for Android resource compliance and removed duplicate `.otf` files to fix build errors.
 
-### 4. UI Fixes
-- **[WelcomeScreen.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/feature/welcome/WelcomeScreen.kt)**: Added the missing `Cream` import to fix build errors in the custom logo/text layout.
+### 4. Welcome Screen Redesign
+- **[WelcomeScreen.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/feature/welcome/WelcomeScreen.kt)**:
+    - Implemented a **nature-inspired vertical gradient background** using `ForestGreen` tones.
+    - Switched to a minimalist layout that focuses on branding and a clear "Get Started" call to action.
+    - Used the **Magilio** font for the "WildWatch" logo text.
+    - Removed the redundant "Log In" button layout inside the main action area for a cleaner look.
 
 ## Verification Results
 
 ### Automated Tests
 - Ran `./gradlew :app:compileDebugKotlin` - **SUCCESS**.
+- Resource packaging for custom fonts - **SUCCESS**.
 
 ### Manual Verification Path
-1. **First Open**: The `WelcomeScreen` appears.
-2. **Proceed**: Click "Get Started" or "Log In".
-3. **App Restart**: Close and reopen the app while signed out. You should now go straight to the **Login** screen.
-4. **Logout**: Click Logout from within the app. You should be taken to the **Login** screen instead of the Welcome screen.
+1. **Welcome Screen**: Observe the new green gradient background and Magilio typography.
+2. **Main Navigation**: Verify that the top bar in the Home and Dashboard screens is now correctly aligned with the top edge (just below the status bar).
+3. **Consistency**: Check that the "WildWatch" branding font is consistent across the app.

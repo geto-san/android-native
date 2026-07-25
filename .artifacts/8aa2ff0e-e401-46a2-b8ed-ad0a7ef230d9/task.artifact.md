@@ -1,5 +1,12 @@
-- `[/]` Commit and Push Changes
-- `[ ]` Fix HomeScreen header position
-- `[ ]` Define Magfio FontFamily in Type.kt
-- `[ ]` Redesign WelcomeScreen (Nature/Minimalist)
-- `[ ]` Verify changes on device
+- `[ ]` Design & Implement Geometric Logo Component
+    - `[ ]` Update `WildWatchLogoMark` in `Surfaces.kt` using `Canvas` and `Path`
+- `[ ]` Update Android Launcher Icons
+    - `[ ]` Redesign `ic_launcher_foreground.xml` with vector "W"
+    - `[ ]` Update `ic_launcher_background.xml` with solid brand color
+- `[ ]` Cleanup Legacy Assets
+    - `[ ]` Delete `drawable-xxxhdpi/ic_launcher_foreground.png`
+- `[ ]` UI Refinement
+    - `[ ]` Adjust `WelcomeScreen.kt` layout for the new logo
+- `[ ]` Verification
+    - `[ ]` Build and run to check launcher icon
+    - `[ ]` Verify in-app logo scaling

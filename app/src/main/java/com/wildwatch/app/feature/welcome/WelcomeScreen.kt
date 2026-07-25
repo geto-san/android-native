@@ -51,7 +51,7 @@ fun WelcomeScreen(
         ) {
             Spacer(modifier = Modifier.fillMaxHeight(0.2f))
 
-            WildWatchLogoMark(size = 100.dp)
+            WildWatchLogoMark(size = 100.dp, color = White)
 
             Spacer(modifier = Modifier.height(24.dp))
 
