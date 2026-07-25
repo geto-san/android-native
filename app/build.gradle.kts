@@ -12,22 +12,23 @@ plugins {
 }
 
 android {
-    namespace = "com.silverback.sentry"
+    namespace = "com.wildwatch.app"
     // Several current AndroidX/Compose/Maps releases require compileSdk 37 to build
     // against, even though targetSdk (the runtime behavior opt-in) stays at 36.
     compileSdk = 37
 
     defaultConfig {
-        // Same applicationId as the Expo app's Android build (see app.json), so both
-        // apps share one Firebase Android app registration / google-services.json.
-        applicationId = "com.silverback.sentry"
+        // Distinct from the sibling Expo app's applicationId (com.silverback.sentry,
+        // see app.json at the repo root) - this native app has its own Firebase
+        // Android app registration under the same silverback-sentry-c6727 project.
+        applicationId = "com.wildwatch.app"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
 
         // Swaps in HiltTestApplication for @HiltAndroidTest instrumented tests.
-        testInstrumentationRunner = "com.silverback.sentry.CustomTestRunner"
+        testInstrumentationRunner = "com.wildwatch.app.CustomTestRunner"
     }
 
     buildTypes {

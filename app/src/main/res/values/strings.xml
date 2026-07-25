@@ -1,3 +1,64 @@
 <resources>
-    <string name="app_name">SilverBack Sentry</string>
+    <string name="app_name">WildWatch</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_feed">Feed</string>
+    <string name="nav_sos">SOS</string>
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_tracking">Tracking</string>
+
+    <!-- Auth -->
+    <string name="auth_sign_in">Sign In</string>
+    <string name="auth_sign_up">Sign Up</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_password">Password</string>
+    <string name="auth_display_name">Display Name</string>
+    <string name="auth_forgot_password">Forgot Password?</string>
+    <string name="auth_no_account">Don\'t have an account?</string>
+    <string name="auth_have_account">Already have an account?</string>
+    <string name="auth_get_started">Get Started</string>
+
+    <!-- Home -->
+    <string name="home_welcome_back">Hi, %1$s</string>
+    <string name="home_community_impact">Community impact this month</string>
+    <string name="home_reports_resolved">%1$d reports · %2$d resolved</string>
+    <string name="home_community_alerts">Community Alerts</string>
+    <string name="home_new_alerts_in_park">%1$d new alerts in %2$s</string>
+    <string name="home_quick_report">Quick report</string>
+    <string name="home_wildlife_sighting">Wildlife Sighting</string>
+    <string name="home_conflict_report">Human-Wildlife Conflict</string>
+    <string name="home_compensation_claim">Compensation Claim</string>
+    <string name="home_recent_reports">My recent reports</string>
+    <string name="home_see_all">See all</string>
+    <string name="home_no_reports">No reports yet - use Quick report above to submit one.</string>
+    <string name="home_nearby_alert">Nearby alert</string>
+    <string name="home_live_map">Live community map</string>
+
+    <!-- Dashboard/Tracking -->
+    <string name="dash_online">Online</string>
+    <string name="dash_offline">Offline</string>
+    <string name="dash_resolved">Resolved</string>
+    <string name="dash_pending">Pending</string>
+    <string name="dash_active_zones">Active zones</string>
+    <string name="dash_active_incidents">Active incidents</string>
+    <string name="dash_active_alerts">Active alerts</string>
+    <string name="dash_attend_to">Attend To</string>
+    <string name="dash_assign_to_me">Assign to me</string>
+    <string name="track_no_incidents">No assigned incidents match this filter</string>
+
+    <!-- SOS -->
+    <string name="sos_title">SOS Emergency</string>
+    <string name="sos_subtitle">One-tap ranger dispatch</string>
+    <string name="sos_instruction">Press and hold to alert Bwindi Impenetrable rangers with your live location.</string>
+    <string name="sos_btn_label">SOS</string>
+    <string name="sos_btn_sent">SENT</string>
+    <string name="sos_live_location">Your live location</string>
+    <string name="sos_getting_location">Getting your location…</string>
+    <string name="sos_location_unavailable">Location unavailable</string>
+    <string name="sos_btn_send">SEND SOS</string>
+    <string name="sos_btn_cancel">CANCEL</string>
+    <string name="sos_locating">Locating you…</string>
+    <string name="sos_location_precision">Precision: ±%1$.1fm</string>
+
 </resources>

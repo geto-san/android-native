@@ -15,26 +15,35 @@
         android:required="false" />
 
     <application
-        android:name=".SentryApplication"
+        android:name=".WildWatchApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.SilverBackSentry">
+        android:theme="@style/Theme.WildWatch">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.Wildwatch.Starting">
+            android:theme="@style/Theme.App.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <!-- PLACEHOLDER - the map will render a blank/grey view until this is
+             replaced with a real key from Google Cloud Console (Maps SDK for
+             Android, restricted to this app's package name + signing
+             certificate SHA-1). See android-native/README.md. -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="YOUR_GOOGLE_MAPS_API_KEY_HERE" />
+
         <!-- WorkManager's default on-demand initializer would construct
              WorkManager before Hilt can inject the custom HiltWorkerFactory
-             into SentryApplication (see Configuration.Provider there), causing
+             into WildWatchApplication (see Configuration.Provider there), causing
              a crash. Removing just this one meta-data entry disables the
              default init while leaving the rest of the shared
              InitializationProvider intact. -->

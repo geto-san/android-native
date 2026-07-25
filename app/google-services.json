@@ -9,10 +9,15 @@
       "client_info": {
         "mobilesdk_app_id": "1:1015092528863:android:e1291f0e1e8a3ec0b5cb6a",
         "android_client_info": {
-          "package_name": "com.silverback.sentry"
+          "package_name": "com.wildwatch.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1015092528863-6uktqq9lfru6blvk4pdomrhbofhdrk1a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDsq5vIKHCCslWxwzwkXnpFygA7tzrPQ2s"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1015092528863-6uktqq9lfru6blvk4pdomrhbofhdrk1a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

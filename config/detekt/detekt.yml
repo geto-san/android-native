@@ -8,6 +8,11 @@ complexity:
   LongParameterList:
     functionThreshold: 8
     constructorThreshold: 8
+  # Form-backing ViewModels naturally accumulate one trivial setter per bound
+  # field - that's not the same kind of complexity smell as a god-class with
+  # many substantive methods.
+  TooManyFunctions:
+    ignoreAnnotated: ["HiltViewModel"]
 
 naming:
   # Composable functions are PascalCase by Compose convention (they act like

@@ -2,25 +2,20 @@
     <!-- Base application theme. Compose owns all in-app theming (see ui/theme/Theme.kt);
          this XML theme only governs the window before Compose content is set (launch
          background, status/nav bar) and satisfies the manifest's theme reference. -->
-    <style name="Theme.SilverBackSentry" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.WildWatch" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/background</item>
         <item name="android:statusBarColor" tools:targetApi="21">@color/background</item>
         <item name="android:navigationBarColor" tools:targetApi="21">@color/background</item>
+        <!-- Background is now light (was dark navy) - bar icons need to render
+             dark-on-light to stay legible. -->
+        <item name="android:windowLightStatusBar" tools:targetApi="23">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
     </style>
 
-    <!-- OS-level splash theme (androidx.core.splashscreen's Theme.SplashScreen parent
-         works back to API 21 via the compat library, not just API 31+). MainActivity is
-         given this theme in the manifest and calls installSplashScreen() before
-         super.onCreate(); the library reads windowSplashScreenBackground/AnimatedIcon
-         from here to draw the branded splash immediately at cold start - replacing
-         the OS's default fallback (launcher icon centered on a plain background) that
-         was showing before this screen existed - then swaps to postSplashScreenTheme
-         once MainActivity releases the keep-on-screen condition. -->
-    <style name="Theme.SilverBackSentry.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_leaf</item>
-        <item name="postSplashScreenTheme">@style/Theme.SilverBackSentry</item>
+    <!-- Theme for the Splash Screen API (Android 12+) -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.WildWatch</item>
     </style>
-
-
 </resources>
