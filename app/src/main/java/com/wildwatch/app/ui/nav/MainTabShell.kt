@@ -19,10 +19,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Newspaper
 import androidx.compose.material.icons.outlined.Person
@@ -47,10 +49,17 @@ import com.wildwatch.app.feature.dashboard.DashboardScreen
 import com.wildwatch.app.feature.dashboard.HomeScreen
 import com.wildwatch.app.feature.feed.FeedScreen
 import com.wildwatch.app.feature.tracking.RangerMapScreen
+import com.wildwatch.app.feature.tracking.RangerTrackingScreen
 
+// wireframe RangerTabBar is Dashboard/Map/Tracking (Profile lives behind the
+// header avatar instead, same as CommunityTabBar's Home/Feed/SOS). This app
+// keeps Profile as a 4th persistent tab for both roles - an established
+// Android convention this codebase already committed to - rather than
+// matching the wireframe's header-avatar placement exactly.
 private enum class MainTab {
     Dashboard,
     Feed,
+    Map,
     Tracking,
     Profile
 }
@@ -67,7 +76,7 @@ fun MainTabShell(
     onArticleClick: (String) -> Unit,
 ) {
     val tabs = if (userRole == UserRole.RANGER) {
-        listOf(MainTab.Dashboard, MainTab.Tracking, MainTab.Profile)
+        listOf(MainTab.Dashboard, MainTab.Map, MainTab.Tracking, MainTab.Profile)
     } else {
         listOf(MainTab.Dashboard, MainTab.Feed, MainTab.Profile)
     }
@@ -98,7 +107,8 @@ fun MainTabShell(
                             val icon = when (tab) {
                                 MainTab.Dashboard -> if (isSelected) Icons.Filled.Home else Icons.Outlined.Home
                                 MainTab.Feed -> if (isSelected) Icons.Filled.Newspaper else Icons.Outlined.Newspaper
-                                MainTab.Tracking -> if (isSelected) Icons.Filled.LocationOn else Icons.Outlined.LocationOn
+                                MainTab.Map -> if (isSelected) Icons.Filled.LocationOn else Icons.Outlined.LocationOn
+                                MainTab.Tracking -> if (isSelected) Icons.Filled.Assignment else Icons.Outlined.Assignment
                                 MainTab.Profile -> if (isSelected) Icons.Filled.Person else Icons.Outlined.Person
                             }
 
@@ -155,7 +165,8 @@ fun MainTabShell(
                     MainTab.Feed -> FeedScreen(
                         onArticleClick = onArticleClick
                     )
-                    MainTab.Tracking -> RangerMapScreen()
+                    MainTab.Map -> RangerMapScreen()
+                    MainTab.Tracking -> RangerTrackingScreen(onIncidentClick = onIncidentClick)
                     MainTab.Profile -> Box(modifier = Modifier) // Navigation handled by callback
                 }
             }

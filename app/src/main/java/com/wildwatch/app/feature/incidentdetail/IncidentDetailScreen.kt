@@ -113,15 +113,30 @@ fun IncidentDetailScreen(
                     
                     item {
                         Spacer(modifier = Modifier.height(32.dp))
-                        Button(
-                            onClick = onStartGps,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                                .height(48.dp),
-                            shape = MaterialTheme.shapes.extraSmall
-                        ) {
-                            Text("Start GPS Tracking", fontWeight = FontWeight.Bold)
+                        when {
+                            uiState.canAssignToSelf -> Button(
+                                onClick = { viewModel.assignToSelf() },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                                    .height(48.dp),
+                                shape = MaterialTheme.shapes.extraSmall
+                            ) {
+                                Text("Assign to me", fontWeight = FontWeight.Bold)
+                            }
+                            uiState.isAssignedToMe -> Button(
+                                onClick = onStartGps,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                                    .height(48.dp),
+                                shape = MaterialTheme.shapes.extraSmall
+                            ) {
+                                Text("Start GPS Tracking", fontWeight = FontWeight.Bold)
+                            }
+                            // Community view (or a ranger viewing someone else's
+                            // assignment) stays read-only - no dispatch action.
+                            else -> Spacer(modifier = Modifier.height(1.dp))
                         }
                     }
                 }

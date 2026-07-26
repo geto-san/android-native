@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wildwatch.app.core.model.UserRole
+import com.wildwatch.app.core.ui.component.StatusPill
 import com.wildwatch.app.core.ui.theme.Grey200
 import com.wildwatch.app.core.ui.theme.Grey500
 
@@ -80,11 +84,15 @@ fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel()) {
             item {
                 ProfileBio(uiState)
             }
-            
+
             item {
                 ProfileActions(onSignOut = viewModel::signOut)
             }
-            
+
+            item {
+                ProfileFieldSection(uiState)
+            }
+
             item {
                 HorizontalDivider(thickness = 0.5.dp, color = Grey200, modifier = Modifier.padding(top = 16.dp))
                 // Grid of sightings could go here
@@ -113,9 +121,12 @@ private fun ProfileHeader(uiState: ProfileUiState) {
             modifier = Modifier.weight(1f).padding(start = 24.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            StatItem(label = "Reports", value = uiState.incidentCount.toString())
+            StatItem(
+                label = if (uiState.role == UserRole.RANGER) "Assigned" else "Reports",
+                value = uiState.primaryCount.toString(),
+            )
             StatItem(label = "Resolved", value = uiState.resolvedCount.toString())
-            StatItem(label = "Zones", value = "4")
+            StatItem(label = "Zones", value = uiState.zones.size.toString())
         }
     }
 }
@@ -131,7 +142,18 @@ private fun StatItem(label: String, value: String) {
 @Composable
 private fun ProfileBio(uiState: ProfileUiState) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-        Text(text = uiState.displayName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = uiState.displayName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.width(8.dp))
+            StatusPill(
+                text = if (uiState.role == UserRole.RANGER) "Field Ranger" else "Community member",
+                contentColor = if (uiState.role == UserRole.RANGER) {
+                    MaterialTheme.colorScheme.tertiary
+                } else {
+                    MaterialTheme.colorScheme.primary
+                },
+            )
+        }
         Text(
             text = "Conservation advocate in Bwindi Impenetrable.\nProtecting wildlife, empowering communities.",
             style = MaterialTheme.typography.bodySmall,
@@ -144,6 +166,27 @@ private fun ProfileBio(uiState: ProfileUiState) {
                 color = MaterialTheme.colorScheme.primary
             )
         }
+    }
+}
+
+@Composable
+private fun ProfileFieldSection(uiState: ProfileUiState) {
+    // Ranger-only for now: wireframe's community "My badges" row has no
+    // backing gamification data source yet, so it's left out rather than
+    // faked with a static number.
+    if (uiState.role != UserRole.RANGER) return
+
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(
+            text = "Assigned zones",
+            style = MaterialTheme.typography.labelSmall,
+            color = Grey500,
+        )
+        Text(
+            text = if (uiState.zones.isEmpty()) "No active assignments" else uiState.zones.joinToString(", "),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+        )
     }
 }
 
