@@ -82,7 +82,6 @@ fun HomeScreen(
     onReportSighting: () -> Unit,
     onReportConflict: () -> Unit,
     onCommunityAlertsClick: () -> Unit,
-    onOpenCommunityMap: () -> Unit,
     onNotificationsClick: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {

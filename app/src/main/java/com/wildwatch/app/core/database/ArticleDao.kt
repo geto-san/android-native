@@ -15,6 +15,9 @@ interface ArticleDao {
     @Query("SELECT * FROM articles ORDER BY publishedAt DESC")
     fun observeAll(): Flow<List<ArticleEntity>>
 
+    @Query("SELECT * FROM articles WHERE id = :id")
+    fun observeById(id: String): Flow<ArticleEntity?>
+
     @Query("SELECT COUNT(*) FROM articles")
     suspend fun count(): Int
 }

@@ -8,4 +8,5 @@ import kotlinx.coroutines.flow.Flow
 // in-memory list.
 interface ArticleRepository {
     fun observeAll(): Flow<List<Article>>
+    fun observeById(id: String): Flow<Article?>
 }

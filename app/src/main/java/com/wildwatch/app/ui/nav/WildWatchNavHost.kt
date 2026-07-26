@@ -16,7 +16,8 @@ import com.wildwatch.app.feature.alerts.CommunityAlertsScreen
 import com.wildwatch.app.feature.auth.AuthScreen
 import com.wildwatch.app.feature.auth.AuthViewModel
 import com.wildwatch.app.feature.incidentdetail.IncidentDetailScreen
-import com.wildwatch.app.feature.map.CommunityMapScreen
+import com.wildwatch.app.feature.feed.ArticleDetailScreen
+import com.wildwatch.app.feature.feed.FeedScreen
 import com.wildwatch.app.feature.notifications.NotificationsScreen
 import com.wildwatch.app.feature.profile.ProfileScreen
 import com.wildwatch.app.feature.report.CameraCaptureScreen
@@ -78,8 +79,8 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
                 onReportSighting = { navController.navigate(Route.WildlifeSightingReport) },
                 onReportConflict = { navController.navigate(Route.ConflictReport) },
                 onCommunityAlertsClick = { navController.navigate(Route.CommunityAlerts) },
-                onOpenCommunityMap = { navController.navigate(Route.CommunityMap) },
-                onNotificationsClick = { navController.navigate(Route.Notifications) }
+                onNotificationsClick = { navController.navigate(Route.Notifications) },
+                onArticleClick = { id -> navController.navigate(Route.ArticleDetail(id)) }
             )
         }
 
@@ -153,15 +154,16 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
             CommunityAlertsScreen(onBack = { navController.popBackStack() })
         }
 
-        composable<Route.CommunityMap> {
-            CommunityMapScreen(
-                onBack = { navController.popBackStack() },
-                onReportSighting = { navController.navigate(Route.WildlifeSightingReport) },
-            )
-        }
-
         composable<Route.Notifications> {
             NotificationsScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable<Route.ArticleDetail> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.ArticleDetail>()
+            ArticleDetailScreen(
+                articleId = args.id,
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 }

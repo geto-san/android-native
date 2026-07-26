@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     // AGP 9+ has built-in Kotlin support; the separate org.jetbrains.kotlin.android
@@ -29,6 +31,14 @@ android {
 
         // Swaps in HiltTestApplication for @HiltAndroidTest instrumented tests.
         testInstrumentationRunner = "com.wildwatch.app.CustomTestRunner"
+
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(localPropertiesFile.inputStream())
+        }
+        val mapboxToken = localProperties.getProperty("PUBLIC_MAPBOX_ACCESS_TOKEN") ?: ""
+        buildConfigField("String", "MAPBOX_ACCESS_TOKEN", "\"$mapboxToken\"")
     }
 
     buildTypes {
@@ -128,8 +138,8 @@ dependencies {
     implementation(libs.firebase.ai)
 
     implementation(libs.play.services.location)
-    implementation(libs.play.services.maps)
-    implementation(libs.maps.compose)
+    implementation(libs.mapbox.maps)
+    implementation(libs.mapbox.compose)
 
     implementation(libs.camerax.core)
     implementation(libs.camerax.camera2)

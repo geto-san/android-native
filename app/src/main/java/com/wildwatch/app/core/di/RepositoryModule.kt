@@ -12,6 +12,8 @@ import com.wildwatch.app.core.data.location.LocationRepository
 import com.wildwatch.app.core.data.location.LocationRepositoryImpl
 import com.wildwatch.app.core.data.notification.NotificationRepository
 import com.wildwatch.app.core.data.notification.NotificationRepositoryImpl
+import com.wildwatch.app.core.data.repository.ParkRepository
+import com.wildwatch.app.core.data.repository.ParkRepositoryImpl
 import com.wildwatch.app.core.data.user.UserDataRepository
 import com.wildwatch.app.core.data.user.UserDataRepositoryImpl
 import com.wildwatch.app.core.data.incident.IncidentRemoteDataSource
@@ -53,4 +55,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindUserDataRepository(impl: UserDataRepositoryImpl): UserDataRepository
+
+    @Binds
+    abstract fun bindParkRepository(impl: ParkRepositoryImpl): ParkRepository
 }

@@ -20,6 +20,7 @@ class WildWatchApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        com.mapbox.common.MapboxOptions.accessToken = BuildConfig.MAPBOX_ACCESS_TOKEN
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }

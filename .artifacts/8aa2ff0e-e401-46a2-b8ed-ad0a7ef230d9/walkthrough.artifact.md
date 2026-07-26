@@ -1,38 +1,49 @@
-# Walkthrough: UI Polish & Redesign
+# Walkthrough: Professional Navigation, Feed & Ranger Map Enhancements
 
-I have completed the UI polish and redesign, including fixing the header alignment on the main screens and creating a new nature-inspired, minimalist `WelcomeScreen` using the custom "Magilio" font.
+I have significantly refined the user experience by implementing a minimalist, industry-standard navigation system, a high-quality community feed with detailed article views, and an enhanced Ranger map experience.
 
 ## Changes Made
 
-### 1. Version Control
-- All pending changes (UI enrichment, project cleanup, build fixes, and Google Sign-In integration) have been **committed and pushed** to the remote repository.
+### 1. Minimalist Navigation (Now In Android Style)
+- **[MainTabShell.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/ui/nav/MainTabShell.kt)**:
+    - Removed text labels from the bottom app bar, showing **only icons** for a modern, clean aesthetic.
+    - Updated the tab structure based on user roles:
+        - **Community**: Dashboard, Feed, You (Profile).
+        - **Ranger**: Dashboard, Tracking, You (Profile).
+    - Reduced bar height and spacing for a more compact feel.
 
-### 2. Header Alignment Fix
-- **[MainTabShell.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/ui/nav/MainTabShell.kt)**: Set `contentWindowInsets` to 0 to prevent the outer shell from pushing inner content down.
-- **[HomeScreen.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/feature/dashboard/HomeScreen.kt)**:
-    - Set `windowInsets = WindowInsets.statusBars` on the `TopAppBar` to ensure it starts exactly below the status bar.
-    - Set `contentWindowInsets = WindowInsets(0, 0, 0, 0)` on the `Scaffold` to remove redundant internal padding.
-    - Applied the **Magilio** font to the "WildWatch" branding title.
-- **[DashboardScreen.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/feature/dashboard/DashboardScreen.kt)**: Applied similar header alignment fixes and branding font updates.
+### 2. Industry-Standard Community Feed
+- **[FeedScreen.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/feature/feed/FeedScreen.kt)**:
+    - Redesigned the feed to use an **ArticleCard** component inspired by NIA and Google News standards.
+    - Included formatted source names, high-density excerpts, and metadata (read time, category).
+- **[ArticleDetailScreen.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/feature/feed/ArticleDetailScreen.kt)**:
+    - Created a new screen for viewing detailed article content.
+    - Features a clean layout with prominent headlines, source attribution, and interactive actions (Like, Share).
+- **[Route.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/ui/nav/Route.kt)**: Added the `ArticleDetail` route for seamless navigation.
 
-### 3. Branding & Typography
-- **[Type.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/core/ui/theme/Type.kt)**: Defined `MagilioFontFamily` using the provided font files.
-- **Resource Management**: Renamed the font files to `magilio.ttf` (lowercase) for Android resource compliance and removed duplicate `.otf` files to fix build errors.
+### 3. Ranger Map Refinement
+- **[RangerMapScreen.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/feature/tracking/RangerMapScreen.kt)**:
+    - Enhanced the map to support **diverse point annotations** for park-specific features (Gates, Ranger Stations, Animal Habitats).
+    - Optimized state management to ensure smooth map interactions during GPS updates.
+- **[ParkRepository.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/core/data/repository/ParkRepository.kt)**: Added `observeById` support for more granular data fetching.
 
-### 4. Welcome Screen Redesign
-- **[WelcomeScreen.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/feature/welcome/WelcomeScreen.kt)**:
-    - Implemented a **nature-inspired vertical gradient background** using `ForestGreen` tones.
-    - Switched to a minimalist layout that focuses on branding and a clear "Get Started" call to action.
-    - Used the **Magilio** font for the "WildWatch" logo text.
-    - Removed the redundant "Log In" button layout inside the main action area for a cleaner look.
+### 4. Project Cleanup
+- **Community Map Removal**: Completely removed the redundant MapView from the community side to focus on the dashboard and news experience.
+- **Dead Code Deletion**: Deleted `CommunityMapScreen.kt`, `MapViewModel.kt`, and related unused assets/logic.
 
 ## Verification Results
 
 ### Automated Tests
 - Ran `./gradlew :app:compileDebugKotlin` - **SUCCESS**.
-- Resource packaging for custom fonts - **SUCCESS**.
+- Navigation graph integrity check - **SUCCESS**.
 
 ### Manual Verification Path
-1. **Welcome Screen**: Observe the new green gradient background and Magilio typography.
-2. **Main Navigation**: Verify that the top bar in the Home and Dashboard screens is now correctly aligned with the top edge (just below the status bar).
-3. **Consistency**: Check that the "WildWatch" branding font is consistent across the app.
+1. **Navigation**: Open the app and observe the new icon-only bottom bar.
+2. **Community Feed**:
+    - Go to the **Feed** tab.
+    - Tap on an article card and verify that it opens the **Article Detail Screen** with full information.
+    - Tap the back button to return to the feed.
+3. **Ranger Map**:
+    - Sign in as a Ranger and go to the **Tracking** tab.
+    - Observe the various park feature markers dynamically overlayed on the map.
+    - Verify that the search bar and sidebar controls function smoothly.

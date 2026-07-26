@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 // Type-safe Navigation Compose routes (Nav Compose 2.8+ @Serializable route objects)
 // rather than manual string routes. `Main` is the authenticated app's entry point -
-// a 3-tab shell (Home/Feed/SOS, see MainTabShell.kt) rendered as a single
+// a 3-tab shell (Dashboard, Tracking, Profile, see MainTabShell.kt) rendered as a single
 // destination rather than three separate nav-graph routes, since none of the tabs
 // need an independent back stack. Everything else pushes onto this outer NavHost
 // from within whichever tab is showing.
@@ -60,7 +60,7 @@ sealed interface Route {
     data class NewClaim(val category: String) : Route
 
     @Serializable
-    data object CommunityMap : Route
+    data class ArticleDetail(val id: String) : Route
 
     @Serializable
     data object Notifications : Route

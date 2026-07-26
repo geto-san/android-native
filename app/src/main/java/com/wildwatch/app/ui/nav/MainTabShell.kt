@@ -21,11 +21,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Newspaper
-import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Newspaper
-import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,15 +46,11 @@ import com.wildwatch.app.core.model.UserRole
 import com.wildwatch.app.feature.dashboard.DashboardScreen
 import com.wildwatch.app.feature.dashboard.HomeScreen
 import com.wildwatch.app.feature.feed.FeedScreen
-import com.wildwatch.app.feature.sos.SosScreen
-import com.wildwatch.app.core.ui.theme.Destructive
-import com.wildwatch.app.feature.tracking.TrackingScreen
+import com.wildwatch.app.feature.tracking.RangerMapScreen
 
 private enum class MainTab {
-    Home,
-    Feed,
-    Sos,
     Dashboard,
+    Feed,
     Tracking,
     Profile
 }
@@ -67,17 +63,17 @@ fun MainTabShell(
     onReportSighting: () -> Unit,
     onReportConflict: () -> Unit,
     onCommunityAlertsClick: () -> Unit,
-    onOpenCommunityMap: () -> Unit,
     onNotificationsClick: () -> Unit,
+    onArticleClick: (String) -> Unit,
 ) {
     val tabs = if (userRole == UserRole.RANGER) {
-        listOf(MainTab.Dashboard, MainTab.Tracking, MainTab.Sos)
+        listOf(MainTab.Dashboard, MainTab.Tracking, MainTab.Profile)
     } else {
-        listOf(MainTab.Home, MainTab.Feed, MainTab.Sos)
+        listOf(MainTab.Dashboard, MainTab.Feed, MainTab.Profile)
     }
 
     var selectedTab by rememberSaveable {
-        mutableStateOf(if (userRole == UserRole.RANGER) MainTab.Dashboard else MainTab.Home)
+        mutableStateOf(MainTab.Dashboard)
     }
 
     Scaffold(
@@ -92,56 +88,39 @@ fun MainTabShell(
                         modifier = Modifier
                             .fillMaxWidth()
                             .navigationBarsPadding()
-                            .height(80.dp)
+                            .height(56.dp)
                             .padding(horizontal = 24.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         tabs.forEach { tab ->
                             val isSelected = selectedTab == tab
-                            if (tab == MainTab.Sos) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(56.dp)
-                                        .clip(CircleShape)
-                                        .background(Destructive)
-                                        .clickable { selectedTab = MainTab.Sos },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        Icons.Filled.WarningAmber,
-                                        contentDescription = "SOS",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(28.dp)
-                                    )
-                                }
-                            } else {
-                                val icon = when (tab) {
-                                    MainTab.Home -> if (isSelected) Icons.Filled.Home else Icons.Outlined.Home
-                                    MainTab.Feed -> if (isSelected) Icons.Filled.Newspaper else Icons.Outlined.Newspaper
-                                    MainTab.Dashboard -> if (isSelected) Icons.Filled.Home else Icons.Outlined.Home
-                                    MainTab.Tracking -> if (isSelected) Icons.Filled.LocationOn else Icons.Outlined.LocationOn
-                                    else -> Icons.Filled.Home
-                                }
-                                
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.clickable { selectedTab = tab }
-                                ) {
-                                    Icon(
-                                        icon,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(26.dp),
-                                        tint = if (isSelected) MaterialTheme.colorScheme.onBackground 
-                                               else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                                    )
-                                    Text(
-                                        text = tab.name,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = if (isSelected) MaterialTheme.colorScheme.onBackground 
-                                                else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                                    )
-                                }
+                            val icon = when (tab) {
+                                MainTab.Dashboard -> if (isSelected) Icons.Filled.Home else Icons.Outlined.Home
+                                MainTab.Feed -> if (isSelected) Icons.Filled.Newspaper else Icons.Outlined.Newspaper
+                                MainTab.Tracking -> if (isSelected) Icons.Filled.LocationOn else Icons.Outlined.LocationOn
+                                MainTab.Profile -> if (isSelected) Icons.Filled.Person else Icons.Outlined.Person
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { 
+                                        if (tab == MainTab.Profile) {
+                                            onProfileClick()
+                                        } else {
+                                            selectedTab = tab 
+                                        }
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    icon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(26.dp),
+                                    tint = if (isSelected) MaterialTheme.colorScheme.primary 
+                                           else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                                )
                             }
                         }
                     }
@@ -157,23 +136,26 @@ fun MainTabShell(
                 label = "tab-transition",
             ) { targetTab ->
                 when (targetTab) {
-                    MainTab.Home -> HomeScreen(
-                        onIncidentClick = onIncidentClick,
-                        onProfileClick = onProfileClick,
-                        onReportSighting = onReportSighting,
-                        onReportConflict = onReportConflict,
-                        onCommunityAlertsClick = onCommunityAlertsClick,
-                        onOpenCommunityMap = onOpenCommunityMap,
-                        onNotificationsClick = onNotificationsClick,
+                    MainTab.Dashboard -> if (userRole == UserRole.RANGER) {
+                        DashboardScreen(
+                            onIncidentClick = onIncidentClick,
+                            onProfileClick = onProfileClick,
+                            onNotificationsClick = onNotificationsClick,
+                        )
+                    } else {
+                        HomeScreen(
+                            onIncidentClick = onIncidentClick,
+                            onProfileClick = onProfileClick,
+                            onReportSighting = onReportSighting,
+                            onReportConflict = onReportConflict,
+                            onCommunityAlertsClick = onCommunityAlertsClick,
+                            onNotificationsClick = onNotificationsClick,
+                        )
+                    }
+                    MainTab.Feed -> FeedScreen(
+                        onArticleClick = onArticleClick
                     )
-                    MainTab.Feed -> FeedScreen()
-                    MainTab.Sos -> SosScreen()
-                    MainTab.Dashboard -> DashboardScreen(
-                        onIncidentClick = onIncidentClick,
-                        onProfileClick = onProfileClick,
-                        onNotificationsClick = onNotificationsClick,
-                    )
-                    MainTab.Tracking -> TrackingScreen()
+                    MainTab.Tracking -> RangerMapScreen()
                     MainTab.Profile -> Box(modifier = Modifier) // Navigation handled by callback
                 }
             }

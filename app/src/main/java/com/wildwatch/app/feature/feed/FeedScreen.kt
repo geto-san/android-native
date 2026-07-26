@@ -1,6 +1,8 @@
 package com.wildwatch.app.feature.feed
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,8 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -36,7 +41,10 @@ import com.wildwatch.app.core.ui.theme.Grey500
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FeedScreen(viewModel: ArticleViewModel = hiltViewModel()) {
+fun FeedScreen(
+    onArticleClick: (String) -> Unit,
+    viewModel: ArticleViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -64,11 +72,14 @@ fun FeedScreen(viewModel: ArticleViewModel = hiltViewModel()) {
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 24.dp)
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(uiState.articles, key = { it.id }) { article ->
-                    ArticleItem(article)
-                    HorizontalDivider(thickness = 0.5.dp, color = Grey200)
+                    ArticleCard(
+                        article = article,
+                        onClick = { onArticleClick(article.id) }
+                    )
                 }
             }
         }
@@ -76,48 +87,66 @@ fun FeedScreen(viewModel: ArticleViewModel = hiltViewModel()) {
 }
 
 @Composable
-private fun ArticleItem(article: Article) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
+private fun ArticleCard(
+    article: Article,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = article.source.uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Icon(Icons.Filled.MoreVert, contentDescription = null, tint = Grey500, modifier = Modifier.size(16.dp))
+            }
+            
             Text(
-                text = article.source,
-                style = MaterialTheme.typography.labelMedium,
+                text = article.title,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                modifier = Modifier.padding(top = 8.dp)
             )
-            IconButton(onClick = {}, modifier = Modifier.size(24.dp)) {
-                Icon(Icons.Filled.MoreVert, contentDescription = null, tint = Grey500)
+            
+            Text(
+                text = article.excerpt,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
+                maxLines = 3
+            )
+            
+            Row(
+                modifier = Modifier.padding(top = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = article.readTime,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Grey500
+                )
+                Text(
+                    text = " · ",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Grey500
+                )
+                Text(
+                    text = article.category,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Grey500
+                )
             }
         }
-        
-        Text(
-            text = article.title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 8.dp)
-        )
-        
-        Text(
-            text = article.excerpt,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp),
-            maxLines = 3
-        )
-        
-        Text(
-            text = "Read more · ${article.readTime}",
-            style = MaterialTheme.typography.labelSmall,
-            color = Grey500,
-            modifier = Modifier.padding(top = 12.dp)
-        )
     }
 }

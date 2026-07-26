@@ -1,54 +1,61 @@
-# Implementation Plan: App Icon & Logo Redesign (Strava Inspiration)
+# Implementation Plan: Navigation Refinement, Feed Enrichment, and Map Enhancements
 
-This plan covers scrapping the current branding assets and designing a new logo and app icon for "WildWatch" from scratch, using the Strava app icon's bold, geometric aesthetic as inspiration.
-
-## Goal
-Create a modern, minimalist, and bold logo based on the "W" in WildWatch, using geometric shapes (chevrons/triangles) similar to the Strava logo.
-
-## Design Concept
-- **The "W" Mark**: Composed of two bold, geometric chevrons (triangles without bases) of different sizes.
-- **Large Chevron**: Represents the "Wild" (Mountain peaks/Nature).
-- **Small Chevron**: Represents the "Watch" (Focus/Lens/Precision).
-- **Style**: High contrast, bold geometric lines, no complex gradients or borders.
+This plan outlines the next steps for visual and functional enrichment, focusing on a cleaner navigation experience, a high-quality community feed, and advanced map features for rangers.
 
 ## Proposed Changes
 
-### [Component] Core UI Design System
+### [Component] Navigation
+Refine the bottom navigation to match modern industry standards (Now in Android style).
 
-#### [MODIFY] [Surfaces.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/core/ui/component/Surfaces.kt)
-- Redefine `WildWatchLogoMark` to draw the new geometric "W" using a custom `Canvas` or `Path`.
-- Remove the dependency on `Icons.Filled.Eco`.
-
-#### [MODIFY] [Color.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/core/ui/theme/Color.kt)
-- Define a primary brand color for the new logo if `SunsetAmber` or `ForestGreen` needs adjustment for high contrast (e.g., a vibrant "Wild" Orange or a deep "Watch" Green).
-
----
-
-### [Component] Android Resources (Icons)
-
-#### [MODIFY] [ic_launcher_foreground.xml](file:///home/geto/Projects/Github/android-native/app/src/main/res/drawable/ic_launcher_foreground.xml)
-- Replace the current path data with the new geometric "W" design.
-
-#### [MODIFY] [ic_launcher_background.xml](file:///home/geto/Projects/Github/android-native/app/src/main/res/drawable/ic_launcher_background.xml)
-- Simplify the background to a solid color (e.g., `ForestGreen` or `PureBlack`) to make the foreground "W" pop.
-
-#### [DELETE] [Old Icon Assets]
-- Remove `drawable-xxxhdpi/ic_launcher_foreground.png` and any other legacy `.png` launcher icons to ensure the vector version is used.
+#### [MODIFY] [MainTabShell.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/ui/nav/MainTabShell.kt)
+- **Remove Labels**: Update the bottom bar to show **only icons**, removing all text labels for a minimalist look.
+- **Update Tabs**:
+    - **Community**: Dashboard, Feed, You (Profile).
+    - **Ranger**: Dashboard, Tracking, You (Profile).
+- **Cleanup**: Remove `onOpenCommunityMap` and other unused callbacks related to the Community Map.
 
 ---
 
-### [Component] UI Screens
+### [Component] Community Feed
+Enrich the Feed feature with high-quality components and detailed views.
 
-#### [MODIFY] [WelcomeScreen.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/feature/welcome/WelcomeScreen.kt)
-- Update the layout to accommodate the new bold logo mark.
+#### [MODIFY] [FeedScreen.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/feature/feed/FeedScreen.kt)
+- **Design Update**: Use a modern, parameter-rich `ArticleCard` component (inspired by NIA's `NewsResourceCard`) with images, tags, and formatted metadata.
+- **Organization**: Group articles by theme or date.
+
+#### [NEW] [ArticleDetailScreen.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/feature/feed/ArticleDetailScreen.kt)
+- Create a detailed view for articles, showing the full content, high-res images, and related actions (Like, Share).
+
+#### [MODIFY] [WildWatchNavHost.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/ui/nav/WildWatchNavHost.kt)
+- Add a new route `ArticleDetail(id: String)` to handle navigation to the detailed article view.
+- Remove the `CommunityMap` route and screen.
+
+---
+
+### [Component] Ranger Map Experience
+Enhance the `RangerMapScreen` with more advanced features and optimized performance.
+
+#### [MODIFY] [RangerMapScreen.kt](file:///home/geto/Projects/Github/android-native/app/src/main/java/com/wildwatch/app/feature/tracking/RangerMapScreen.kt)
+- **Advanced Overlays**: Add more specific park features (gates, water sources, ranger stations) using different icon sets.
+- **Performance**: Use `remember` and `derivedStateOf` to ensure the map interactions remain fluid during high location update frequencies.
+
+---
+
+### [Component] Optimization
+#### [ACTION] Performance Audit
+- Review the entire codebase for performance bottlenecks, specifically focusing on:
+    - Unnecessary recompositions in high-frequency UI (Maps, Feed).
+    - Efficient use of `StateFlow` and `collectAsStateWithLifecycle`.
+    - Optimizing image loading with Coil.
 
 ## Verification Plan
 
 ### Automated Tests
-- Render Compose previews for the new `WildWatchLogoMark` with different sizes.
-- Verify the build with `./gradlew :app:assembleDebug`.
+- Run `./gradlew :app:compileDebugKotlin` to verify the build.
+- Check navigation graph integrity.
 
 ### Manual Verification
-- Deploy to the device and check the home screen icon.
-- Verify the logo appearance on the Welcome and Auth screens.
-- Check the icon's legibility at small sizes (e.g., in the app switcher).
+- **Navigation**: Confirm bottom bar shows only icons and correctly switches between Dashboard, Feed/Tracking, and You.
+- **Feed**: Click an article and verify it opens the detailed view.
+- **Ranger Map**: Verify sidebar buttons and search bar functionality.
+- **Performance**: Ensure smooth scrolling in the Feed and Map.

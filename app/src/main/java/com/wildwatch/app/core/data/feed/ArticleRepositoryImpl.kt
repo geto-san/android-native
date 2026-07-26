@@ -24,6 +24,10 @@ class ArticleRepositoryImpl @Inject constructor(
             .onStart { seedIfEmpty() }
             .map { entities -> entities.map(Article::fromEntity) }
 
+    override fun observeById(id: String): Flow<Article?> =
+        articleDao.observeById(id)
+            .map { it?.let(Article::fromEntity) }
+
     private suspend fun seedIfEmpty() = withContext(ioDispatcher) {
         if (articleDao.count() > 0) return@withContext
         val now = System.currentTimeMillis()

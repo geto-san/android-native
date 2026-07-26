@@ -1,12 +1,14 @@
-- `[ ]` Design & Implement Geometric Logo Component
-    - `[ ]` Update `WildWatchLogoMark` in `Surfaces.kt` using `Canvas` and `Path`
-- `[ ]` Update Android Launcher Icons
-    - `[ ]` Redesign `ic_launcher_foreground.xml` with vector "W"
-    - `[ ]` Update `ic_launcher_background.xml` with solid brand color
-- `[ ]` Cleanup Legacy Assets
-    - `[ ]` Delete `drawable-xxxhdpi/ic_launcher_foreground.png`
-- `[ ]` UI Refinement
-    - `[ ]` Adjust `WelcomeScreen.kt` layout for the new logo
-- `[ ]` Verification
-    - `[ ]` Build and run to check launcher icon
-    - `[ ]` Verify in-app logo scaling
+- `[x]` Navigation & Bottom Bar Update
+    - `[x]` Remove labels from `MainTabShell.kt` (only icons shown)
+    - `[x]` Update tab logic for Community/Ranger roles (Dashboard, Feed/Tracking, You)
+    - `[x]` Update routes in `Route.kt` and `WildWatchNavHost.kt`
+- `[x]` Community Feed Enrichment
+    - `[x]` Update `FeedScreen.kt` with modern NIA-style `ArticleCard`
+    - `[x]` Create `ArticleDetailScreen.kt`
+    - `[x]` Wire navigation from feed to detail
+- `[x]` Ranger Map Enhancements
+    - `[x]` Add support for diverse park feature annotations (Gates, Stations, etc.)
+    - `[x]` Refactor map interactions and state management
+- `[x]` Cleanup & Verification
+    - `[x]` Delete `CommunityMapScreen.kt` and `MapViewModel.kt`
+    - `[x]` Run build `:app:compileDebugKotlin` - SUCCESS
