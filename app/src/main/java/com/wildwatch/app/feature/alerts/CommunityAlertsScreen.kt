@@ -83,13 +83,10 @@ fun CommunityAlertsScreen(onBack: () -> Unit, viewModel: AlertViewModel = hiltVi
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 BackHeader(
-                    title = "Notifications",
+                    title = "Community Alerts",
                     onBack = onBack,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
-                IconButton(onClick = {}, modifier = Modifier.padding(end = 12.dp)) {
-                    Icon(Icons.Filled.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
             }
 
             LazyRow(

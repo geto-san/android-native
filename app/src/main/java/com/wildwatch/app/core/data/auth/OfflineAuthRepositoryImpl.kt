@@ -114,7 +114,7 @@ class OfflineAuthRepositoryImpl @Inject constructor(
         val role = if (email?.lowercase() == "ranger@wildwatch.com") {
             UserRole.RANGER
         } else {
-            UserRole.COMMUNITY
+            UserRole.PUBLIC
         }
         return User(uid = uid, email = email, displayName = this[KEY_DISPLAY_NAME], role = role)
     }

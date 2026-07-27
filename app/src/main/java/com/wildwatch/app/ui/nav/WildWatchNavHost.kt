@@ -25,6 +25,7 @@ import com.wildwatch.app.feature.report.ConflictReportScreen
 import com.wildwatch.app.feature.report.ReportIncidentViewModel
 import com.wildwatch.app.feature.report.ReportSubmittedScreen
 import com.wildwatch.app.feature.report.WildlifeSightingReportScreen
+import com.wildwatch.app.feature.settings.AccountManagementScreen
 import com.wildwatch.app.ui.nav.MainTabShell
 import com.wildwatch.app.ui.nav.Route
 
@@ -63,14 +64,16 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
 
         composable<Route.Main> {
             MainTabShell(
-                userRole = currentUser?.role ?: UserRole.COMMUNITY,
+                userRole = currentUser?.role ?: UserRole.PUBLIC,
+                isGuest = currentUser?.isGuest ?: true,
                 onIncidentClick = { id -> navController.navigate(Route.IncidentDetail(id)) },
-                onProfileClick = { navController.navigate(Route.Profile) },
+                onSignInClick = { navController.navigate(Route.Auth(startOnSignIn = true)) },
                 onReportSighting = { navController.navigate(Route.WildlifeSightingReport) },
                 onReportConflict = { navController.navigate(Route.ConflictReport) },
                 onCommunityAlertsClick = { navController.navigate(Route.CommunityAlerts) },
                 onNotificationsClick = { navController.navigate(Route.Notifications) },
-                onArticleClick = { id -> navController.navigate(Route.ArticleDetail(id)) }
+                onArticleClick = { id -> navController.navigate(Route.ArticleDetail(id)) },
+                onAccountManagementClick = { navController.navigate(Route.AccountManagement) }
             )
         }
 
@@ -146,6 +149,10 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
 
         composable<Route.Notifications> {
             NotificationsScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable<Route.AccountManagement> {
+            AccountManagementScreen(onBack = { navController.popBackStack() })
         }
 
         composable<Route.ArticleDetail> { backStackEntry ->

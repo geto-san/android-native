@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,7 +53,6 @@ import com.wildwatch.app.core.ui.theme.MagilioFontFamily
 @Composable
 fun DashboardScreen(
     onIncidentClick: (String) -> Unit,
-    onProfileClick: () -> Unit,
     onNotificationsClick: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
@@ -72,10 +72,7 @@ fun DashboardScreen(
                 },
                 actions = {
                     IconButton(onClick = onNotificationsClick) {
-                        Icon(Icons.Filled.NotificationsNone, contentDescription = "Notifications")
-                    }
-                    IconButton(onClick = onProfileClick) {
-                        Icon(Icons.Filled.Settings, contentDescription = null)
+                        Icon(Icons.Outlined.Notifications, contentDescription = "Notifications")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

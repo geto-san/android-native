@@ -1,5 +1,7 @@
 package com.wildwatch.app.feature.report
 
+import com.wildwatch.app.core.ui.component.PermissionDialog
+import androidx.compose.material.icons.filled.CameraAlt
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -54,13 +56,30 @@ fun CameraCaptureScreen(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED,
         )
     }
+    var showPermissionDialog by remember { mutableStateOf(false) }
+
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         hasCameraPermission = granted
     }
     LaunchedEffect(Unit) {
         if (!hasCameraPermission) {
-            permissionLauncher.launch(Manifest.permission.CAMERA)
+            showPermissionDialog = true
         }
+    }
+
+    if (showPermissionDialog) {
+        PermissionDialog(
+            icon = Icons.Default.CameraAlt,
+            title = "Allow WildWatch to take pictures?",
+            description = "We use your camera to capture evidence of wildlife activity and conflict incidents for verification.",
+            onAllow = {
+                showPermissionDialog = false
+                permissionLauncher.launch(Manifest.permission.CAMERA)
+            },
+            onDismiss = {
+                showPermissionDialog = false
+            }
+        )
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {

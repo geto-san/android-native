@@ -42,4 +42,7 @@ sealed interface Route {
 
     @Serializable
     data object Notifications : Route
+
+    @Serializable
+    data object AccountManagement : Route
 }

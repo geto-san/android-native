@@ -1,8 +1,8 @@
 package com.wildwatch.app.core.model
 
 enum class UserRole {
-    COMMUNITY,
-    RANGER
+    PUBLIC,
+    RANGER,
 }
 
 // Pure domain model - no FirebaseUser leaks past the data layer (guardrail G7:
@@ -11,7 +11,8 @@ data class User(
     val uid: String,
     val email: String?,
     val displayName: String?,
-    val role: UserRole = UserRole.COMMUNITY,
+    val role: UserRole = UserRole.PUBLIC,
+    val isGuest: Boolean = false,
 ) {
     // Mirrors the RN app's fallback chain (ObservationContext.jsx's
     // `user?.displayName || user?.email?.split('@')[0] || 'Anonymous'`) so

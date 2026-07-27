@@ -59,10 +59,12 @@ import coil3.compose.rememberAsyncImagePainter
 import com.wildwatch.app.core.database.IncidentType
 import com.wildwatch.app.core.database.Severity
 import com.wildwatch.app.core.ui.component.BackHeader
+import com.wildwatch.app.core.ui.component.PermissionDialog
 import com.wildwatch.app.core.ui.component.WildWatchDropdownField
 import com.wildwatch.app.core.ui.component.WildWatchTextField
 import com.wildwatch.app.core.ui.theme.Grey200
 import com.wildwatch.app.core.ui.theme.Grey500
+import androidx.compose.material.icons.filled.LocationOn
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -95,6 +97,8 @@ fun WildlifeSightingReportScreen(
                 PackageManager.PERMISSION_GRANTED,
         )
     }
+    var showPermissionDialog by remember { mutableStateOf(false) }
+
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         hasLocationPermission = granted
         if (granted) viewModel.loadCurrentLocation()
@@ -102,7 +106,26 @@ fun WildlifeSightingReportScreen(
     LaunchedEffect(Unit) {
         viewModel.updateType(IncidentType.SIGHTING)
         viewModel.updateSeverity(Severity.LOW)
-        if (hasLocationPermission) viewModel.loadCurrentLocation() else permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        if (hasLocationPermission) {
+            viewModel.loadCurrentLocation()
+        } else {
+            showPermissionDialog = true
+        }
+    }
+
+    if (showPermissionDialog) {
+        PermissionDialog(
+            icon = Icons.Default.LocationOn,
+            title = "Allow WildWatch to use your location?",
+            description = "We use your location to precisely tag where wildlife sightings occur, helping rangers protect endangered species.",
+            onAllow = {
+                showPermissionDialog = false
+                permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            },
+            onDismiss = {
+                showPermissionDialog = false
+            }
+        )
     }
     LaunchedEffect(uiState.locationName) {
         uiState.locationName?.let { viewModel.updateCommunity(it) }

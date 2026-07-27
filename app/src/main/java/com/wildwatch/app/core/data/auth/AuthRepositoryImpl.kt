@@ -18,12 +18,19 @@ import javax.inject.Singleton
 
 private fun com.google.firebase.auth.FirebaseUser?.toDomain(): User? =
     this?.let {
-        val role = if (it.email?.lowercase() == "ranger@wildwatch.com") {
+        val email = it.email?.lowercase()
+        val role = if (email == "ranger@wildwatch.com" || email == "ranger@wildwatch.app") {
             UserRole.RANGER
         } else {
-            UserRole.COMMUNITY
+            UserRole.PUBLIC
         }
-        User(uid = it.uid, email = it.email, displayName = it.displayName, role = role)
+        User(
+            uid = it.uid,
+            email = it.email,
+            displayName = it.displayName,
+            role = role,
+            isGuest = it.isAnonymous
+        )
     }
 
 @Singleton

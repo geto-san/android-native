@@ -6,16 +6,15 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import com.wildwatch.app.core.di.ApplicationScope
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
 interface UserDataRepository {
-    // Placeholder for future user-specific preferences (e.g. biometric lock flag)
+    val darkThemeConfig: Flow<Boolean?>
+    suspend fun setDarkThemeConfig(dark: Boolean?)
 }
 
 @Singleton
@@ -23,5 +22,20 @@ class UserDataRepositoryImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>,
     @ApplicationScope private val scope: CoroutineScope,
 ) : UserDataRepository {
-    // Implementation placeholder
+
+    private val darkThemeKey = booleanPreferencesKey("dark_theme")
+
+    override val darkThemeConfig: Flow<Boolean?> = dataStore.data.map { preferences ->
+        preferences[darkThemeKey]
+    }
+
+    override suspend fun setDarkThemeConfig(dark: Boolean?) {
+        dataStore.edit { preferences ->
+            if (dark == null) {
+                preferences.remove(darkThemeKey)
+            } else {
+                preferences[darkThemeKey] = dark
+            }
+        }
+    }
 }

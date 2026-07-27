@@ -1,69 +1,67 @@
 package com.wildwatch.app.feature.profile
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wildwatch.app.core.model.UserRole
-import com.wildwatch.app.core.ui.component.StatusPill
-import com.wildwatch.app.core.ui.theme.Grey200
 import com.wildwatch.app.core.ui.theme.Grey500
+import com.wildwatch.app.core.ui.theme.InstaBlue
+import com.wildwatch.app.core.ui.theme.WildWatchTheme
+
+@Composable
+fun ProfileScreen(
+    viewModel: ProfileViewModel = hiltViewModel(),
+    onSignInClick: () -> Unit = {},
+    onAccountManagementClick: () -> Unit = {}
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    ProfileContent(
+        uiState = uiState,
+        onSignOut = viewModel::signOut,
+        onSignIn = onSignInClick,
+        onThemeToggle = viewModel::setDarkTheme,
+        onAccountManagementClick = onAccountManagementClick
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel()) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
+private fun ProfileContent(
+    uiState: ProfileUiState,
+    onSignOut: () -> Unit,
+    onSignIn: () -> Unit,
+    onThemeToggle: (Boolean) -> Unit,
+    onAccountManagementClick: () -> Unit
+) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { 
+            CenterAlignedTopAppBar(
+                title = {
                     Text(
-                        uiState.displayName.lowercase().replace(" ", "_"), 
-                        style = MaterialTheme.typography.titleMedium,
+                        "Profile & Settings",
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
-                    ) 
-                },
-                actions = {
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Filled.Menu, contentDescription = null)
-                    }
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
@@ -75,27 +73,114 @@ fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
+            contentPadding = PaddingValues(bottom = 32.dp)
         ) {
             item {
-                ProfileHeader(uiState)
-            }
-            
-            item {
-                ProfileBio(uiState)
-            }
-
-            item {
-                ProfileActions(onSignOut = viewModel::signOut)
+                if (uiState.isGuest) {
+                    GuestJoinCard(onSignIn = onSignIn)
+                } else {
+                    ProfileHeader(uiState)
+                }
             }
 
             item {
-                ProfileFieldSection(uiState)
+                SettingsSection(
+                    title = "ACCOUNT",
+                    items = listOf(
+                        SettingsItemData(
+                            title = "Account management", 
+                            icon = Icons.Default.AccountCircle, 
+                            onClick = onAccountManagementClick
+                        ),
+                        SettingsItemData(
+                            title = "Notifications", 
+                            icon = Icons.Default.NotificationsNone, 
+                            showSwitch = true
+                        ),
+                        SettingsItemData(
+                            title = "Dark mode", 
+                            icon = Icons.Default.DarkMode, 
+                            showSwitch = true,
+                            switchChecked = uiState.isDarkTheme,
+                            onSwitchChange = onThemeToggle
+                        ),
+                        SettingsItemData(
+                            title = "Language", 
+                            icon = Icons.Default.Language, 
+                            trailingText = "English"
+                        )
+                    )
+                )
             }
 
             item {
-                HorizontalDivider(thickness = 0.5.dp, color = Grey200, modifier = Modifier.padding(top = 16.dp))
-                // Grid of sightings could go here
+                SettingsSection(
+                    title = "SUPPORT",
+                    items = listOf(
+                        if (uiState.isGuest) {
+                            SettingsItemData(
+                                title = "Sign in / Join WildWatch", 
+                                icon = Icons.AutoMirrored.Filled.Logout, 
+                                tint = InstaBlue, 
+                                onClick = onSignIn
+                            )
+                        } else {
+                            SettingsItemData(
+                                title = "Sign out", 
+                                icon = Icons.AutoMirrored.Filled.Logout, 
+                                tint = MaterialTheme.colorScheme.error, 
+                                onClick = onSignOut
+                            )
+                        }
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun GuestJoinCard(onSignIn: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                Icons.Default.AccountCircle,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Join the Community",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Sign in to track your reports, earn badges, and help rangers protect Bwindi.",
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = onSignIn,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = InstaBlue)
+            ) {
+                Text("Sign In", fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
     }
@@ -103,127 +188,238 @@ fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel()) {
 
 @Composable
 private fun ProfileHeader(uiState: ProfileUiState) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier = Modifier
-                .size(80.dp)
+                .size(100.dp)
                 .clip(CircleShape)
-                .background(Grey200)
-        )
-        
-        Row(
-            modifier = Modifier.weight(1f).padding(start = 24.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+                .background(MaterialTheme.colorScheme.tertiary),
+            contentAlignment = Alignment.Center
         ) {
-            StatItem(
-                label = if (uiState.role == UserRole.RANGER) "Assigned" else "Reports",
-                value = uiState.primaryCount.toString(),
-            )
-            StatItem(label = "Resolved", value = uiState.resolvedCount.toString())
-            StatItem(label = "Zones", value = uiState.zones.size.toString())
-        }
-    }
-}
-
-@Composable
-private fun StatItem(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground)
-    }
-}
-
-@Composable
-private fun ProfileBio(uiState: ProfileUiState) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = uiState.displayName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.width(8.dp))
-            StatusPill(
-                text = if (uiState.role == UserRole.RANGER) "Field Ranger" else "Community member",
-                contentColor = if (uiState.role == UserRole.RANGER) {
-                    MaterialTheme.colorScheme.tertiary
-                } else {
-                    MaterialTheme.colorScheme.primary
-                },
-            )
-        }
-        Text(
-            text = "Conservation advocate in Bwindi Impenetrable.\nProtecting wildlife, empowering communities.",
-            style = MaterialTheme.typography.bodySmall,
-            lineHeight = 16.sp
-        )
-        uiState.email?.let {
             Text(
-                text = it,
+                text = uiState.displayName.take(1).uppercase(),
+                color = MaterialTheme.colorScheme.onTertiary,
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = uiState.displayName,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(top = 4.dp)
+        ) {
+            Icon(
+                Icons.Default.LocationOn,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "Bwindi Impenetrable",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+        ) {
+            Text(
+                text = if (uiState.role == UserRole.RANGER) "Field Ranger" else "Community member",
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
             )
         }
     }
 }
 
-@Composable
-private fun ProfileFieldSection(uiState: ProfileUiState) {
-    // Ranger-only for now: wireframe's community "My badges" row has no
-    // backing gamification data source yet, so it's left out rather than
-    // faked with a static number.
-    if (uiState.role != UserRole.RANGER) return
+data class SettingsItemData(
+    val title: String,
+    val icon: ImageVector,
+    val trailingText: String? = null,
+    val showSwitch: Boolean = false,
+    val switchChecked: Boolean = false,
+    val onSwitchChange: (Boolean) -> Unit = {},
+    val tint: Color? = null,
+    val onClick: () -> Unit = {}
+)
 
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+@Composable
+private fun SettingsSection(title: String, items: List<SettingsItemData>) {
+    Column(modifier = Modifier.padding(top = 24.dp)) {
         Text(
-            text = "Assigned zones",
-            style = MaterialTheme.typography.labelSmall,
-            color = Grey500,
+            text = title,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Bold
         )
-        Text(
-            text = if (uiState.zones.isEmpty()) "No active assignments" else uiState.zones.joinToString(", "),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
-        )
+
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 1.dp,
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+        ) {
+            Column {
+                items.forEachIndexed { index, item ->
+                    SettingsRow(item)
+                    if (index < items.size - 1) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun ProfileActions(onSignOut: () -> Unit) {
+private fun SettingsRow(item: SettingsItemData) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .clickable(onClick = item.onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Button(
-            onClick = {},
-            modifier = Modifier.weight(1f).height(32.dp),
-            shape = MaterialTheme.shapes.extraSmall,
-            colors = ButtonDefaults.buttonColors(containerColor = Grey200, contentColor = Color.Black),
-            contentPadding = PaddingValues(0.dp)
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center
         ) {
-            Text("Edit profile", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Icon(
+                item.icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = item.tint ?: MaterialTheme.colorScheme.onSurface
+            )
         }
-        Button(
-            onClick = {},
-            modifier = Modifier.weight(1f).height(32.dp),
-            shape = MaterialTheme.shapes.extraSmall,
-            colors = ButtonDefaults.buttonColors(containerColor = Grey200, contentColor = Color.Black),
-            contentPadding = PaddingValues(0.dp)
-        ) {
-            Text("Share profile", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Text(
+            text = item.title,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.weight(1f),
+            color = item.tint ?: MaterialTheme.colorScheme.onSurface
+        )
+
+        if (item.showSwitch) {
+            Switch(
+                checked = item.switchChecked,
+                onCheckedChange = item.onSwitchChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = InstaBlue
+                )
+            )
+        } else if (item.trailingText != null) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = item.trailingText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else {
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-        Button(
-            onClick = onSignOut,
-            modifier = Modifier.height(32.dp),
-            shape = MaterialTheme.shapes.extraSmall,
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.1f), contentColor = MaterialTheme.colorScheme.error),
-            contentPadding = PaddingValues(horizontal = 12.dp)
-        ) {
-            Text("Log Out", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun RegisteredProfilePreview() {
+    WildWatchTheme {
+        ProfileContent(
+            uiState = ProfileUiState(
+                displayName = "John Ranger",
+                role = UserRole.RANGER,
+                isGuest = false,
+                primaryCount = 24,
+                resolvedCount = 19
+            ),
+            onSignOut = {},
+            onSignIn = {},
+            onThemeToggle = {},
+            onAccountManagementClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GuestProfilePreview() {
+    WildWatchTheme {
+        ProfileContent(
+            uiState = ProfileUiState(
+                isGuest = true
+            ),
+            onSignOut = {},
+            onSignIn = {},
+            onThemeToggle = {},
+            onAccountManagementClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DarkRegisteredProfilePreview() {
+    WildWatchTheme(darkTheme = true) {
+        ProfileContent(
+            uiState = ProfileUiState(
+                displayName = "John Ranger",
+                role = UserRole.RANGER,
+                isGuest = false,
+                primaryCount = 24,
+                resolvedCount = 19,
+                isDarkTheme = true
+            ),
+            onSignOut = {},
+            onSignIn = {},
+            onThemeToggle = {},
+            onAccountManagementClick = {}
+        )
     }
 }

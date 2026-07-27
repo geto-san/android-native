@@ -24,6 +24,7 @@ import com.wildwatch.app.core.model.UserRole
 import com.wildwatch.app.feature.dashboard.DashboardScreen
 import com.wildwatch.app.feature.dashboard.HomeScreen
 import com.wildwatch.app.feature.feed.FeedScreen
+import com.wildwatch.app.feature.profile.ProfileScreen
 import com.wildwatch.app.feature.tracking.RangerTrackingScreen
 
 // wireframe RangerTabBar is Dashboard/Map/Tracking (Profile lives behind the
@@ -41,18 +42,24 @@ private enum class MainTab {
 @Composable
 fun MainTabShell(
     userRole: UserRole,
+    isGuest: Boolean,
     onIncidentClick: (String) -> Unit,
-    onProfileClick: () -> Unit,
+    onSignInClick: () -> Unit,
     onReportSighting: () -> Unit,
     onReportConflict: () -> Unit,
     onCommunityAlertsClick: () -> Unit,
     onNotificationsClick: () -> Unit,
     onArticleClick: (String) -> Unit,
+    onAccountManagementClick: () -> Unit,
 ) {
     val tabs = if (userRole == UserRole.RANGER) {
         listOf(MainTab.Dashboard, MainTab.Tracking, MainTab.Profile)
     } else {
-        listOf(MainTab.Dashboard, MainTab.Feed, MainTab.Profile)
+        if (isGuest) {
+            listOf(MainTab.Dashboard, MainTab.Feed)
+        } else {
+            listOf(MainTab.Dashboard, MainTab.Feed, MainTab.Profile)
+        }
     }
 
     var selectedTab by rememberSaveable {
@@ -88,13 +95,7 @@ fun MainTabShell(
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clickable { 
-                                        if (tab == MainTab.Profile) {
-                                            onProfileClick()
-                                        } else {
-                                            selectedTab = tab 
-                                        }
-                                    },
+                                    .clickable { selectedTab = tab },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
@@ -123,13 +124,11 @@ fun MainTabShell(
                 MainTab.Dashboard -> if (userRole == UserRole.RANGER) {
                     DashboardScreen(
                         onIncidentClick = onIncidentClick,
-                        onProfileClick = onProfileClick,
                         onNotificationsClick = onNotificationsClick,
                     )
                 } else {
                     HomeScreen(
                         onIncidentClick = onIncidentClick,
-                        onProfileClick = onProfileClick,
                         onReportSighting = onReportSighting,
                         onReportConflict = onReportConflict,
                         onCommunityAlertsClick = onCommunityAlertsClick,
@@ -140,7 +139,10 @@ fun MainTabShell(
                     onArticleClick = onArticleClick
                 )
                 MainTab.Tracking -> RangerTrackingScreen(onIncidentClick = onIncidentClick)
-                MainTab.Profile -> Box(modifier = Modifier) // Navigation handled by callback
+                MainTab.Profile -> ProfileScreen(
+                    onSignInClick = onSignInClick,
+                    onAccountManagementClick = onAccountManagementClick
+                )
             }
         }
     }
