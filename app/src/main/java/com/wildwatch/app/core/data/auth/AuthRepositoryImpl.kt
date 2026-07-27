@@ -49,6 +49,11 @@ class AuthRepositoryImpl @Inject constructor(
         Unit
     }
 
+    override suspend fun signInAnonymously(): Result<Unit> = runCatching {
+        firebaseAuth.signInAnonymously().await()
+        Unit
+    }
+
     override suspend fun signInWithGoogle(idToken: String): Result<Unit> = runCatching {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         firebaseAuth.signInWithCredential(credential).await()

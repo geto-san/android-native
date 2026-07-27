@@ -167,6 +167,18 @@ fun AuthScreen(
                 )
             }
 
+            TextButton(
+                onClick = viewModel::signInAnonymously,
+                enabled = !uiState.isLoading
+            ) {
+                Text(
+                    "Continue as guest",
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
             Spacer(modifier = Modifier.height(40.dp))
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outline)

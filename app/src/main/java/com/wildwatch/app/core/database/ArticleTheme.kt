@@ -7,4 +7,6 @@ enum class ArticleTheme {
     FOREST,
     SUNSET,
     SKY,
+    WILDLIFE,
+    SECURITY
 }

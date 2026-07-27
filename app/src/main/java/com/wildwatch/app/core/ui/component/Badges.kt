@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 
 // A colored circular (or rounded-square) container around an icon - the
 // "quick report tile" and "list row" icon treatment used throughout the
-// wireframes (Community Alerts bell, recent-report species icon, claim
+// wireframes (Community Alerts bell, recent-report species icon)
 // category icon, etc).
 @Composable
 fun IconBadge(

@@ -2,71 +2,97 @@ package com.wildwatch.app.feature.tracking
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.wildwatch.app.core.data.incident.IncidentRepository
-import com.wildwatch.app.core.database.IncidentStatus
-import com.wildwatch.app.core.database.Severity
-import com.wildwatch.app.core.domain.usecase.ObserveUserUseCase
-import com.wildwatch.app.core.model.Incident
+import com.mapbox.geojson.Point
+import com.wildwatch.app.core.data.location.LocationRepository
+import com.wildwatch.app.core.data.repository.ParkRepository
+import com.wildwatch.app.core.model.NationalPark
+import com.wildwatch.app.core.model.ParkAttraction
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
-enum class TrackingFilter(val label: String) {
-    ALL("All"),
-    URGENT("Urgent"),
-    IN_PROGRESS("In progress"),
-    RESOLVED("Resolved"),
-    ESCALATED("Escalated"),
-}
-
 data class RangerTrackingUiState(
-    val resolvedCount: Int = 0,
-    val inProgressCount: Int = 0,
-    val escalatedCount: Int = 0,
-    val selectedFilter: TrackingFilter = TrackingFilter.ALL,
-    val cases: List<Incident> = emptyList(),
+    val activePark: NationalPark? = null,
+    val attractions: List<ParkAttraction> = emptyList(),
+    val isSatelliteView: Boolean = false,
+    val is3DMode: Boolean = false,
+    val showAttractions: Boolean = true,
+    val searchQuery: String = "",
+    val isSearching: Boolean = false,
+    val userLocation: Point? = null,
+    val error: String? = null
 )
 
-// wireframe ranger.tracking - "Your assigned cases": distinct from
-// ranger.index/DashboardScreen's live triage view (new incidents + unassigned
-// alerts). This is the ranger's own case log across every lifecycle status,
-// so it's scoped to Incident.assignedTo == currentUser.uid, same scoping
-// rule as ProfileViewModel uses for its "Assigned" stat.
 @HiltViewModel
 class RangerTrackingViewModel @Inject constructor(
-    incidentRepository: IncidentRepository,
-    observeUserUseCase: ObserveUserUseCase,
+    private val locationRepository: LocationRepository,
+    private val parkRepository: ParkRepository
 ) : ViewModel() {
 
-    private val selectedFilter = MutableStateFlow(TrackingFilter.ALL)
+    private val _uiState = MutableStateFlow(RangerTrackingUiState())
+    val uiState: StateFlow<RangerTrackingUiState> = _uiState.asStateFlow()
 
-    val uiState: StateFlow<RangerTrackingUiState> = combine(
-        incidentRepository.observeAll(),
-        observeUserUseCase(),
-        selectedFilter,
-    ) { incidents, user, filter ->
-        val myCases = incidents.filter { it.assignedTo == user?.uid }
-        val filtered = when (filter) {
-            TrackingFilter.ALL -> myCases
-            TrackingFilter.URGENT -> myCases.filter { it.severity == Severity.CRITICAL }
-            TrackingFilter.IN_PROGRESS -> myCases.filter { it.status == IncidentStatus.IN_PROGRESS }
-            TrackingFilter.RESOLVED -> myCases.filter { it.status == IncidentStatus.RESOLVED }
-            TrackingFilter.ESCALATED -> myCases.filter { it.isEscalated }
+    init {
+        detectActivePark()
+    }
+
+    private fun detectActivePark() {
+        viewModelScope.launch {
+            try {
+                locationRepository.getCurrentLocation().onSuccess { location ->
+                    val userPoint = Point.fromLngLat(location.longitude, location.latitude)
+                    _uiState.update { it.copy(userLocation = userPoint) }
+                    
+                    val park = parkRepository.findNearestPark(location.latitude, location.longitude)
+                    if (park != null) {
+                        setActivePark(park)
+                    }
+                }.onFailure { e ->
+                    Timber.e(e, "Failed to get current location")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Unexpected error in detectActivePark")
+                _uiState.update { it.copy(error = e.message) }
+            }
         }
-        RangerTrackingUiState(
-            resolvedCount = myCases.count { it.status == IncidentStatus.RESOLVED },
-            inProgressCount = myCases.count { it.status == IncidentStatus.IN_PROGRESS },
-            escalatedCount = myCases.count { it.isEscalated },
-            selectedFilter = filter,
-            cases = filtered.sortedByDescending { it.lastModified },
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), RangerTrackingUiState())
+    }
 
-    fun selectFilter(filter: TrackingFilter) {
-        selectedFilter.value = filter
+    fun setActivePark(park: NationalPark) {
+        _uiState.update { it.copy(activePark = park) }
+        loadAttractions(park.id)
+    }
+
+    private fun loadAttractions(parkId: String) {
+        parkRepository.getAttractions(parkId)
+            .catch { e ->
+                Timber.e(e, "Failed to load attractions for park: $parkId")
+                _uiState.update { it.copy(error = "Failed to load park features") }
+            }
+            .onEach { list ->
+                _uiState.update { it.copy(attractions = list) }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun toggleMapStyle() {
+        _uiState.update { it.copy(isSatelliteView = !it.isSatelliteView) }
+    }
+
+    fun toggle3DMode() {
+        _uiState.update { it.copy(is3DMode = !it.is3DMode) }
+    }
+
+    fun toggleAttractionsVisibility() {
+        _uiState.update { it.copy(showAttractions = !it.showAttractions) }
+    }
+
+    fun updateSearchQuery(query: String) {
+        _uiState.update { it.copy(searchQuery = query, isSearching = query.isNotBlank()) }
+    }
+
+    fun clearSearch() {
+        _uiState.update { it.copy(searchQuery = "", isSearching = false) }
     }
 }

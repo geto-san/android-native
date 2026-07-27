@@ -25,47 +25,37 @@ import com.wildwatch.app.feature.report.ConflictReportScreen
 import com.wildwatch.app.feature.report.ReportIncidentViewModel
 import com.wildwatch.app.feature.report.ReportSubmittedScreen
 import com.wildwatch.app.feature.report.WildlifeSightingReportScreen
-import com.wildwatch.app.feature.welcome.WelcomeScreen
+import com.wildwatch.app.ui.nav.MainTabShell
+import com.wildwatch.app.ui.nav.Route
 
 @Composable
 fun WildWatchNavHost(navController: NavHostController = rememberNavController()) {
     val authViewModel: AuthViewModel = hiltViewModel()
     val currentUser by authViewModel.currentUser.collectAsStateWithLifecycle()
-    val shouldShowWelcomeScreen by authViewModel.shouldShowWelcomeScreen.collectAsStateWithLifecycle()
 
-    LaunchedEffect(currentUser, shouldShowWelcomeScreen) {
+    // Use a stable start destination determined by the INITIAL value of currentUser
+    // to prevent the "login screen flash" when the app opens while logged in.
+    val startDestination = remember {
+        if (authViewModel.currentUser.value != null) Route.Main else Route.Auth(startOnSignIn = true)
+    }
+
+    LaunchedEffect(currentUser) {
         if (currentUser == null) {
-            if (shouldShowWelcomeScreen) {
-                navController.navigate(Route.Welcome) {
-                    popUpTo(0) { inclusive = true }
-                }
-            } else {
+            // Logout: Clear backstack and go to Auth, but only if not already there
+            if (navController.currentBackStackEntry?.destination?.route?.contains("Auth") != true) {
                 navController.navigate(Route.Auth(startOnSignIn = true)) {
                     popUpTo(0) { inclusive = true }
                 }
             }
-        } else if (navController.currentDestination?.route == Route.Welcome::class.qualifiedName ||
-                   navController.currentDestination?.route?.contains("Auth") == true) {
+        } else if (navController.currentBackStackEntry?.destination?.route?.contains("Auth") == true) {
+            // Login success: Go to Main
             navController.navigate(Route.Main) {
                 popUpTo(0) { inclusive = true }
             }
         }
     }
 
-    NavHost(navController = navController, startDestination = Route.Welcome) {
-        composable<Route.Welcome> {
-            WelcomeScreen(
-                onGetStarted = {
-                    authViewModel.dismissWelcomeScreen()
-                    navController.navigate(Route.Auth(startOnSignIn = false))
-                },
-                onAlreadyHaveAccount = {
-                    authViewModel.dismissWelcomeScreen()
-                    navController.navigate(Route.Auth(startOnSignIn = true))
-                },
-            )
-        }
-
+    NavHost(navController = navController, startDestination = startDestination) {
         composable<Route.Auth> { backStackEntry ->
             val args = backStackEntry.toRoute<Route.Auth>()
             AuthScreen(startOnSignIn = args.startOnSignIn)

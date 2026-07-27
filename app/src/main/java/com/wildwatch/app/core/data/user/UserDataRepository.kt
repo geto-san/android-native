@@ -15,8 +15,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 interface UserDataRepository {
-    val shouldShowWelcomeScreen: StateFlow<Boolean>
-    fun dismissWelcomeScreen()
+    // Placeholder for future user-specific preferences (e.g. biometric lock flag)
 }
 
 @Singleton
@@ -24,26 +23,5 @@ class UserDataRepositoryImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>,
     @ApplicationScope private val scope: CoroutineScope,
 ) : UserDataRepository {
-
-    private object PreferencesKeys {
-        val SHOULD_SHOW_WELCOME = booleanPreferencesKey("should_show_welcome")
-    }
-
-    override val shouldShowWelcomeScreen: StateFlow<Boolean> = dataStore.data
-        .map { preferences ->
-            preferences[PreferencesKeys.SHOULD_SHOW_WELCOME] ?: true
-        }
-        .stateIn(
-            scope = scope,
-            started = SharingStarted.Eagerly,
-            initialValue = true
-        )
-
-    override fun dismissWelcomeScreen() {
-        scope.launch {
-            dataStore.edit { preferences ->
-                preferences[PreferencesKeys.SHOULD_SHOW_WELCOME] = false
-            }
-        }
-    }
+    // Implementation placeholder
 }

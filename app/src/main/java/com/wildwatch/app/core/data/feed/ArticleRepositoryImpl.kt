@@ -38,12 +38,36 @@ class ArticleRepositoryImpl @Inject constructor(
                     category = "UWA News",
                     theme = ArticleTheme.FOREST,
                     title = "New Buffer Zone Rules",
-                    excerpt = "Updated grazing regulations for Bwindi buffer zones taking effect next Monday.",
+                    excerpt = "Updated grazing regulations for Bwindi buffer zones taking effect next Monday. Community members are advised to register their livestock at the nearest gate station.",
                     readTime = "4 min",
                     source = "Uganda Wildlife Authority",
                     likes = 24,
                     comments = 3,
                     publishedAt = now
+                ),
+                ArticleEntity(
+                    id = "seed-art-2",
+                    category = "Conservation",
+                    theme = ArticleTheme.WILDLIFE,
+                    title = "Gorilla Population Surge",
+                    excerpt = "Recent census shows a 15% increase in the mountain gorilla population within Bwindi Impenetrable Forest. This marks a major victory for community-led conservation efforts.",
+                    readTime = "6 min",
+                    source = "WildWatch Observer",
+                    likes = 152,
+                    comments = 18,
+                    publishedAt = now - 86400000 // Yesterday
+                ),
+                ArticleEntity(
+                    id = "seed-art-3",
+                    category = "Security",
+                    theme = ArticleTheme.SECURITY,
+                    title = "Ranger Patrol Upgrades",
+                    excerpt = "New digital tracking tools deployed to all sector rangers this week to improve response times to wildlife conflicts. The system integrates real-time GPS and satellite mapping.",
+                    readTime = "3 min",
+                    source = "Ministry of Tourism",
+                    likes = 89,
+                    comments = 7,
+                    publishedAt = now - 172800000 // 2 days ago
                 )
             )
         )

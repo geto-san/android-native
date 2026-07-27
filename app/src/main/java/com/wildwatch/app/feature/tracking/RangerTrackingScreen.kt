@@ -1,11 +1,8 @@
 package com.wildwatch.app.feature.tracking
 
-import androidx.compose.foundation.background
+import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -15,165 +12,131 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.wildwatch.app.core.database.IncidentStatus
-import com.wildwatch.app.core.database.Severity
-import com.wildwatch.app.core.model.Incident
-import com.wildwatch.app.core.ui.component.StatusPill
-import com.wildwatch.app.core.ui.theme.Destructive
-import com.wildwatch.app.core.ui.theme.Info
-import com.wildwatch.app.core.ui.theme.Success
-import com.wildwatch.app.core.ui.theme.Warning
-import java.util.concurrent.TimeUnit
+import com.mapbox.geojson.Point
+import com.mapbox.maps.CameraOptions
+import com.mapbox.maps.extension.compose.MapboxMap
+import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
+import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
+import com.wildwatch.app.core.ui.theme.White
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RangerTrackingScreen(
     onIncidentClick: (String) -> Unit,
-    viewModel: RangerTrackingViewModel = hiltViewModel(),
+    viewModel: RangerTrackingViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val viewportState = rememberMapViewportState {
+        setCameraOptions {
+            zoom(12.0)
+            center(Point.fromLngLat(29.66, -1.03))
+        }
+    }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text("Incident Tracking", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(
-                            "Your assigned cases",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                },
+    LaunchedEffect(uiState.activePark) {
+        uiState.activePark?.let { park ->
+            viewportState.flyTo(
+                CameraOptions.Builder()
+                    .center(park.center)
+                    .zoom(park.zoomLevel)
+                    .build()
             )
-        },
-    ) { paddingValues ->
-        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                KpiCard(Icons.Filled.CheckCircle, uiState.resolvedCount, "Resolved", Success, Modifier.weight(1f))
-                KpiCard(Icons.Filled.Schedule, uiState.inProgressCount, "In progress", Warning, Modifier.weight(1f))
-                KpiCard(Icons.Filled.WarningAmber, uiState.escalatedCount, "Escalated", Destructive, Modifier.weight(1f))
-            }
+        }
+    }
 
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(TrackingFilter.entries) { filter ->
-                    FilterChip(
-                        selected = uiState.selectedFilter == filter,
-                        onClick = { viewModel.selectFilter(filter) },
-                        label = { Text(filter.label) },
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (uiState.cases.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-                    Text(
-                        "No cases match this filter",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(uiState.cases, key = { it.id }) { incident ->
-                        CaseRow(incident = incident, onClick = { onIncidentClick(incident.id) })
+    Box(modifier = Modifier.fillMaxSize()) {
+        MapboxMap(
+            modifier = Modifier.fillMaxSize(),
+            mapViewportState = viewportState
+        ) {
+            if (uiState.showAttractions) {
+                uiState.attractions.forEach { attraction ->
+                    PointAnnotation(
+                        point = attraction.location
+                    ) {
+                        // Init block for annotation properties if needed
                     }
                 }
             }
         }
-    }
-}
 
-@Composable
-private fun KpiCard(icon: ImageVector, value: Int, label: String, tone: Color, modifier: Modifier = Modifier) {
-    Card(modifier = modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-        Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(icon, contentDescription = null, tint = tone, modifier = Modifier.size(18.dp))
-            Text(value.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        SearchBar(
+            query = uiState.searchQuery,
+            onQueryChange = viewModel::updateSearchQuery,
+            onSearch = { viewModel.updateSearchQuery(it) },
+            active = uiState.isSearching,
+            onActiveChange = { if (!it) viewModel.clearSearch() },
+            placeholder = { Text("Search park locations...") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            trailingIcon = { 
+                if (uiState.isSearching) {
+                    IconButton(onClick = viewModel::clearSearch) {
+                        Icon(Icons.Default.Close, contentDescription = null)
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .statusBarsPadding()
+        ) {
+            // Suggestion list
+        }
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            MapControlButton(
+                icon = if (uiState.isSatelliteView) Icons.Default.Terrain else Icons.Default.Layers,
+                onClick = viewModel::toggleMapStyle
+            )
+            MapControlButton(
+                icon = if (uiState.is3DMode) Icons.Default.ViewInAr else Icons.Default.ViewHeadline,
+                onClick = viewModel::toggle3DMode
+            )
+            MapControlButton(
+                icon = if (uiState.showAttractions) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                onClick = viewModel::toggleAttractionsVisibility
+            )
+            MapControlButton(
+                icon = Icons.Default.MyLocation,
+                onClick = {
+                    uiState.userLocation?.let { location ->
+                        viewportState.flyTo(CameraOptions.Builder().center(location).zoom(14.0).build())
+                    }
+                }
+            )
         }
     }
 }
 
 @Composable
-private fun CaseRow(incident: Incident, onClick: () -> Unit) {
-    val (statusText, statusTone) = incident.statusTextAndTone()
-
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+private fun MapControlButton(
+    icon: ImageVector,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .size(48.dp)
+            .clickable(onClick = onClick),
+        shape = CircleShape,
+        color = White.copy(alpha = 0.9f),
+        tonalElevation = 4.dp,
+        shadowElevation = 2.dp
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                StatusPill(text = incident.severity.label(), contentColor = incident.severity.tone())
-                if (incident.isEscalated) {
-                    StatusPill(text = "Escalated", contentColor = Destructive)
-                }
-            }
-            Text(
-                text = "${incident.species} · ${incident.locationName ?: incident.community}",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(top = 6.dp),
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = Color.Black
             )
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                StatusPill(text = statusText, contentColor = statusTone)
-                Text(
-                    relativeTime(incident.lastModified),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
         }
-    }
-}
-
-private fun Incident.statusTextAndTone(): Pair<String, Color> = when (status) {
-    IncidentStatus.OPEN -> "En route" to Info
-    IncidentStatus.IN_PROGRESS -> "On site" to Warning
-    IncidentStatus.RESOLVED -> "Resolved" to Success
-}
-
-private fun Severity.label(): String = when (this) {
-    Severity.CRITICAL -> "Urgent"
-    Severity.HIGH -> "High"
-    Severity.MEDIUM -> "Medium"
-    Severity.LOW -> "Low"
-}
-
-private fun Severity.tone(): Color = when (this) {
-    Severity.CRITICAL -> Destructive
-    Severity.HIGH -> Warning
-    Severity.MEDIUM -> Info
-    Severity.LOW -> Success
-}
-
-private fun relativeTime(epochMillis: Long): String {
-    val diffMs = System.currentTimeMillis() - epochMillis
-    return when {
-        diffMs < TimeUnit.MINUTES.toMillis(60) -> "${TimeUnit.MILLISECONDS.toMinutes(diffMs)}m"
-        diffMs < TimeUnit.HOURS.toMillis(24) -> "${TimeUnit.MILLISECONDS.toHours(diffMs)}h"
-        diffMs < TimeUnit.DAYS.toMillis(2) -> "Yesterday"
-        else -> "${TimeUnit.MILLISECONDS.toDays(diffMs)}d"
     }
 }

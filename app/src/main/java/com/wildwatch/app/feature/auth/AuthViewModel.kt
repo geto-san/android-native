@@ -30,13 +30,10 @@ data class AuthUiState(
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val userDataRepository: UserDataRepository,
     observeUserUseCase: ObserveUserUseCase,
 ) : ViewModel() {
 
     val currentUser: StateFlow<User?> = observeUserUseCase()
-
-    val shouldShowWelcomeScreen: StateFlow<Boolean> = userDataRepository.shouldShowWelcomeScreen
 
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
@@ -49,6 +46,16 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             val result = authRepository.signIn(email.trim(), password)
+            _uiState.update {
+                it.copy(isLoading = false, errorMessage = result.exceptionOrNull()?.friendlyMessage())
+            }
+        }
+    }
+
+    fun signInAnonymously() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            val result = authRepository.signInAnonymously()
             _uiState.update {
                 it.copy(isLoading = false, errorMessage = result.exceptionOrNull()?.friendlyMessage())
             }
@@ -103,10 +110,6 @@ class AuthViewModel @Inject constructor(
 
     fun signOut() {
         authRepository.signOut()
-    }
-
-    fun dismissWelcomeScreen() {
-        userDataRepository.dismissWelcomeScreen()
     }
 
     fun clearError() {
