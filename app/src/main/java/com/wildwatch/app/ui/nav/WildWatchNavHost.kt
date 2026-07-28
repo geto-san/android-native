@@ -1,5 +1,7 @@
 package com.wildwatch.app.ui.nav
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -15,9 +17,9 @@ import com.wildwatch.app.core.model.UserRole
 import com.wildwatch.app.feature.alerts.CommunityAlertsScreen
 import com.wildwatch.app.feature.auth.AuthScreen
 import com.wildwatch.app.feature.auth.AuthViewModel
+import com.wildwatch.app.feature.dashboard.HistoryPlaceholderScreen
 import com.wildwatch.app.feature.incidentdetail.IncidentDetailScreen
 import com.wildwatch.app.feature.feed.ArticleDetailScreen
-import com.wildwatch.app.feature.feed.FeedScreen
 import com.wildwatch.app.feature.notifications.NotificationsScreen
 import com.wildwatch.app.feature.profile.ProfileScreen
 import com.wildwatch.app.feature.report.CameraCaptureScreen
@@ -34,29 +36,32 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
     val authViewModel: AuthViewModel = hiltViewModel()
     val currentUser by authViewModel.currentUser.collectAsStateWithLifecycle()
 
-    // Use a stable start destination determined by the INITIAL value of currentUser
-    // to prevent the "login screen flash" when the app opens while logged in.
     val startDestination = remember {
         if (authViewModel.currentUser.value != null) Route.Main else Route.Auth(startOnSignIn = true)
     }
 
     LaunchedEffect(currentUser) {
         if (currentUser == null) {
-            // Logout: Clear backstack and go to Auth, but only if not already there
             if (navController.currentBackStackEntry?.destination?.route?.contains("Auth") != true) {
                 navController.navigate(Route.Auth(startOnSignIn = true)) {
                     popUpTo(0) { inclusive = true }
                 }
             }
         } else if (navController.currentBackStackEntry?.destination?.route?.contains("Auth") == true) {
-            // Login success: Go to Main
             navController.navigate(Route.Main) {
                 popUpTo(0) { inclusive = true }
             }
         }
     }
 
-    NavHost(navController = navController, startDestination = startDestination) {
+    NavHost(
+        navController = navController, 
+        startDestination = startDestination,
+        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400)) + fadeIn(tween(400)) },
+        exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400)) + fadeOut(tween(400)) },
+        popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400)) + fadeIn(tween(400)) },
+        popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400)) + fadeOut(tween(400)) }
+    ) {
         composable<Route.Auth> { backStackEntry ->
             val args = backStackEntry.toRoute<Route.Auth>()
             AuthScreen(startOnSignIn = args.startOnSignIn)
@@ -65,7 +70,6 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
         composable<Route.Main> {
             MainTabShell(
                 userRole = currentUser?.role ?: UserRole.PUBLIC,
-                isGuest = currentUser?.isGuest ?: true,
                 onIncidentClick = { id -> navController.navigate(Route.IncidentDetail(id)) },
                 onSignInClick = { navController.navigate(Route.Auth(startOnSignIn = true)) },
                 onReportSighting = { navController.navigate(Route.WildlifeSightingReport) },
@@ -73,7 +77,8 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
                 onCommunityAlertsClick = { navController.navigate(Route.CommunityAlerts) },
                 onNotificationsClick = { navController.navigate(Route.Notifications) },
                 onArticleClick = { id -> navController.navigate(Route.ArticleDetail(id)) },
-                onAccountManagementClick = { navController.navigate(Route.AccountManagement) }
+                onAccountManagementClick = { navController.navigate(Route.AccountManagement) },
+                onSeeAllReportsClick = { navController.navigate(Route.IncidentHistory) }
             )
         }
 
@@ -136,7 +141,7 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
             val reportViewModel: ReportIncidentViewModel = hiltViewModel(parentEntry)
             CameraCaptureScreen(
                 onPhotoCaptured = { uri ->
-                    reportViewModel.addPhoto(uri, args.photoCategory)
+                    reportViewModel.addPhoto(uri)
                     navController.popBackStack()
                 },
                 onCancel = { navController.popBackStack() },
@@ -148,11 +153,20 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
         }
 
         composable<Route.Notifications> {
-            NotificationsScreen(onBack = { navController.popBackStack() })
+            NotificationsScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToIncident = { id -> navController.navigate(Route.IncidentDetail(id)) },
+                onNavigateToArticle = { id -> navController.navigate(Route.ArticleDetail(id)) },
+                onNavigateToAlerts = { navController.navigate(Route.CommunityAlerts) }
+            )
         }
 
         composable<Route.AccountManagement> {
             AccountManagementScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable<Route.IncidentHistory> {
+            HistoryPlaceholderScreen(onBack = { navController.popBackStack() })
         }
 
         composable<Route.ArticleDetail> { backStackEntry ->

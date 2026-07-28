@@ -41,6 +41,14 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="YOUR_GOOGLE_MAPS_API_KEY_HERE" />
 
+        <service
+            android:name=".core.notifications.WildWatchMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
         <!-- WorkManager's default on-demand initializer would construct
              WorkManager before Hilt can inject the custom HiltWorkerFactory
              into WildWatchApplication (see Configuration.Provider there), causing

@@ -27,8 +27,7 @@ data class ReportUiState(
     val lat: Double = 0.0,
     val lng: Double = 0.0,
     val locationName: String? = null,
-    val localImageUris: List<String> = emptyList(),
-    val photoUris: List<String> = emptyList(),
+    val mediaUris: List<String> = emptyList(),
     val isSaving: Boolean = false,
     val saveError: String? = null,
     val savedIncidentId: String? = null,
@@ -67,17 +66,11 @@ class ReportIncidentViewModel @Inject constructor(
     }
 
     fun addPhoto(uri: String, category: String? = null) {
-        _uiState.update { 
-            val newUris = it.localImageUris + uri
-            it.copy(localImageUris = newUris, photoUris = newUris) 
-        }
+        _uiState.update { it.copy(mediaUris = it.mediaUris + uri) }
     }
 
     fun removePhoto(uri: String) {
-        _uiState.update { 
-            val newUris = it.localImageUris.filter { u -> u != uri }
-            it.copy(localImageUris = newUris, photoUris = newUris) 
-        }
+        _uiState.update { it.copy(mediaUris = it.mediaUris.filter { u -> u != uri }) }
     }
 
     fun save() {
@@ -97,7 +90,7 @@ class ReportIncidentViewModel @Inject constructor(
                         lat = state.lat,
                         lng = state.lng,
                         locationName = state.locationName,
-                        localImageUris = state.localImageUris,
+                        localImageUris = state.mediaUris,
                     )
                 )
                 _uiState.update { it.copy(isSaving = false, savedIncidentId = incident.id) }

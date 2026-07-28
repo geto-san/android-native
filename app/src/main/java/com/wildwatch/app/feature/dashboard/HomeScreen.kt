@@ -1,7 +1,6 @@
 package com.wildwatch.app.feature.dashboard
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,14 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.wildwatch.app.core.model.Incident
 import com.wildwatch.app.core.ui.component.IncidentListItem
 import com.wildwatch.app.core.ui.component.QuickReportCard
 import com.wildwatch.app.core.ui.theme.*
@@ -40,6 +37,7 @@ fun HomeScreen(
     onReportConflict: () -> Unit,
     onCommunityAlertsClick: () -> Unit,
     onNotificationsClick: () -> Unit,
+    onSeeAllClick: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -136,7 +134,7 @@ fun HomeScreen(
                         text = "See all",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable { /* Navigate to full list */ }
+                        modifier = Modifier.clickable { onSeeAllClick() }
                     )
                 }
             }

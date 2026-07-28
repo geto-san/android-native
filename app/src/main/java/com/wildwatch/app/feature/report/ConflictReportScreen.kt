@@ -1,53 +1,21 @@
 package com.wildwatch.app.feature.report
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wildwatch.app.core.database.IncidentType
 import com.wildwatch.app.core.database.Severity
-import com.wildwatch.app.core.ui.component.BackHeader
-import com.wildwatch.app.core.ui.component.WildWatchDropdownField
-import com.wildwatch.app.core.ui.component.WildWatchTextField
+import com.wildwatch.app.core.ui.component.*
 import com.wildwatch.app.core.ui.theme.Destructive
-import com.wildwatch.app.core.ui.theme.Grey200
-import com.wildwatch.app.core.ui.theme.Grey500
 import com.wildwatch.app.core.ui.theme.SunsetAmber
 
 private val CONFLICT_TYPES = listOf("Crop Damage", "Livestock Predation", "Property Damage", "Human Injury", "Other")
@@ -78,7 +46,12 @@ fun ConflictReportScreen(
         }
     }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    Surface(
+        modifier = Modifier
+            .fillMaxSize()
+            .safeDrawingPadding(), 
+        color = MaterialTheme.colorScheme.background
+    ) {
         Column(modifier = Modifier.fillMaxSize()) {
             BackHeader(title = "Conflict Report", subtitle = "Human-wildlife impact", onBack = onBack)
 
@@ -120,9 +93,27 @@ fun ConflictReportScreen(
                 item {
                     FieldLabel("Severity")
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                        SeverityChip("Low", Severity.LOW, severity == Severity.LOW, onClick = { severity = Severity.LOW }, modifier = Modifier.weight(1f))
-                        SeverityChip("Medium", Severity.MEDIUM, severity == Severity.MEDIUM, onClick = { severity = Severity.MEDIUM }, modifier = Modifier.weight(1f))
-                        SeverityChip("High", Severity.HIGH, severity == Severity.HIGH, onClick = { severity = Severity.HIGH }, modifier = Modifier.weight(1f))
+                        SeverityChip(
+                            label = "Low", 
+                            value = Severity.LOW, 
+                            selected = severity == Severity.LOW, 
+                            onClick = { severity = Severity.LOW }, 
+                            modifier = Modifier.weight(1f)
+                        )
+                        SeverityChip(
+                            label = "Medium", 
+                            value = Severity.MEDIUM, 
+                            selected = severity == Severity.MEDIUM, 
+                            onClick = { severity = Severity.MEDIUM }, 
+                            modifier = Modifier.weight(1f)
+                        )
+                        SeverityChip(
+                            label = "High", 
+                            value = Severity.HIGH, 
+                            selected = severity == Severity.HIGH, 
+                            onClick = { severity = Severity.HIGH }, 
+                            modifier = Modifier.weight(1f)
+                        )
                     }
                     Spacer(modifier = Modifier.height(24.dp))
                 }
@@ -142,7 +133,7 @@ fun ConflictReportScreen(
                 item {
                     FieldLabel("Evidence Photos")
                     PhotoGrid(
-                        photoUris = uiState.photoUris,
+                        photoUris = uiState.mediaUris,
                         onAddPhoto = { onNavigateToCamera(conflictType) },
                         onRemovePhoto = { viewModel.removePhoto(it) },
                         slots = 3,
@@ -181,36 +172,4 @@ fun ConflictReportScreen(
             }
         }
     }
-}
-
-@Composable
-private fun SeverityChip(label: String, value: Severity, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val color = when (value) {
-        Severity.LOW -> MaterialTheme.colorScheme.primary
-        Severity.MEDIUM -> SunsetAmber
-        Severity.HIGH -> Destructive
-        else -> MaterialTheme.colorScheme.primary
-    }
-    Surface(
-        onClick = onClick,
-        shape = MaterialTheme.shapes.extraSmall,
-        color = if (selected) color.copy(alpha = 0.1f) else Grey200,
-        border = if (selected) androidx.compose.foundation.BorderStroke(1.dp, color) else null,
-        modifier = modifier.height(36.dp),
-    ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-            Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = if (selected) color else Grey500)
-        }
-    }
-}
-
-@Composable
-private fun FieldLabel(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text,
-        style = MaterialTheme.typography.labelMedium,
-        color = Grey500,
-        fontWeight = FontWeight.Bold,
-        modifier = modifier.padding(bottom = 8.dp),
-    )
 }

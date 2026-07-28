@@ -45,4 +45,7 @@ sealed interface Route {
 
     @Serializable
     data object AccountManagement : Route
+
+    @Serializable
+    data object IncidentHistory : Route
 }

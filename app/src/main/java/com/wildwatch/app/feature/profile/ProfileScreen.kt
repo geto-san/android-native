@@ -106,7 +106,7 @@ private fun ProfileContent(
                             onSwitchChange = onThemeToggle
                         ),
                         SettingsItemData(
-                            title = "Language", 
+                            title = "App language", 
                             icon = Icons.Default.Language, 
                             trailingText = "English"
                         )
@@ -196,7 +196,7 @@ private fun ProfileHeader(uiState: ProfileUiState) {
     ) {
         Box(
             modifier = Modifier
-                .size(100.dp)
+                .size(80.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.tertiary),
             contentAlignment = Alignment.Center
@@ -232,21 +232,6 @@ private fun ProfileHeader(uiState: ProfileUiState) {
                 text = "Bwindi Impenetrable",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-        ) {
-            Text(
-                text = if (uiState.role == UserRole.RANGER) "Field Ranger" else "Community member",
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
             )
         }
     }

@@ -93,7 +93,7 @@ The app follows an **Offline-First Outbox Pattern**:
 | **B4** | **Incident Reporting**: Sighting/Conflict forms with Camera/GPS integration | [/] |
 | **B5** | **Ranger Tracking**: Background location breadcrumbs for patrols | [ ] |
 | **B6** | **Permissions**: Custom `PermissionDialog` (Instagram-style) integration | [x] |
-| **B7** | **Push Notifications**: Topic-based messaging for all user types | [ ] |
+| **B7** | **Push Notifications**: Topic-based messaging for all user types (e.g., `park_alerts_all` for Guests) | [ ] |
 
 ---
 
