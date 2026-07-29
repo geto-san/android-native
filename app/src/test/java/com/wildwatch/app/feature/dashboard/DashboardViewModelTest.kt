@@ -1,14 +1,16 @@
-package com.wildwatch.app.ui.dashboard
+package com.wildwatch.app.feature.dashboard
 
 import app.cash.turbine.test
-import com.wildwatch.app.data.connectivity.ConnectivityObserver
-import com.wildwatch.app.data.incident.IncidentRepository
-import com.wildwatch.app.data.local.db.IncidentStatus
-import com.wildwatch.app.data.local.db.IncidentType
-import com.wildwatch.app.data.local.db.Park
-import com.wildwatch.app.data.local.db.Severity
-import com.wildwatch.app.data.local.db.SyncStatus
-import com.wildwatch.app.domain.model.Incident
+import com.wildwatch.app.core.data.connectivity.ConnectivityObserver
+import com.wildwatch.app.core.data.incident.IncidentRepository
+import com.wildwatch.app.core.data.notification.NotificationRepository
+import com.wildwatch.app.core.database.IncidentSeverity
+import com.wildwatch.app.core.database.IncidentStatus
+import com.wildwatch.app.core.database.IncidentType
+import com.wildwatch.app.core.database.Park
+import com.wildwatch.app.core.database.SyncStatus
+import com.wildwatch.app.core.domain.usecase.GetIncidentsUseCase
+import com.wildwatch.app.core.model.Incident
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -16,6 +18,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -31,13 +34,18 @@ class DashboardViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var incidentRepository: IncidentRepository
     private lateinit var connectivityObserver: ConnectivityObserver
+    private lateinit var getIncidentsUseCase: GetIncidentsUseCase
+    private lateinit var notificationRepository: NotificationRepository
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         incidentRepository = mockk()
         connectivityObserver = mockk()
+        getIncidentsUseCase = mockk()
+        notificationRepository = mockk()
         every { connectivityObserver.isOnline } returns MutableStateFlow(true)
+        every { notificationRepository.observeUnreadCount() } returns flowOf(0)
     }
 
     @After
@@ -57,14 +65,9 @@ class DashboardViewModelTest {
         park = Park.BWINDI_IMPENETRABLE,
         community = community,
         species = "Elephant",
-        severity = Severity.MEDIUM,
-        summary = null,
+        severity = IncidentSeverity.MEDIUM,
         lat = -1.5,
         lng = 29.5,
-        locationName = "$community sector",
-        userName = "Jane Ranger",
-        userEmail = "jane@example.com",
-        userId = "uid-1",
         reportedAt = "2026-07-22T00:00:00Z",
         assignedTo = assignedTo,
         syncStatus = SyncStatus.SYNCED,
@@ -73,15 +76,14 @@ class DashboardViewModelTest {
 
     @Test
     fun `stats and lists are derived correctly from the incident list`() = runTest(testDispatcher) {
-        every { incidentRepository.observeAll() } returns MutableStateFlow(
-            listOf(
-                incident("a", status = IncidentStatus.OPEN, community = "Buhoma"),
-                incident("b", status = IncidentStatus.RESOLVED, community = "Buhoma"),
-                incident("c", status = IncidentStatus.IN_PROGRESS, community = "Nkuringo", assignedTo = "uid-2"),
-            ),
+        val incidents = listOf(
+            incident("a", status = IncidentStatus.OPEN, community = "Buhoma"),
+            incident("b", status = IncidentStatus.RESOLVED, community = "Buhoma"),
+            incident("c", status = IncidentStatus.IN_PROGRESS, community = "Nkuringo", assignedTo = "uid-2"),
         )
+        every { getIncidentsUseCase() } returns flowOf(incidents)
 
-        val viewModel = DashboardViewModel(incidentRepository, connectivityObserver)
+        val viewModel = DashboardViewModel(getIncidentsUseCase, incidentRepository, connectivityObserver, notificationRepository)
 
         viewModel.uiState.test {
             val state = awaitItem()
@@ -98,14 +100,13 @@ class DashboardViewModelTest {
 
     @Test
     fun `selecting a zone scopes the incident and alert lists but not the hero stats`() = runTest(testDispatcher) {
-        every { incidentRepository.observeAll() } returns MutableStateFlow(
-            listOf(
-                incident("a", status = IncidentStatus.OPEN, community = "Buhoma"),
-                incident("b", status = IncidentStatus.OPEN, community = "Nkuringo"),
-            ),
+        val incidents = listOf(
+            incident("a", status = IncidentStatus.OPEN, community = "Buhoma"),
+            incident("b", status = IncidentStatus.OPEN, community = "Nkuringo"),
         )
+        every { getIncidentsUseCase() } returns flowOf(incidents)
 
-        val viewModel = DashboardViewModel(incidentRepository, connectivityObserver)
+        val viewModel = DashboardViewModel(getIncidentsUseCase, incidentRepository, connectivityObserver, notificationRepository)
 
         viewModel.uiState.test {
             assertEquals(2, awaitItem().activeAlerts.size)
@@ -121,9 +122,9 @@ class DashboardViewModelTest {
 
     @Test
     fun `assignToSelf delegates to the repository`() = runTest(testDispatcher) {
-        every { incidentRepository.observeAll() } returns MutableStateFlow(emptyList())
+        every { getIncidentsUseCase() } returns flowOf(emptyList())
         coEvery { incidentRepository.assignToSelf("a") } returns Unit
-        val viewModel = DashboardViewModel(incidentRepository, connectivityObserver)
+        val viewModel = DashboardViewModel(getIncidentsUseCase, incidentRepository, connectivityObserver, notificationRepository)
 
         viewModel.assignToSelf("a")
 

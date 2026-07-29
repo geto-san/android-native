@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -17,8 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wildwatch.app.core.database.IncidentSeverity
 import com.wildwatch.app.core.database.IncidentType
-import com.wildwatch.app.core.database.Severity
 import com.wildwatch.app.core.ui.component.*
 import com.wildwatch.app.core.ui.theme.Grey500
 
@@ -38,10 +39,6 @@ fun WildlifeSightingReportScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    var species by remember { mutableStateOf(SPECIES_OPTIONS.first()) }
-    var numberObserved by remember { mutableStateOf("") }
-    var behavior by remember { mutableStateOf(BEHAVIOR_OPTIONS.first()) }
-    var description by remember { mutableStateOf("") }
     var hasLocationPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
@@ -54,14 +51,19 @@ fun WildlifeSightingReportScreen(
         hasLocationPermission = granted
         if (granted) viewModel.loadCurrentLocation()
     }
+    
     LaunchedEffect(Unit) {
         viewModel.updateType(IncidentType.SIGHTING)
-        viewModel.updateSeverity(Severity.LOW)
+        viewModel.updateSeverity(IncidentSeverity.LOW)
         if (hasLocationPermission) {
             viewModel.loadCurrentLocation()
         } else {
             showPermissionDialog = true
         }
+        
+        // Initialize dropdown defaults if empty
+        if (viewModel.species.isEmpty()) viewModel.species = SPECIES_OPTIONS.first()
+        if (viewModel.behavior.isEmpty()) viewModel.behavior = BEHAVIOR_OPTIONS.first()
     }
 
     if (showPermissionDialog) {
@@ -99,15 +101,20 @@ fun WildlifeSightingReportScreen(
             ) {
                 item {
                     FieldLabel("Species")
-                    WildWatchDropdownField(value = species, options = SPECIES_OPTIONS, onSelect = { species = it }, displayName = { it })
+                    WildWatchDropdownField(
+                        value = viewModel.species,
+                        options = SPECIES_OPTIONS,
+                        onSelect = { viewModel.species = it },
+                        displayName = { it }
+                    )
                     Spacer(modifier = Modifier.height(24.dp))
                 }
 
                 item {
                     FieldLabel("Number Observed")
                     WildWatchTextField(
-                        value = numberObserved,
-                        onValueChange = { numberObserved = it.filter(Char::isDigit) },
+                        value = viewModel.numberObserved,
+                        onValueChange = { viewModel.numberObserved = it.filter(Char::isDigit) },
                         placeholder = "e.g. 5",
                         keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
                     )
@@ -116,15 +123,20 @@ fun WildlifeSightingReportScreen(
 
                 item {
                     FieldLabel("Behavior")
-                    WildWatchDropdownField(value = behavior, options = BEHAVIOR_OPTIONS, onSelect = { behavior = it }, displayName = { it })
+                    WildWatchDropdownField(
+                        value = viewModel.behavior,
+                        options = BEHAVIOR_OPTIONS,
+                        onSelect = { viewModel.behavior = it },
+                        displayName = { it }
+                    )
                     Spacer(modifier = Modifier.height(24.dp))
                 }
 
                 item {
                     FieldLabel("Observation Notes")
                     WildWatchTextField(
-                        value = description,
-                        onValueChange = { description = it },
+                        value = viewModel.description,
+                        onValueChange = { viewModel.description = it },
                         placeholder = "Describe the situation…",
                         singleLine = false,
                         minLines = 4,
@@ -133,9 +145,23 @@ fun WildlifeSightingReportScreen(
                 }
 
                 item {
-                    FieldLabel("Photos")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        FieldLabel("Photos", modifier = Modifier.weight(1f))
+                        if (uiState.isLocationLoading) {
+                            Text(
+                                "Fetching location...",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            CircularProgressIndicator(
+                                modifier = Modifier.padding(start = 8.dp).size(12.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                     PhotoGrid(
-                        photoUris = uiState.mediaUris,
+                        photoUris = uiState.localImageUris,
                         onAddPhoto = onNavigateToCamera,
                         onRemovePhoto = { viewModel.removePhoto(it) },
                         slots = 3,
@@ -154,20 +180,14 @@ fun WildlifeSightingReportScreen(
                     }
 
                     Button(
-                        onClick = {
-                            viewModel.updateSpecies(species)
-                            viewModel.updateCategory(behavior)
-                            val countText = numberObserved.ifBlank { null }?.let { "Observed $it. " } ?: ""
-                            viewModel.updateSummary("$countText$description".trim())
-                            viewModel.save()
-                        },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = MaterialTheme.shapes.extraSmall,
+                        onClick = { viewModel.save() },
+                        modifier = Modifier.fillMaxWidth().height(56.dp), // Height increased for better touch target
+                        shape = MaterialTheme.shapes.medium,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.tertiary,
                             contentColor = MaterialTheme.colorScheme.onTertiary
                         ),
-                        enabled = species.isNotBlank() && !uiState.isSaving
+                        enabled = uiState.canSubmit && !uiState.isSaving
                     ) {
                         Text(if (uiState.isSaving) "Submitting..." else "Share Sighting", fontWeight = FontWeight.Bold)
                     }

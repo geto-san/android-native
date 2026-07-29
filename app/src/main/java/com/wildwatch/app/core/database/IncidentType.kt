@@ -5,4 +5,5 @@ enum class IncidentType {
     SIGHTING,
     EMERGENCY,
     POACHING,
+    SNARE,
 }

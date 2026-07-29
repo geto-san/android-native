@@ -1,25 +1,19 @@
 package com.wildwatch.app.core.data.incident
 
 import com.wildwatch.app.core.database.IncidentDao
-import com.wildwatch.app.core.database.IncidentEntity
 import com.wildwatch.app.core.database.IncidentStatus
-import com.wildwatch.app.core.database.Park
 import com.wildwatch.app.core.database.RangerProgress
 import com.wildwatch.app.core.database.SyncStatus
 import com.wildwatch.app.core.di.ApplicationScope
 import com.wildwatch.app.core.di.IoDispatcher
 import com.wildwatch.app.core.model.Incident
-import com.wildwatch.app.core.model.User
 import com.wildwatch.app.core.data.auth.AuthRepository
 import com.wildwatch.app.core.data.location.LocationRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock

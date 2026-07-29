@@ -12,26 +12,20 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private fun com.google.firebase.auth.FirebaseUser?.toDomain(): User? =
-    this?.let {
-        val email = it.email?.lowercase()
-        val role = if (email == "ranger@wildwatch.com" || email == "ranger@wildwatch.app") {
-            UserRole.RANGER
-        } else {
-            UserRole.PUBLIC
-        }
-        User(
-            uid = it.uid,
-            email = it.email,
-            displayName = it.displayName,
-            role = role,
-            isGuest = it.isAnonymous
-        )
-    }
+private fun com.google.firebase.auth.FirebaseUser.toDomain(role: UserRole): User =
+    User(
+        uid = uid,
+        email = email,
+        displayName = displayName,
+        role = role,
+        isGuest = isAnonymous
+    )
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
@@ -40,15 +34,36 @@ class AuthRepositoryImpl @Inject constructor(
 ) : AuthRepository {
 
     override val currentUser: StateFlow<User?> = callbackFlow {
-        val listener = FirebaseAuth.AuthStateListener { auth ->
-            trySend(auth.currentUser.toDomain())
+        val listener = FirebaseAuth.IdTokenListener { auth ->
+            launch {
+                val firebaseUser = auth.currentUser
+                if (firebaseUser == null) {
+                    trySend(null)
+                    return@launch
+                }
+
+                try {
+                    // Force refresh to get latest claims if needed
+                    val tokenResult = firebaseUser.getIdToken(false).await()
+                    val roleStr = tokenResult.claims["role"] as? String
+                    val role = when (roleStr) {
+                        "ranger" -> UserRole.RANGER
+                        else -> UserRole.PUBLIC
+                    }
+                    trySend(firebaseUser.toDomain(role))
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to get ID token for user role mapping")
+                    // Fallback to public if token fetch fails
+                    trySend(firebaseUser.toDomain(UserRole.PUBLIC))
+                }
+            }
         }
-        firebaseAuth.addAuthStateListener(listener)
-        awaitClose { firebaseAuth.removeAuthStateListener(listener) }
+        firebaseAuth.addIdTokenListener(listener)
+        awaitClose { firebaseAuth.removeIdTokenListener(listener) }
     }.stateIn(
         scope = applicationScope,
         started = SharingStarted.Eagerly,
-        initialValue = firebaseAuth.currentUser.toDomain(),
+        initialValue = null, // Initial value is unknown until listener fires
     )
 
     override suspend fun signIn(email: String, password: String): Result<Unit> = runCatching {

@@ -12,8 +12,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wildwatch.app.core.database.IncidentSeverity
 import com.wildwatch.app.core.database.IncidentType
-import com.wildwatch.app.core.database.Severity
 import com.wildwatch.app.core.ui.component.*
 import com.wildwatch.app.core.ui.theme.Destructive
 import com.wildwatch.app.core.ui.theme.SunsetAmber
@@ -30,14 +30,12 @@ fun ConflictReportScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    var conflictType by remember { mutableStateOf(CONFLICT_TYPES.first()) }
-    var species by remember { mutableStateOf(SPECIES_OPTIONS.first()) }
-    var severity by remember { mutableStateOf(Severity.MEDIUM) }
-    var description by remember { mutableStateOf("") }
-
     LaunchedEffect(Unit) {
         viewModel.updateType(IncidentType.CONFLICT)
         viewModel.loadCurrentLocation()
+        
+        if (viewModel.behavior.isEmpty()) viewModel.behavior = CONFLICT_TYPES.first()
+        if (viewModel.species.isEmpty()) viewModel.species = SPECIES_OPTIONS.first()
     }
     LaunchedEffect(uiState.savedIncidentId) {
         uiState.savedIncidentId?.let {
@@ -61,7 +59,7 @@ fun ConflictReportScreen(
             ) {
                 item {
                     Surface(
-                        color = SunsetAmber.copy(alpha = 0.05f),
+                        color = SunsetAmber.copy(alpha = 0.1f), // Increased alpha for visibility
                         shape = MaterialTheme.shapes.small,
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -80,13 +78,23 @@ fun ConflictReportScreen(
 
                 item {
                     FieldLabel("Impact Type")
-                    WildWatchDropdownField(value = conflictType, options = CONFLICT_TYPES, onSelect = { conflictType = it }, displayName = { it })
+                    WildWatchDropdownField(
+                        value = viewModel.behavior, 
+                        options = CONFLICT_TYPES, 
+                        onSelect = { viewModel.behavior = it }, 
+                        displayName = { it }
+                    )
                     Spacer(modifier = Modifier.height(24.dp))
                 }
 
                 item {
                     FieldLabel("Species Involved")
-                    WildWatchDropdownField(value = species, options = SPECIES_OPTIONS, onSelect = { species = it }, displayName = { it })
+                    WildWatchDropdownField(
+                        value = viewModel.species, 
+                        options = SPECIES_OPTIONS, 
+                        onSelect = { viewModel.species = it }, 
+                        displayName = { it }
+                    )
                     Spacer(modifier = Modifier.height(24.dp))
                 }
 
@@ -95,23 +103,23 @@ fun ConflictReportScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                         SeverityChip(
                             label = "Low", 
-                            value = Severity.LOW, 
-                            selected = severity == Severity.LOW, 
-                            onClick = { severity = Severity.LOW }, 
+                            value = IncidentSeverity.LOW, 
+                            selected = uiState.severity == IncidentSeverity.LOW, 
+                            onClick = { viewModel.updateSeverity(IncidentSeverity.LOW) }, 
                             modifier = Modifier.weight(1f)
                         )
                         SeverityChip(
                             label = "Medium", 
-                            value = Severity.MEDIUM, 
-                            selected = severity == Severity.MEDIUM, 
-                            onClick = { severity = Severity.MEDIUM }, 
+                            value = IncidentSeverity.MEDIUM, 
+                            selected = uiState.severity == IncidentSeverity.MEDIUM, 
+                            onClick = { viewModel.updateSeverity(IncidentSeverity.MEDIUM) }, 
                             modifier = Modifier.weight(1f)
                         )
                         SeverityChip(
                             label = "High", 
-                            value = Severity.HIGH, 
-                            selected = severity == Severity.HIGH, 
-                            onClick = { severity = Severity.HIGH }, 
+                            value = IncidentSeverity.HIGH, 
+                            selected = uiState.severity == IncidentSeverity.HIGH, 
+                            onClick = { viewModel.updateSeverity(IncidentSeverity.HIGH) }, 
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -121,8 +129,8 @@ fun ConflictReportScreen(
                 item {
                     FieldLabel("Description")
                     WildWatchTextField(
-                        value = description,
-                        onValueChange = { description = it },
+                        value = viewModel.description,
+                        onValueChange = { viewModel.description = it },
                         placeholder = "Describe the incident and damage…",
                         singleLine = false,
                         minLines = 4,
@@ -133,8 +141,8 @@ fun ConflictReportScreen(
                 item {
                     FieldLabel("Evidence Photos")
                     PhotoGrid(
-                        photoUris = uiState.mediaUris,
-                        onAddPhoto = { onNavigateToCamera(conflictType) },
+                        photoUris = uiState.localImageUris,
+                        onAddPhoto = { onNavigateToCamera(viewModel.behavior) },
                         onRemovePhoto = { viewModel.removePhoto(it) },
                         slots = 3,
                     )
@@ -152,17 +160,11 @@ fun ConflictReportScreen(
                     }
 
                     Button(
-                        onClick = {
-                            viewModel.updateCategory(conflictType)
-                            viewModel.updateSpecies(species)
-                            viewModel.updateSeverity(severity)
-                            viewModel.updateSummary(description)
-                            viewModel.save()
-                        },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = MaterialTheme.shapes.extraSmall,
+                        onClick = { viewModel.save() },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        shape = MaterialTheme.shapes.medium,
                         colors = ButtonDefaults.buttonColors(containerColor = Destructive),
-                        enabled = !uiState.isSaving
+                        enabled = uiState.canSubmit && !uiState.isSaving
                     ) {
                         Text(if (uiState.isSaving) "Submitting..." else "Submit Report", fontWeight = FontWeight.Bold)
                     }

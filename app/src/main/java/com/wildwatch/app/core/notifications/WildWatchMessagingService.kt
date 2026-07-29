@@ -71,6 +71,6 @@ class WildWatchMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Timber.d("Refreshed token: $token")
+        Timber.d("FCM token refreshed")
     }
 }

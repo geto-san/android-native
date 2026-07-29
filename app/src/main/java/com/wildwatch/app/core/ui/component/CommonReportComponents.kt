@@ -31,7 +31,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.rememberAsyncImagePainter
-import com.wildwatch.app.core.database.Severity
+import com.wildwatch.app.core.database.IncidentSeverity
 import com.wildwatch.app.core.ui.theme.Destructive
 import com.wildwatch.app.core.ui.theme.Grey200
 import com.wildwatch.app.core.ui.theme.Grey500
@@ -116,15 +116,15 @@ fun PhotoGrid(
 @Composable
 fun SeverityChip(
     label: String,
-    value: Severity,
+    value: IncidentSeverity,
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val color = when (value) {
-        Severity.LOW -> MaterialTheme.colorScheme.primary
-        Severity.MEDIUM -> SunsetAmber
-        Severity.HIGH -> Destructive
+        IncidentSeverity.LOW -> MaterialTheme.colorScheme.primary
+        IncidentSeverity.MEDIUM -> SunsetAmber
+        IncidentSeverity.HIGH -> Destructive
         else -> MaterialTheme.colorScheme.primary
     }
     Surface(

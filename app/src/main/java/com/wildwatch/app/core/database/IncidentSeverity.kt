@@ -1,8 +1,8 @@
 package com.wildwatch.app.core.database
 
-enum class Severity {
-    LOW,
-    MEDIUM,
+enum class IncidentSeverity {
     HIGH,
-    CRITICAL,
+    LOW,
+    LIGHT,
+    MEDIUM,
 }

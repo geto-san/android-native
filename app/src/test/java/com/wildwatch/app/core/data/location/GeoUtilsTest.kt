@@ -1,4 +1,4 @@
-package com.wildwatch.app.data.location
+package com.wildwatch.app.core.data.location
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

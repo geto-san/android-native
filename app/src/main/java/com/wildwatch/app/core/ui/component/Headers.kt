@@ -18,6 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wildwatch.app.core.ui.theme.Grey500
 
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+
 @Composable
 fun BackHeader(
     title: String,
@@ -26,22 +29,34 @@ fun BackHeader(
     subtitle: String? = null,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 8.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier.size(48.dp) // Ensure explicit 48dp touch target
+        ) {
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowBack, 
+                contentDescription = "Navigate back"
+            )
         }
-        Column(modifier = Modifier.padding(start = 8.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .semantics { heading() } // Identify as a heading for screen readers
+        ) {
             Text(
                 title, 
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge, // Increased for better hierarchy
                 fontWeight = FontWeight.Bold
             )
             subtitle?.let {
                 Text(
                     it, 
-                    style = MaterialTheme.typography.labelSmall, 
+                    style = MaterialTheme.typography.bodySmall, 
                     color = Grey500
                 )
             }

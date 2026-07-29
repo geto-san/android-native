@@ -22,7 +22,7 @@ data class IncidentEntity(
     val park: Park,
     val community: String,
     val species: String,
-    val severity: Severity,
+    val severity: IncidentSeverity,
     val category: String?,
     val summary: String?,
     val lat: Double,

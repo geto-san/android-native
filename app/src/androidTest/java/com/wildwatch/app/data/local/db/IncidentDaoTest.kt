@@ -6,6 +6,12 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
 import kotlinx.coroutines.test.runTest
+import com.wildwatch.app.core.database.*
+import com.wildwatch.app.core.database.IncidentSeverity
+import com.wildwatch.app.core.database.IncidentStatus
+import com.wildwatch.app.core.database.IncidentType
+import com.wildwatch.app.core.database.Park
+import com.wildwatch.app.core.database.SyncStatus
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -43,7 +49,7 @@ class IncidentDaoTest {
         park = Park.BWINDI_IMPENETRABLE,
         community = "Buhoma",
         species = "Elephant",
-        severity = Severity.MEDIUM,
+        severity = IncidentSeverity.MEDIUM,
         category = null,
         summary = "Calm herd",
         lat = -1.5,

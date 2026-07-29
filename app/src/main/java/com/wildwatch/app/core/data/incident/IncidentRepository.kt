@@ -1,8 +1,8 @@
 package com.wildwatch.app.core.data.incident
 
+import com.wildwatch.app.core.database.IncidentSeverity
 import com.wildwatch.app.core.database.IncidentType
 import com.wildwatch.app.core.database.Park
-import com.wildwatch.app.core.database.Severity
 import com.wildwatch.app.core.model.Incident
 import kotlinx.coroutines.flow.Flow
 
@@ -13,7 +13,7 @@ data class NewIncidentDetails(
     val park: Park,
     val community: String,
     val species: String,
-    val severity: Severity,
+    val severity: IncidentSeverity,
     val category: String?,
     val summary: String?,
     val lat: Double,

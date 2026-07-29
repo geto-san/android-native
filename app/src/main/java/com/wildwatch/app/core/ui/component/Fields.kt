@@ -6,10 +6,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -33,6 +33,7 @@ fun WildWatchTextField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     placeholder: String? = null,
+    label: String? = null,
     leadingIcon: ImageVector? = null,
     trailingIcon: ImageVector? = null,
     keyboardType: KeyboardType = KeyboardType.Text,
@@ -47,6 +48,7 @@ fun WildWatchTextField(
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth(),
         textStyle = TextStyle(fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface),
+        label = label?.let { labelText -> { Text(labelText) } },
         placeholder = placeholder?.let { { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp) } },
         leadingIcon = leadingIcon?.let {
             { Icon(it, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
@@ -60,7 +62,7 @@ fun WildWatchTextField(
         readOnly = readOnly,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         visualTransformation = visualTransformation,
-        shape = MaterialTheme.shapes.extraSmall,
+        shape = MaterialTheme.shapes.small,
         colors = TextFieldDefaults.colors(
             focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -85,14 +87,18 @@ fun <T> WildWatchDropdownField(
     leadingIcon: ImageVector? = null,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = modifier) {
+    ExposedDropdownMenuBox(
+        expanded = expanded, 
+        onExpandedChange = { expanded = it }, 
+        modifier = modifier
+    ) {
         WildWatchTextField(
             value = displayName(value),
             onValueChange = {},
             readOnly = true,
             leadingIcon = leadingIcon,
             trailingIcon = Icons.Filled.ArrowDropDown,
-            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, true).fillMaxWidth(),
+            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true).fillMaxWidth(),
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             options.forEach { option ->

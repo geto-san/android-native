@@ -1,11 +1,11 @@
 package com.wildwatch.app.core.model
 
 import com.wildwatch.app.core.database.IncidentEntity
+import com.wildwatch.app.core.database.IncidentSeverity
 import com.wildwatch.app.core.database.IncidentStatus
 import com.wildwatch.app.core.database.IncidentType
 import com.wildwatch.app.core.database.Park
 import com.wildwatch.app.core.database.RangerProgress
-import com.wildwatch.app.core.database.Severity
 import com.wildwatch.app.core.database.SyncStatus
 
 // The one canonical mapping between Room's IncidentEntity, this domain model,
@@ -23,7 +23,7 @@ data class Incident(
     val park: Park,
     val community: String,
     val species: String,
-    val severity: Severity,
+    val severity: IncidentSeverity,
     val category: String? = null,
     val summary: String? = null,
     val lat: Double,
@@ -168,12 +168,12 @@ data class Incident(
                 else -> null
             }
 
-        private fun parseSeverity(data: Map<String, Any?>): Severity =
+        private fun parseSeverity(data: Map<String, Any?>): IncidentSeverity =
             when ((data["severity"] as? String)?.lowercase()) {
-                "low" -> Severity.LOW
-                "high" -> Severity.HIGH
-                "critical" -> Severity.CRITICAL
-                else -> Severity.MEDIUM
+                "low" -> IncidentSeverity.LOW
+                "high" -> IncidentSeverity.HIGH
+                "light" -> IncidentSeverity.LIGHT
+                else -> IncidentSeverity.MEDIUM
             }
 
         @Suppress("UNCHECKED_CAST")
