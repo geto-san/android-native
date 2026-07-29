@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 108 108" role="img" aria-labelledby="title desc">
+  <title id="title">WildWatch W App Icon</title>
+  <desc id="desc">A refined wildlife monitoring app icon based on the supplied geometric W vector mark.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#123C32"/>
+      <stop offset="100%" stop-color="#0A2923"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFB43B"/>
+      <stop offset="100%" stop-color="#EE921A"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="2.2" stdDeviation="2.2" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <!-- App icon background -->
+  <rect x="4" y="4" width="100" height="100" rx="24" fill="url(#bg)"/>
+
+  <!-- Subtle watch/lens ring -->
+  <circle cx="54" cy="54" r="39" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="2"/>
+  <circle cx="54" cy="54" r="34" fill="none" stroke="#FFFFFF" stroke-opacity="0.035" stroke-width="1"/>
+
+  <!-- Original geometric W, refined from supplied XML -->
+  <g fill="none" stroke="url(#gold)" stroke-width="12.0" stroke-linecap="round" stroke-linejoin="round" filter="url(#shadow)">
+    <path d="M22,76 L48,32 L74,76"/>
+    <path d="M58,76 L80,48 L102,76"/>
+  </g>
+
+  <!-- Small conservation leaf accent -->
+  <path d="M84 22 C90 20, 94 22, 95 28 C89 29, 85 27, 84 22 Z"
+        fill="#78B84A" opacity="0.95"/>
+  <path d="M85 23 C88 24, 91 25, 94 27"
+        fill="none" stroke="#D6F0B6" stroke-width="1.2" stroke-linecap="round" opacity="0.8"/>
+</svg>

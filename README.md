@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://via.placeholder.com/150" width="120" height="120" alt="WildWatch Logo" />
+  <img src="./art/icons/ic_launcher_foreground_exact.png" width="120" height="120" alt="WildWatch Logo" />
   <h1>WildWatch</h1>
   <p><b>Beautiful and Professional Wildlife Conservation Platform for Uganda</b></p>
 
@@ -60,9 +60,10 @@ WildWatch is built using the latest industry-standard technologies for a robust,
 
 ## 📸 Previews
 
-| Home Dashboard | Professional Tools | Profile & Settings |
+| Home Dashboard | Community News | Profile & Settings |
 |:---:|:---:|:---:|
-| <img src="https://via.placeholder.com/300x600" width="200" /> | <img src="https://via.placeholder.com/300x600" width="200" /> | <img src="https://via.placeholder.com/300x600" width="200" /> |
+| <img src="./art/screenshots/home_light.png" width="200" /> | <img src="./art/screenshots/feed_light.png" width="200" /> | <img src="./art/screenshots/profile_light.png" width="200" /> |
+| <img src="./art/screenshots/home_dark.png" width="200" /> | <img src="./art/screenshots/feed_dark.png" width="200" /> | <img src="./art/screenshots/profile_dark.png" width="200" /> |
 
 ---
 
