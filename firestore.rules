@@ -1,0 +1,102 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getRole() {
+      return request.auth.token.role;
+    }
+
+    function getParkId() {
+      return request.auth.token.park_id;
+    }
+
+    function isUwaOfficial() {
+      return isSignedIn() && getRole() == 'uwa_official';
+    }
+
+    function isWarden() {
+      return isSignedIn() && getRole() == 'warden';
+    }
+
+    function isRanger() {
+      return isSignedIn() && getRole() == 'ranger';
+    }
+
+    function isPublic() {
+      return isSignedIn() && getRole() == 'public';
+    }
+
+    function belongsToPark(parkId) {
+      return getParkId() == parkId;
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isWarden() || isUwaOfficial());
+      allow write: if isUwaOfficial() || (request.auth.uid == userId);
+    }
+
+    // Parks
+    match /parks/{parkId} {
+      allow read: if true;
+      allow write: if isUwaOfficial();
+    }
+
+    // Zones
+    match /zones/{zoneId} {
+      allow read: if isSignedIn() && (isRanger() || isWarden() || isUwaOfficial());
+      allow write: if isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id));
+    }
+
+    // Incidents
+    match /incidents/{incidentId} {
+      allow read: if isSignedIn() && (
+        isUwaOfficial() ||
+        (isWarden() && belongsToPark(resource.data.park_id)) ||
+        request.auth.uid == resource.data.reporter_uid
+      );
+      allow create: if isRanger() || isPublic();
+      allow update: if isSignedIn() && (isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id)));
+    }
+
+    // Patrol Logs
+    match /patrol_logs/{logId} {
+      allow read: if isSignedIn() && (isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id)));
+      allow create: if isRanger();
+    }
+
+    // Sightings
+    match /sightings/{sightingId} {
+      allow read: if isSignedIn() && (isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id)));
+      allow create: if isPublic();
+    }
+
+    // POIs
+    match /pois/{poiId} {
+      allow read: if true;
+      allow write: if isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id));
+    }
+
+    // Tasks
+    match /tasks/{taskId} {
+      allow read: if isSignedIn() && (
+        isUwaOfficial() ||
+        (isWarden() && belongsToPark(resource.data.park_id)) ||
+        request.auth.uid == resource.data.assigned_ranger_uid
+      );
+      allow write: if isUwaOfficial() || (isWarden() && belongsToPark(request.resource.data.park_id));
+    }
+
+    // Notifications
+    match /notifications/{notifId} {
+      allow read: if isSignedIn() && request.auth.uid == resource.data.target_uid;
+      allow write: if false; // Only Cloud Functions (Admin SDK) should write
+    }
+  }
+}
