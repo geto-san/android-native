@@ -49,7 +49,7 @@ fun AuthScreen(
     val context = LocalContext.current
     var signInSelected by remember { mutableStateOf(startOnSignIn) }
     var fullName by remember { mutableStateOf("") }
-    var emailOrPhone by remember { mutableStateOf("ranger@wildwatch.com") }
+    var emailOrPhone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -172,7 +172,7 @@ fun AuthScreen(
                 enabled = !uiState.isLoading
             ) {
                 Text(
-                    "Continue as guest",
+                    "Continue without account",
                     color = MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodyMedium

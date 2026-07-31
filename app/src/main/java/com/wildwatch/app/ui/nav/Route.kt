@@ -23,10 +23,10 @@ sealed interface Route {
     data object Profile : Route
 
     @Serializable
-    data object WildlifeSightingReport : Route
+    data class WildlifeSightingReport(val draftId: String? = null) : Route
 
     @Serializable
-    data object ConflictReport : Route
+    data class ConflictReport(val draftId: String? = null) : Route
 
     @Serializable
     data class ReportSubmitted(val incidentId: String) : Route

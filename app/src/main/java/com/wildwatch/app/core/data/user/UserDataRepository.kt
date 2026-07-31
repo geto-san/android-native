@@ -15,6 +15,8 @@ import javax.inject.Singleton
 interface UserDataRepository {
     val darkThemeConfig: Flow<Boolean?>
     suspend fun setDarkThemeConfig(dark: Boolean?)
+    val formViewMode: Flow<String?>
+    suspend fun setFormViewMode(mode: String?)
 }
 
 @Singleton
@@ -24,6 +26,7 @@ class UserDataRepositoryImpl @Inject constructor(
 ) : UserDataRepository {
 
     private val darkThemeKey = booleanPreferencesKey("dark_theme")
+    private val formViewModeKey = androidx.datastore.preferences.core.stringPreferencesKey("form_view_mode")
 
     override val darkThemeConfig: Flow<Boolean?> = dataStore.data.map { preferences ->
         preferences[darkThemeKey]
@@ -35,6 +38,20 @@ class UserDataRepositoryImpl @Inject constructor(
                 preferences.remove(darkThemeKey)
             } else {
                 preferences[darkThemeKey] = dark
+            }
+        }
+    }
+
+    override val formViewMode: Flow<String?> = dataStore.data.map { preferences ->
+        preferences[formViewModeKey]
+    }
+
+    override suspend fun setFormViewMode(mode: String?) {
+        dataStore.edit { preferences ->
+            if (mode == null) {
+                preferences.remove(formViewModeKey)
+            } else {
+                preferences[formViewModeKey] = mode
             }
         }
     }

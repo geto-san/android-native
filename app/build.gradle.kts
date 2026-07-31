@@ -39,6 +39,12 @@ android {
         }
         val mapboxToken = localProperties.getProperty("PUBLIC_MAPBOX_ACCESS_TOKEN") ?: ""
         buildConfigField("String", "MAPBOX_ACCESS_TOKEN", "\"$mapboxToken\"")
+
+        val useLocalBackend = localProperties.getProperty("USE_LOCAL_BACKEND")?.toBoolean() ?: false
+        buildConfigField("Boolean", "USE_LOCAL_BACKEND", "$useLocalBackend")
+
+        val localBackendHost = localProperties.getProperty("LOCAL_BACKEND_HOST") ?: "10.0.2.2"
+        buildConfigField("String", "LOCAL_BACKEND_HOST", "\"$localBackendHost\"")
     }
 
     buildTypes {
@@ -136,6 +142,8 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
     implementation(libs.firebase.messaging)
+    implementation(libs.firebase.appcheck.playintegrity)
+    debugImplementation(libs.firebase.appcheck.debug)
     implementation(libs.firebase.ai)
 
     implementation(libs.play.services.location)
@@ -152,6 +160,9 @@ dependencies {
     implementation(libs.googleid)
 
     implementation(libs.biometric)
+
+    implementation(libs.sqlcipher)
+    implementation(libs.sqlite.ktx)
 
     implementation(libs.kotlinx.coroutines.android)
 

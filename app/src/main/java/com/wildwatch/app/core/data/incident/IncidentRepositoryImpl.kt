@@ -37,7 +37,11 @@ class IncidentRepositoryImpl @Inject constructor(
         incidentDao.observeAll()
             .map { entities -> entities.map(Incident::fromEntity) }
 
-    override suspend fun create(details: NewIncidentDetails): Incident = withContext(ioDispatcher) {
+    override suspend fun getById(id: String): Incident? = withContext(ioDispatcher) {
+        incidentDao.getById(id)?.let(Incident::fromEntity)
+    }
+
+    override suspend fun create(details: NewIncidentDetails, asDraft: Boolean): Incident = withContext(ioDispatcher) {
         val user = authRepository.currentUser.first()
         val incident = Incident(
             id = java.util.UUID.randomUUID().toString(),
@@ -57,11 +61,35 @@ class IncidentRepositoryImpl @Inject constructor(
             userId = user?.uid,
             reportedAt = java.time.Instant.now().toString(),
             localImageUris = details.localImageUris,
-            syncStatus = SyncStatus.PENDING,
+            syncStatus = if (asDraft) SyncStatus.DRAFT else SyncStatus.PENDING,
             lastModified = System.currentTimeMillis()
         )
         incidentDao.insert(incident.toEntity())
         incident
+    }
+
+    override suspend fun update(id: String, details: NewIncidentDetails, asDraft: Boolean) = withContext(ioDispatcher) {
+        val existing = incidentDao.getById(id) ?: return@withContext
+        val updated = existing.copy(
+            type = details.type,
+            park = details.park,
+            community = details.community,
+            species = details.species,
+            severity = details.severity,
+            category = details.category,
+            summary = details.summary,
+            lat = details.lat,
+            lng = details.lng,
+            locationName = details.locationName,
+            localImageUris = details.localImageUris,
+            syncStatus = if (asDraft) SyncStatus.DRAFT else SyncStatus.PENDING,
+            lastModified = System.currentTimeMillis()
+        )
+        incidentDao.update(updated)
+    }
+
+    override suspend fun finalizeDraft(id: String) = withContext(ioDispatcher) {
+        incidentDao.updateSyncStatus(id, SyncStatus.PENDING)
     }
 
     override suspend fun assignToSelf(id: String) = withContext(ioDispatcher) {

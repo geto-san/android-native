@@ -24,7 +24,10 @@ data class NewIncidentDetails(
 
 interface IncidentRepository {
     fun observeAll(): Flow<List<Incident>>
-    suspend fun create(details: NewIncidentDetails): Incident
+    suspend fun getById(id: String): Incident?
+    suspend fun create(details: NewIncidentDetails, asDraft: Boolean = false): Incident
+    suspend fun update(id: String, details: NewIncidentDetails, asDraft: Boolean = false)
+    suspend fun finalizeDraft(id: String)
     suspend fun assignToSelf(id: String)
     suspend fun syncPending(): SyncResult
     fun startObservingRemoteChanges()

@@ -106,7 +106,7 @@ private fun ProfileContent(
                             onSwitchChange = onThemeToggle
                         ),
                         SettingsItemData(
-                            title = "App language", 
+                            title = "App language",
                             icon = Icons.Default.Language, 
                             trailingText = "English"
                         )

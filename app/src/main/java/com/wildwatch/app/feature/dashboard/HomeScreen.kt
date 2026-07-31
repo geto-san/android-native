@@ -2,9 +2,11 @@ package com.wildwatch.app.feature.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -35,6 +37,7 @@ fun HomeScreen(
     onIncidentClick: (String) -> Unit,
     onReportSighting: () -> Unit,
     onReportConflict: () -> Unit,
+    onEditDraft: (String, com.wildwatch.app.core.database.IncidentType) -> Unit,
     onCommunityAlertsClick: () -> Unit,
     onNotificationsClick: () -> Unit,
     onSeeAllClick: () -> Unit,
@@ -44,27 +47,49 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "WildWatch",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontFamily = MagilioFontFamily
-                        ),
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                },
-                actions = {
-                    IconButton(onClick = onNotificationsClick) {
-                        Icon(Icons.Outlined.Notifications, contentDescription = "Notifications")
+            Column {
+                TopAppBar(
+                    title = {
+                        Text(
+                            "WildWatch",
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontFamily = MagilioFontFamily
+                            ),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    },
+                    actions = {
+                        IconButton(onClick = onNotificationsClick) {
+                            Icon(Icons.Outlined.Notifications, contentDescription = "Notifications")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    ),
+                    windowInsets = WindowInsets.statusBars
+                )
+                
+                if (uiState.pendingUploadsCount > 0) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().clickable { viewModel.triggerSync() },
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 20.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Text(
+                                "${uiState.pendingUploadsCount} reports pending upload. Tap to sync.",
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(start = 8.dp).weight(1f)
+                            )
+                            Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(14.dp))
+                        }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                ),
-                windowInsets = WindowInsets.statusBars
-            )
+                }
+            }
         },
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
@@ -79,10 +104,39 @@ fun HomeScreen(
             // Community Alerts Card
             item {
                 CommunityAlertsCard(
-                    alertCount = 3, // Mock count
-                    parkName = "Bwindi Impenetrable",
+                    alertCount = uiState.unreadAlertCount,
+                    parkName = uiState.park,
                     onClick = onCommunityAlertsClick
                 )
+            }
+
+            // Drafts Section
+            if (uiState.drafts.isNotEmpty()) {
+                item {
+                    Column {
+                        Text(
+                            text = "Unfinished Drafts",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            uiState.drafts.forEach { draft ->
+                                QuickReportCard(
+                                    title = draft.species.ifBlank { "New Draft" },
+                                    icon = if (draft.type == com.wildwatch.app.core.database.IncidentType.SIGHTING) Icons.Filled.AddAPhoto else Icons.Filled.Warning,
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    onClick = { onEditDraft(draft.id, draft.type) },
+                                    modifier = Modifier.width(140.dp)
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             // Quick Report Section

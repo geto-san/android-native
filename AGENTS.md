@@ -97,9 +97,10 @@ The app follows an **Offline-First Outbox Pattern**:
 
 ---
 
-## 8. Track C — Web App (Future)
+## 8. Track C — Web App (Laravel & TanStack)
 
-*Note: The web app is currently deprioritized until mobile/backend foundations are solid.*
+- **Warden Dashboard**: Located at `/home/geto/Projects/Github/android-native-webaportal`. Built with Laravel (backend) and TanStack Start (frontend).
+- **Current Status**: UI foundation established. Needs Firestore integration based on `docs/schema-v1.md`.
 - **Warden Dashboard**: Roster management, incident triage, and task assignment.
 - **UWA Official**: Cross-park analytics, map data management, and Warden account oversight.
 
@@ -118,3 +119,11 @@ The app follows an **Offline-First Outbox Pattern**:
 - **Guest Notifications**: Topic-based messaging (e.g., `park_alerts_all`) will allow Guests to receive info without being logged in.
 - **Media Optimization**: Cloudinary or R2 will be used for large media files to stay within Firebase Storage free-tier limits.
 - **Ranger Login**: Use `ranger@wildwatch.com` (pw: `password123`) in development to access professional features.
+
+## 11. Local-first Docker development (see ../wildwatch-local/WildWatch-Platform-Plan.md §10-11)
+- This app has a `USE_LOCAL_BACKEND` build flag (local.properties-driven, same
+  pattern as PUBLIC_MAPBOX_ACCESS_TOKEN) that points Firebase SDKs at the
+  local emulator suite instead of production.
+- Never hardcode emulator hosts/ports outside that one gated path.
+- Match the existing repository-interface + Hilt-binding pattern; don't call
+  Firebase SDKs directly from ViewModels or Composables.

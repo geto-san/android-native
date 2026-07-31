@@ -22,11 +22,11 @@ import com.wildwatch.app.feature.incidentdetail.IncidentDetailScreen
 import com.wildwatch.app.feature.feed.ArticleDetailScreen
 import com.wildwatch.app.feature.notifications.NotificationsScreen
 import com.wildwatch.app.feature.profile.ProfileScreen
+import com.wildwatch.app.core.database.IncidentType
+import com.wildwatch.app.feature.report.dynamic.ui.DynamicReportScreen
+import com.wildwatch.app.feature.report.dynamic.DynamicReportViewModel
 import com.wildwatch.app.feature.report.CameraCaptureScreen
-import com.wildwatch.app.feature.report.ConflictReportScreen
-import com.wildwatch.app.feature.report.ReportIncidentViewModel
 import com.wildwatch.app.feature.report.ReportSubmittedScreen
-import com.wildwatch.app.feature.report.WildlifeSightingReportScreen
 import com.wildwatch.app.feature.settings.AccountManagementScreen
 import com.wildwatch.app.ui.nav.MainTabShell
 import com.wildwatch.app.ui.nav.Route
@@ -72,8 +72,12 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
                 userRole = currentUser?.role ?: UserRole.PUBLIC,
                 onIncidentClick = { id -> navController.navigate(Route.IncidentDetail(id)) },
                 onSignInClick = { navController.navigate(Route.Auth(startOnSignIn = true)) },
-                onReportSighting = { navController.navigate(Route.WildlifeSightingReport) },
-                onReportConflict = { navController.navigate(Route.ConflictReport) },
+                onReportSighting = { navController.navigate(Route.WildlifeSightingReport()) },
+                onReportConflict = { navController.navigate(Route.ConflictReport()) },
+                onEditDraft = { id, type ->
+                    val route = if (type == IncidentType.SIGHTING) Route.WildlifeSightingReport(id) else Route.ConflictReport(id)
+                    navController.navigate(route)
+                },
                 onCommunityAlertsClick = { navController.navigate(Route.CommunityAlerts) },
                 onNotificationsClick = { navController.navigate(Route.Notifications) },
                 onArticleClick = { id -> navController.navigate(Route.ArticleDetail(id)) },
@@ -94,8 +98,10 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
         }
 
         composable<Route.WildlifeSightingReport> { backStackEntry ->
-            val viewModel: ReportIncidentViewModel = hiltViewModel(backStackEntry)
-            WildlifeSightingReportScreen(
+            val args = backStackEntry.toRoute<Route.WildlifeSightingReport>()
+            DynamicReportScreen(
+                type = IncidentType.SIGHTING,
+                draftId = args.draftId,
                 onBack = { navController.popBackStack() },
                 onSubmitted = { incidentId ->
                     navController.navigate(Route.ReportSubmitted(incidentId)) {
@@ -103,13 +109,14 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
                     }
                 },
                 onNavigateToCamera = { navController.navigate(Route.CameraCapture()) },
-                viewModel = viewModel,
             )
         }
 
         composable<Route.ConflictReport> { backStackEntry ->
-            val viewModel: ReportIncidentViewModel = hiltViewModel(backStackEntry)
-            ConflictReportScreen(
+            val args = backStackEntry.toRoute<Route.ConflictReport>()
+            DynamicReportScreen(
+                type = IncidentType.CONFLICT,
+                draftId = args.draftId,
                 onBack = { navController.popBackStack() },
                 onSubmitted = { incidentId ->
                     navController.navigate(Route.ReportSubmitted(incidentId)) {
@@ -117,7 +124,6 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
                     }
                 },
                 onNavigateToCamera = { category -> navController.navigate(Route.CameraCapture(category, source = "conflict")) },
-                viewModel = viewModel,
             )
         }
 
@@ -138,10 +144,11 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
                     navController.getBackStackEntry(Route.WildlifeSightingReport)
                 }
             }
-            val reportViewModel: ReportIncidentViewModel = hiltViewModel(parentEntry)
+            val reportViewModel: DynamicReportViewModel = hiltViewModel(parentEntry)
             CameraCaptureScreen(
                 onPhotoCaptured = { uri ->
-                    reportViewModel.addPhoto(uri)
+                    val currentPhotos = (reportViewModel.uiState.value.answers["photos"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+                    reportViewModel.updateAnswer("photos", currentPhotos + uri)
                     navController.popBackStack()
                 },
                 onCancel = { navController.popBackStack() },

@@ -2,6 +2,7 @@ package com.wildwatch.app.core.ui.component
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -27,6 +28,7 @@ fun BackHeader(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    actions: @Composable RowScope.() -> Unit = {}
 ) {
     Row(
         modifier = modifier
@@ -46,6 +48,7 @@ fun BackHeader(
         Column(
             modifier = Modifier
                 .padding(start = 8.dp)
+                .weight(1f) // Added weight to allow actions to be pushed to the end
                 .semantics { heading() } // Identify as a heading for screen readers
         ) {
             Text(
@@ -61,5 +64,9 @@ fun BackHeader(
                 )
             }
         }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            content = actions
+        )
     }
 }

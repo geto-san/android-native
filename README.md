@@ -83,7 +83,7 @@ WildWatch is built using the latest industry-standard technologies for a robust,
 ### Local Backend (Emulators)
 To test professional features and role-based access locally:
 ```bash
-cd park-backend
+git clone https://github/geto-san/android-native && git checkout backend
 npx firebase-tools emulators:start
 ```
 Use the provided `seed.ts` script to populate test data.
@@ -92,12 +92,12 @@ Use the provided `seed.ts` script to populate test data.
 
 ## 🗺️ Roadmap
 
-Check out our detailed [AGENTS.md](AGENTS.md) for the full development lifecycle and upcoming phases.
+Check out [AGENTS.md](AGENTS.md) for the full development lifecycle and upcoming phases.
 
 ---
 
-## 🤝 Support & Community
+## 🤝 Support
 
-WildWatch is a community-driven effort. If you find a bug or have a feature request, please open an issue or reach out to the conservation team.
+If you find a bug or have a feature request, please open an issue or reach out to the conservation team.
 
-**Uganda Wildlife Authority (UWA)** | *Protecting the Pearl*
+*Protecting the Pearl*
