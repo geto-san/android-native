@@ -1,5 +1,6 @@
 package com.wildwatch.app.feature.dashboard
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wildwatch.app.core.model.Incident
 import com.wildwatch.app.core.ui.component.IncidentListItem
 import com.wildwatch.app.core.ui.component.QuickReportCard
 import com.wildwatch.app.core.ui.theme.*
@@ -38,7 +40,6 @@ fun HomeScreen(
     onReportSighting: () -> Unit,
     onReportConflict: () -> Unit,
     onEditDraft: (String, com.wildwatch.app.core.database.IncidentType) -> Unit,
-    onCommunityAlertsClick: () -> Unit,
     onNotificationsClick: () -> Unit,
     onSeeAllClick: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
@@ -102,12 +103,13 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             // Community Alerts Card
-            item {
-                CommunityAlertsCard(
-                    alertCount = uiState.unreadAlertCount,
-                    parkName = uiState.park,
-                    onClick = onCommunityAlertsClick
-                )
+            if (uiState.communityAlerts.isNotEmpty()) {
+                item {
+                    CommunityAlertsCard(
+                        alerts = uiState.communityAlerts,
+                        parkName = uiState.park
+                    )
+                }
             }
 
             // Drafts Section
@@ -216,69 +218,191 @@ fun HomeScreen(
 
 @Composable
 private fun CommunityAlertsCard(
-    alertCount: Int,
-    parkName: String,
-    onClick: () -> Unit
+    alerts: List<Incident>,
+    parkName: String
 ) {
+    var isExpanded by remember { mutableStateOf(false) }
+    var selectedAlertId by remember { mutableStateOf<String?>(null) }
+
+    // Reset selected alert when collapsing
+    LaunchedEffect(isExpanded) {
+        if (!isExpanded) selectedAlertId = null
+    }
+
+    val selectedAlert = remember(selectedAlertId, alerts) {
+        alerts.find { it.id == selectedAlertId }
+    }
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .clickable(onClick = onClick),
+            .animateContentSize()
+            .clickable { isExpanded = !isExpanded },
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(if (isExpanded) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        if (isExpanded) Icons.Filled.NotificationsOff else Icons.Filled.NotificationsActive,
+                        contentDescription = null,
+                        tint = if (isExpanded) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = if (isExpanded) "Active Alerts Details" else "Community Alerts",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = if (isExpanded) "Tap to collapse" else "${alerts.size} active alerts in $parkName",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (!isExpanded) {
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.error),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = alerts.size.toString(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
                 Icon(
-                    Icons.Filled.NotificationsActive,
+                    if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.ChevronRight,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(24.dp)
+                    tint = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.padding(start = 8.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Community Alerts",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "$alertCount new alerts in $parkName",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+
+            if (isExpanded) {
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                when {
+                    alerts.size == 1 -> {
+                        AlertDetailContent(alerts.first())
+                    }
+                    selectedAlert != null -> {
+                        Column {
+                            TextButton(
+                                onClick = { selectedAlertId = null },
+                                contentPadding = PaddingValues(0.dp),
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Icon(Icons.Filled.ArrowBack, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Back to list", style = MaterialTheme.typography.labelLarge)
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            AlertDetailContent(selectedAlert)
+                        }
+                    }
+                    else -> {
+                        AlertListContent(alerts) { selectedAlertId = it }
+                    }
+                }
             }
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.error),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = alertCount.toString(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Icon(
-                Icons.Filled.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.padding(start = 8.dp)
+        }
+    }
+}
+
+@Composable
+private fun AlertDetailContent(incident: Incident) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        DetailRow("Species", incident.species, Icons.Filled.Pets)
+        DetailRow("Location", incident.locationName ?: incident.community, Icons.Filled.LocationOn)
+        incident.summary?.let {
+            DetailRow("Summary", it, Icons.Filled.Notes)
+        }
+        if (incident.evidencePhotoUrls.isNotEmpty()) {
+            Text(
+                text = "Photos (${incident.evidencePhotoUrls.size})",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary
             )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                repeat(incident.evidencePhotoUrls.size.coerceAtMost(3)) {
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Filled.Image, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AlertListContent(alerts: List<Incident>, onSelect: (String) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        alerts.forEach { alert ->
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onSelect(alert.id) },
+                color = Color.Transparent,
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.05f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = if (alert.type == com.wildwatch.app.core.database.IncidentType.SIGHTING) Icons.Filled.AddAPhoto else Icons.Filled.Warning,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(alert.species, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                        Text(alert.community, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Icon(Icons.Filled.ChevronRight, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.outline)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DetailRow(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    Row(verticalAlignment = Alignment.Top) {
+        Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp).padding(top = 2.dp), tint = MaterialTheme.colorScheme.primary)
+        Spacer(modifier = Modifier.width(12.dp))
+        Column {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(value, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }

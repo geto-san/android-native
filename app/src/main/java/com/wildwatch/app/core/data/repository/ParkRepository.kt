@@ -46,7 +46,7 @@ class ParkRepositoryImpl @Inject constructor(
             .get(Source.DEFAULT)
             .await()
             .toObjects(NationalPark::class.java)
-        
+
         return parks.minByOrNull { park ->
             val distLat = park.center.latitude() - latitude
             val distLng = park.center.longitude() - longitude

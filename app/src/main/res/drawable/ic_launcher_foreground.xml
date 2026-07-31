@@ -1,12 +1,12 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
+    android:viewportWidth="128"
     android:viewportHeight="108">
     <!-- Geometric "W" Logo (Nature/Watch) -->
     <path
         android:strokeColor="#EE921A"
-        android:strokeWidth="12"
+        android:strokeWidth="16"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:pathData="M22,76 L48,32 L74,76" />

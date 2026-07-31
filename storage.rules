@@ -1,0 +1,51 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getRole() {
+      return request.auth.token.role;
+    }
+
+    function isUwaOfficial() {
+      return isSignedIn() && getRole() == 'uwa_official';
+    }
+
+    function isWarden() {
+      return isSignedIn() && getRole() == 'warden';
+    }
+
+    function isRanger() {
+      return isSignedIn() && getRole() == 'ranger';
+    }
+
+    function isPublic() {
+      return isSignedIn() && getRole() == 'public';
+    }
+
+    // Storage rules for incident photos
+    match /incidents/{incidentId}/{fileName} {
+      // Anyone signed in can view incident evidence photos (public transparency)
+      allow read: if isSignedIn();
+
+      // Only Rangers or Public users can upload photos when creating an incident.
+      // Restrict by size and type to prevent abuse.
+      allow write: if (isRanger() || isPublic())
+                      && request.resource.size < 10 * 1024 * 1024 // 10MB limit
+                      && request.resource.contentType.matches('image/.*')
+                      || isUwaOfficial() || isWarden();
+    }
+
+    // User profile photos
+    match /users/{userId}/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if request.auth.uid == userId
+                      && request.resource.size < 5 * 1024 * 1024
+                      && request.resource.contentType.matches('image/.*');
+    }
+  }
+}

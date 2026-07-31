@@ -78,7 +78,6 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
                     val route = if (type == IncidentType.SIGHTING) Route.WildlifeSightingReport(id) else Route.ConflictReport(id)
                     navController.navigate(route)
                 },
-                onCommunityAlertsClick = { navController.navigate(Route.CommunityAlerts) },
                 onNotificationsClick = { navController.navigate(Route.Notifications) },
                 onArticleClick = { id -> navController.navigate(Route.ArticleDetail(id)) },
                 onAccountManagementClick = { navController.navigate(Route.AccountManagement) },

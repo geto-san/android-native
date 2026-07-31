@@ -46,7 +46,6 @@ fun MainTabShell(
     onReportSighting: () -> Unit,
     onReportConflict: () -> Unit,
     onEditDraft: (String, com.wildwatch.app.core.database.IncidentType) -> Unit,
-    onCommunityAlertsClick: () -> Unit,
     onNotificationsClick: () -> Unit,
     onArticleClick: (String) -> Unit,
     onAccountManagementClick: () -> Unit,
@@ -150,7 +149,6 @@ fun MainTabShell(
                         onReportSighting = onReportSighting,
                         onReportConflict = onReportConflict,
                         onEditDraft = onEditDraft,
-                        onCommunityAlertsClick = onCommunityAlertsClick,
                         onNotificationsClick = onNotificationsClick,
                         onSeeAllClick = onSeeAllReportsClick,
                     )
