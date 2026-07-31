@@ -1,2 +1,2 @@
-functions/node_modules
-scripts/node_modules
+node_modules
+firestore-debug.logfirebase-debug.log

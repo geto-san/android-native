@@ -16,19 +16,27 @@
       ]
     }
   ],
-  "emulators": {
-    "auth": {
-      "port": 9099
-    },
-    "functions": {
-      "port": 5001
-    },
-    "firestore": {
-      "port": 8080
-    },
-    "ui": {
-      "enabled": true
-    },
-    "singleProjectMode": true
-  }
+    "emulators": {
+      "auth": {
+        "port": 9099,
+        "host": "0.0.0.0"
+      },
+      "functions": {
+        "port": 5001,
+        "host": "0.0.0.0"
+      },
+      "firestore": {
+        "port": 8080,
+        "host": "0.0.0.0"
+      },
+      "storage": {
+        "port": 9199,
+        "host": "0.0.0.0"
+      },
+      "ui": {
+        "enabled": true,
+        "host": "0.0.0.0"
+      },
+      "singleProjectMode": true
+    }
 }
