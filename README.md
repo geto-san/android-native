@@ -80,13 +80,16 @@ WildWatch is built using the latest industry-standard technologies for a robust,
 3.  Add your `google-services.json` to the `app/` directory.
 4.  Sync Gradle and run on a physical device or emulator.
 
-### Local Backend (Emulators)
-To test professional features and role-based access locally:
-```bash
-git clone https://github/geto-san/android-native && git checkout backend
-npx firebase-tools emulators:start
-```
-Use the provided `seed.ts` script to populate test data.
+### Local Backend (Docker)
+For a full-fidelity development experience with Auth, Firestore, and the Warden Portal, use the [WildWatch Local Stack](https://github.com/geto-san/wildwatch-local):
+
+1.  Clone and start the local stack repo (see its README for `make up` instructions).
+2.  Configure your `local.properties`:
+    ```properties
+    USE_LOCAL_BACKEND=true
+    LOCAL_BACKEND_HOST=10.0.2.2  # 127.0.0.1 for physical devices + adb reverse
+    ```
+3.  Seed test data using `make seed` in the local stack directory.
 
 ---
 
