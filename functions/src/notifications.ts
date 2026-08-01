@@ -147,7 +147,12 @@ export async function handleIncidentCreateNotifications(
     return;
   }
 
-  const topic = `warden_${parkTopicSuffix}`;
+  if (data.animalSeen === false) {
+    return;
+  }
+
+  const wardenTopic = `warden_${parkTopicSuffix}`;
+  const publicTopic = `park_alerts_${parkTopicSuffix}`;
   const title = "New incident report";
   const message =
     typeof data.summary === "string" && data.summary.length > 0
@@ -156,9 +161,10 @@ export async function handleIncidentCreateNotifications(
 
   await writeNotificationDoc(null, "SECURITY_ALERT", title, message, {
     incidentId,
-    topic,
+    topic: publicTopic,
   });
-  await sendTopicNotification(topic, title, message, "SECURITY_ALERT", { incidentId });
+  await sendTopicNotification(wardenTopic, title, message, "SECURITY_ALERT", { incidentId });
+  await sendTopicNotification(publicTopic, title, message, "SECURITY_ALERT", { incidentId });
 }
 
 export async function handleSosAlertCreateNotifications(

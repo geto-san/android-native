@@ -33,30 +33,35 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onFeedArticleCreated = exports.onSosAlertWritten = exports.onSightingWritten = exports.onIncidentWritten = exports.setUserRole = exports.onUserCreated = void 0;
+exports.onFeedArticleCreated = exports.onSosAlertWritten = exports.onSightingWritten = exports.onIncidentWritten = exports.setUserRole = exports.onUserCreated = exports.syncActiveDevice = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const firestore_1 = require("firebase-admin/firestore");
 const bridge_1 = require("./bridge");
 const notifications_1 = require("./notifications");
+const deviceSessions_1 = require("./deviceSessions");
+Object.defineProperty(exports, "syncActiveDevice", { enumerable: true, get: function () { return deviceSessions_1.syncActiveDevice; } });
 admin.initializeApp();
 exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
-    if (!user.providerData || user.providerData.length === 0) {
-        console.log(`Skipping Firestore profile for guest user: ${user.uid}`);
-        return;
-    }
     const role = "public";
+    const isAnonymous = !user.providerData || user.providerData.length === 0;
     try {
-        await admin.auth().setCustomUserClaims(user.uid, { role });
+        await admin.auth().setCustomUserClaims(user.uid, {
+            role,
+            session_version: 1,
+        });
         await admin.firestore().collection("users").doc(user.uid).set({
             uid: user.uid,
-            email: user.email,
-            displayName: user.displayName,
+            email: user.email ?? null,
+            displayName: user.displayName ?? (isAnonymous ? "Guest" : null),
             role: role,
             park_id: null,
+            is_anonymous: isAnonymous,
+            session_version: 1,
+            active_devices: [],
             created_at: firestore_1.FieldValue.serverTimestamp(),
         });
-        console.log(`User ${user.uid} initialized with role: ${role}`);
+        console.log(`User ${user.uid} initialized with role: ${role}${isAnonymous ? " (anonymous)" : ""}`);
     }
     catch (error) {
         console.error("Error in onUserCreated trigger:", error);
@@ -82,7 +87,7 @@ exports.setUserRole = functions.https.onCall(async (data, context) => {
         }
     }
     try {
-        await admin.auth().setCustomUserClaims(targetUid, { role, park_id: parkId });
+        await (0, deviceSessions_1.mergeCustomClaims)(targetUid, { role, park_id: parkId ?? null });
         await admin.firestore().collection("users").doc(targetUid).update({
             role: role,
             park_id: parkId || null,

@@ -54,15 +54,26 @@ service cloud.firestore {
       allow write: if isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id));
     }
 
+    function incidentParkId(data) {
+      return data.park_id != null ? data.park_id : data.park;
+    }
+
+    function incidentReporterUid(data) {
+      return data.reporter_uid != null ? data.reporter_uid : data.userId;
+    }
+
+    function canReadIncident(data) {
+      return isUwaOfficial() ||
+        (isWarden() && belongsToPark(incidentParkId(data))) ||
+        (isRanger() && belongsToPark(incidentParkId(data))) ||
+        request.auth.uid == incidentReporterUid(data);
+    }
+
     // Incidents
     match /incidents/{incidentId} {
-      allow read: if isSignedIn() && (
-        isUwaOfficial() ||
-        (isWarden() && belongsToPark(resource.data.park_id)) ||
-        request.auth.uid == resource.data.reporter_uid
-      );
+      allow read: if isSignedIn() && canReadIncident(resource.data);
       allow create: if isRanger() || isPublic();
-      allow update: if isSignedIn() && (isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id)));
+      allow update: if isSignedIn() && (isUwaOfficial() || (isWarden() && belongsToPark(incidentParkId(resource.data))));
     }
 
     // Patrol Logs

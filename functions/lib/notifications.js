@@ -139,16 +139,21 @@ async function handleIncidentCreateNotifications(change, context) {
         await sendTopicNotification(topic, title, message, "SECURITY_ALERT", { incidentId });
         return;
     }
-    const topic = `warden_${parkTopicSuffix}`;
+    if (data.animalSeen === false) {
+        return;
+    }
+    const wardenTopic = `warden_${parkTopicSuffix}`;
+    const publicTopic = `park_alerts_${parkTopicSuffix}`;
     const title = "New incident report";
     const message = typeof data.summary === "string" && data.summary.length > 0
         ? data.summary
         : "A new incident has been reported in your park.";
     await writeNotificationDoc(null, "SECURITY_ALERT", title, message, {
         incidentId,
-        topic,
+        topic: publicTopic,
     });
-    await sendTopicNotification(topic, title, message, "SECURITY_ALERT", { incidentId });
+    await sendTopicNotification(wardenTopic, title, message, "SECURITY_ALERT", { incidentId });
+    await sendTopicNotification(publicTopic, title, message, "SECURITY_ALERT", { incidentId });
 }
 async function handleSosAlertCreateNotifications(change, context) {
     if (!change.after.exists) {

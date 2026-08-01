@@ -68,12 +68,13 @@ describe("Cloud Functions", () => {
 
       expect(mockSetCustomUserClaims).toHaveBeenCalledWith("user-1", {
         role: "public",
+        session_version: 1,
       });
       expect(mockFirestoreCollection).toHaveBeenCalledWith("users");
       expect(mockFirestoreDoc).toHaveBeenCalledWith("user-1");
     });
 
-    it("should skip for guest users (no provider data)", async () => {
+    it("should set custom claims and create firestore document for anonymous users", async () => {
       const user = test.auth.makeUserRecord({
         uid: "guest-1",
         providerData: [] as any,
@@ -82,7 +83,18 @@ describe("Cloud Functions", () => {
       const wrapped = test.wrap(myFunctions.onUserCreated);
       await wrapped(user);
 
-      expect(mockSetCustomUserClaims).not.toHaveBeenCalled();
+      expect(mockSetCustomUserClaims).toHaveBeenCalledWith("guest-1", {
+        role: "public",
+        session_version: 1,
+      });
+      expect(mockFirestoreCollection).toHaveBeenCalledWith("users");
+      expect(mockFirestoreDoc).toHaveBeenCalledWith("guest-1");
+      expect(mockFirestoreSet).toHaveBeenCalledWith(
+        expect.objectContaining({
+          role: "public",
+          is_anonymous: true,
+        })
+      );
     });
   });
 
