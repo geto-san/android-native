@@ -3,6 +3,8 @@ package com.wildwatch.app.core.model
 enum class UserRole {
     PUBLIC,
     RANGER,
+    WARDEN,
+    UWA_OFFICIAL,
 }
 
 // Pure domain model - no FirebaseUser leaks past the data layer (guardrail G7:
@@ -12,6 +14,7 @@ data class User(
     val email: String?,
     val displayName: String?,
     val role: UserRole = UserRole.PUBLIC,
+    val parkId: String? = null,
     val isGuest: Boolean = false,
 ) {
     // Mirrors the RN app's fallback chain (ObservationContext.jsx's

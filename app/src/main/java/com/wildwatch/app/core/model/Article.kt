@@ -41,5 +41,33 @@ data class Article(
             comments = entity.comments,
             publishedAt = entity.publishedAt,
         )
+
+        fun fromFirestoreDocument(documentId: String, data: Map<String, Any?>): Article = Article(
+            id = documentId,
+            category = data["category"] as? String ?: "News",
+            theme = parseTheme(data["theme"]),
+            title = data["title"] as? String ?: "",
+            excerpt = data["excerpt"] as? String ?: "",
+            readTime = data["readTime"] as? String ?: "3 min",
+            source = data["source"] as? String ?: "Uganda Wildlife Authority",
+            likes = (data["likes"] as? Number)?.toInt() ?: 0,
+            comments = (data["comments"] as? Number)?.toInt() ?: 0,
+            publishedAt = parsePublishedAt(data["publishedAt"]),
+        )
+
+        private fun parseTheme(raw: Any?): ArticleTheme =
+            when ((raw as? String)?.lowercase()) {
+                "wildlife" -> ArticleTheme.WILDLIFE
+                "security" -> ArticleTheme.SECURITY
+                "sunset" -> ArticleTheme.SUNSET
+                "sky" -> ArticleTheme.SKY
+                else -> ArticleTheme.FOREST
+            }
+
+        private fun parsePublishedAt(raw: Any?): Long {
+            val iso = raw as? String ?: return System.currentTimeMillis()
+            return runCatching { java.time.Instant.parse(iso).toEpochMilli() }
+                .getOrDefault(System.currentTimeMillis())
+        }
     }
 }

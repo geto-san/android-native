@@ -9,8 +9,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ArticleDao {
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertAll(articles: List<ArticleEntity>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(article: ArticleEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertAll(articles: List<ArticleEntity>)
+
+    @Query("DELETE FROM articles WHERE id = :id")
+    suspend fun deleteById(id: String)
 
     @Query("SELECT * FROM articles ORDER BY publishedAt DESC")
     fun observeAll(): Flow<List<ArticleEntity>>

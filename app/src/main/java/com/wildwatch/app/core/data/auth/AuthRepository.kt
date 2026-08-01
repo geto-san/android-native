@@ -24,4 +24,7 @@ interface AuthRepository {
     suspend fun signUp(email: String, password: String, displayName: String): Result<Unit>
 
     fun signOut()
+
+    /** Force-refresh Firebase custom claims and re-sync FCM topic subscriptions. */
+    suspend fun refreshRoleClaims(): Result<Unit>
 }

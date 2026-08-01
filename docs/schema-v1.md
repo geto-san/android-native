@@ -66,10 +66,37 @@ GPS traces from ranger patrols.
 Targeted alerts for specific users.
 - **Path**: `/notifications/{id}`
 - **Fields**:
-    - `target_uid`: string
+    - `target_uid`: string | null
+    - `type`: string — mobile enum: `SYSTEM`, `SIGHTING_APPROVED`, `SECURITY_ALERT`, `LIKE`, `COMMENT`, `NEW_FEED_ARTICLE` (see `NotificationType.kt`)
+    - `title`: string
     - `message`: string
-    - `time`: string
-    - `type`: string (`alert`, `task`, `update`)
+    - `time`: string (ISO 8601)
+    - `isRead`: boolean
+    - `data`: map (optional metadata, e.g. `articleId`, `incidentId`)
+
+### `feed`
+Community news articles authored by the warden portal (Laravel → Firestore via Admin SDK).
+- **Path**: `/feed/{id}` — `{id}` matches Laravel `news_articles.firestore_doc_id` (defaults to MySQL `article_id`)
+- **Fields**:
+    - `title`: string
+    - `excerpt`: string
+    - `body`: string | null
+    - `category`: string
+    - `source`: string
+    - `readTime`: string (e.g. `"3 min"`)
+    - `theme`: string (`forest`, `wildlife`, `security`) — maps to mobile `ArticleTheme`
+    - `likes`: number
+    - `comments`: number
+    - `publishedAt`: string (ISO 8601)
+    - `authorId`: string (Laravel user id as string)
+    - `source_system`: string (`laravel` on portal-originated writes)
+- **Mobile consumer:** `FeedScreen` / `ArticleRepositoryImpl` (Room cache + Firestore listener)
+- **Not the same as:** `CommunityAlertsScreen` / `AlertEntity` (operational alerts, separate schema)
+
+## Bridge metadata (cross-system)
+
+Documents written by Laravel observers or Functions webhooks may include:
+- `source_system`: `"laravel"` | `"firestore"` — used to prevent write-loop echoes
 
 ## Enums (Case-insensitive)
 

@@ -109,6 +109,8 @@ class OfflineAuthRepositoryImpl @Inject constructor(
         applicationScope.launch { dataStore.edit { it[KEY_SESSION_ACTIVE] = false } }
     }
 
+    override suspend fun refreshRoleClaims(): Result<Unit> = Result.success(Unit)
+
     private fun Preferences.toUserIfSessionActive(): User? {
         if (this[KEY_SESSION_ACTIVE] != true) return null
         val uid = this[KEY_UID] ?: return null
