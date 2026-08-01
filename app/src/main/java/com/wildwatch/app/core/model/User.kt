@@ -13,6 +13,7 @@ data class User(
     val displayName: String?,
     val role: UserRole = UserRole.PUBLIC,
     val isGuest: Boolean = false,
+    val parkId: String? = null,
 ) {
     // Mirrors the RN app's fallback chain (ObservationContext.jsx's
     // `user?.displayName || user?.email?.split('@')[0] || 'Anonymous'`) so

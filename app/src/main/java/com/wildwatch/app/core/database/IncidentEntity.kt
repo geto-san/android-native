@@ -46,4 +46,5 @@ data class IncidentEntity(
     val syncStatus: SyncStatus,
     val syncedAt: String?,
     val lastModified: Long,
+    val sourceSystem: String = "firestore",
 )

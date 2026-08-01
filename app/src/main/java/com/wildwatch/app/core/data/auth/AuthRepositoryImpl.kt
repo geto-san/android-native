@@ -3,6 +3,9 @@ package com.wildwatch.app.core.data.auth
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.userProfileChangeRequest
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import com.wildwatch.app.core.di.ApplicationScope
 import com.wildwatch.app.core.model.User
 import com.wildwatch.app.core.model.UserRole
@@ -20,19 +23,22 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private fun com.google.firebase.auth.FirebaseUser.toDomain(role: UserRole): User =
+private fun com.google.firebase.auth.FirebaseUser.toDomain(role: UserRole, parkId: String?): User =
     User(
         uid = uid,
         email = email,
         displayName = displayName,
         role = role,
-        isGuest = isAnonymous
+        isGuest = isAnonymous,
+        parkId = parkId
     )
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
-    @ApplicationScope applicationScope: CoroutineScope,
+    private val firestore: FirebaseFirestore,
+    private val firebaseMessaging: FirebaseMessaging,
+    @ApplicationScope private val applicationScope: CoroutineScope,
 ) : AuthRepository {
 
     private val localGuestUser = MutableStateFlow<User?>(null)
@@ -50,15 +56,20 @@ class AuthRepositoryImpl @Inject constructor(
                     // Force refresh to get latest claims if needed
                     val tokenResult = firebaseUser.getIdToken(false).await()
                     val roleStr = tokenResult.claims["role"] as? String
+                    val parkId = tokenResult.claims["park_id"] as? String
                     val role = when (roleStr) {
                         "ranger" -> UserRole.RANGER
                         else -> UserRole.PUBLIC
                     }
-                    trySend(firebaseUser.toDomain(role))
+                    val domainUser = firebaseUser.toDomain(role, parkId)
+                    trySend(domainUser)
+                    
+                    // Sync FCM token and topics whenever we get a valid user
+                    syncFcmTokenAndTopics(domainUser)
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to get ID token for user role mapping")
                     // Fallback to public if token fetch fails
-                    trySend(firebaseUser.toDomain(UserRole.PUBLIC))
+                    trySend(firebaseUser.toDomain(UserRole.PUBLIC, null))
                 }
             }
         }
@@ -118,5 +129,34 @@ class AuthRepositoryImpl @Inject constructor(
     override fun signOut() {
         firebaseAuth.signOut()
         localGuestUser.value = null
+    }
+
+    private fun syncFcmTokenAndTopics(user: User) {
+        applicationScope.launch {
+            try {
+                // 1. Sync FCM token to Firestore
+                val token = firebaseMessaging.getToken().await()
+                firestore.collection("users").document(user.uid)
+                    .update("fcm_tokens", FieldValue.arrayUnion(token))
+                    .await()
+
+                // 2. Subscribe to topics
+                firebaseMessaging.subscribeToTopic("park_alerts_all").await()
+                
+                val roleTopic = when (user.role) {
+                    UserRole.RANGER -> "role_ranger"
+                    UserRole.PUBLIC -> "role_public"
+                }
+                firebaseMessaging.subscribeToTopic(roleTopic).await()
+
+                user.parkId?.let { parkId ->
+                    firebaseMessaging.subscribeToTopic("park_alerts_$parkId").await()
+                }
+
+                Timber.d("FCM token and topics synced for user ${user.uid}")
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to sync FCM token or topics")
+            }
+        }
     }
 }

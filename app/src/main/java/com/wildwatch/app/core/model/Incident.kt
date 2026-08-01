@@ -45,6 +45,7 @@ data class Incident(
     val syncStatus: SyncStatus,
     val syncedAt: String? = null,
     val lastModified: Long,
+    val sourceSystem: String = "firestore",
 ) {
     // Derived, not stored - evidencePhotoUrls is the single source of truth for
     // whether this incident has evidence photos, so hasEvidence/evidenceCount can
@@ -86,6 +87,7 @@ data class Incident(
         syncStatus = syncStatus,
         syncedAt = syncedAt,
         lastModified = lastModified,
+        sourceSystem = sourceSystem,
     )
 
     fun toFirestoreMap(): Map<String, Any?> = mapOf(
@@ -118,6 +120,7 @@ data class Incident(
         "evidencePhotoUrls" to evidencePhotoUrls,
         "voiceNoteUrl" to voiceNoteUrl,
         "voiceNoteDurationSec" to voiceNoteDurationSec,
+        "source_system" to sourceSystem,
     )
 
     companion object {
@@ -152,6 +155,7 @@ data class Incident(
             syncStatus = entity.syncStatus,
             syncedAt = entity.syncedAt,
             lastModified = entity.lastModified,
+            sourceSystem = entity.sourceSystem,
         )
 
         // Maps an incoming Firestore document (e.g. a teammate's incident, or this
@@ -220,6 +224,7 @@ data class Incident(
             syncStatus = SyncStatus.SYNCED,
             syncedAt = data["syncedAt"] as? String,
             lastModified = System.currentTimeMillis(),
+            sourceSystem = data["source_system"] as? String ?: "firestore",
         )
     }
 }
