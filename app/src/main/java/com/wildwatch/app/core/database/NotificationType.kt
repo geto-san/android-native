@@ -6,5 +6,6 @@ enum class NotificationType {
     SECURITY_ALERT,
     LIKE,
     COMMENT,
-    NEW_FEED_ARTICLE
+    NEW_FEED_ARTICLE,
+    PENDING_SYNC,
 }

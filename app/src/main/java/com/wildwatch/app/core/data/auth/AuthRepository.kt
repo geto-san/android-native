@@ -15,9 +15,8 @@ interface AuthRepository {
 
     suspend fun signIn(email: String, password: String): Result<Unit>
 
+    /** Firebase anonymous auth — use for guest browse, reporting, and notifications. */
     suspend fun signInAnonymously(): Result<Unit>
-
-    suspend fun continueAsGuest(): Result<Unit>
 
     suspend fun signInWithGoogle(idToken: String): Result<Unit>
 

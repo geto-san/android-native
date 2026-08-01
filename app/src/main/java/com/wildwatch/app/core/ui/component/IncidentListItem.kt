@@ -36,7 +36,8 @@ fun IncidentListItem(
     icon: ImageVector,
     iconContainerColor: androidx.compose.ui.graphics.Color,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    syncStatus: com.wildwatch.app.core.database.SyncStatus? = null,
 ) {
     Row(
         modifier = modifier
@@ -75,6 +76,21 @@ fun IncidentListItem(
                 style = MaterialTheme.typography.bodySmall,
                 color = Grey500
             )
+            syncStatus?.let { sync ->
+                if (sync != com.wildwatch.app.core.database.SyncStatus.SYNCED) {
+                    Text(
+                        text = when (sync) {
+                            com.wildwatch.app.core.database.SyncStatus.PENDING,
+                            com.wildwatch.app.core.database.SyncStatus.PENDING_UPDATE -> "Pending upload"
+                            com.wildwatch.app.core.database.SyncStatus.FAILED -> "Upload failed"
+                            com.wildwatch.app.core.database.SyncStatus.SYNCING -> "Uploading…"
+                            else -> sync.name
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
         }
 
         StatusChip(text = status, color = statusColor)

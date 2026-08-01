@@ -5,8 +5,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
+/**
+ * Drives dynamic form state. Visibility is resolved from each [Question.visibilityCondition],
+ * which [FormSchemaLoader] builds from bundled relevance expressions via [RelevanceEvaluator].
+ */
 class FormEngine(
-    val questions: List<Question>
+    val questions: List<Question>,
 ) {
     private val _answers = MutableStateFlow<Map<String, Any?>>(emptyMap())
     val answers: StateFlow<Map<String, Any?>> = _answers.asStateFlow()

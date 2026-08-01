@@ -7,4 +7,5 @@ interface NotificationRepository {
     fun observeAll(): Flow<List<Notification>>
     fun observeUnreadCount(): Flow<Int>
     suspend fun markRead(id: String)
+    suspend fun notifyPendingSync(incidentId: String)
 }

@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.wildwatch.app.core.data.auth.AuthErrorMapper
 import com.wildwatch.app.core.data.auth.AuthRepository
 import com.wildwatch.app.core.data.user.UserDataRepository
 import com.wildwatch.app.core.domain.usecase.ObserveUserUseCase
@@ -47,7 +48,10 @@ class AuthViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             val result = authRepository.signIn(email.trim(), password)
             _uiState.update {
-                it.copy(isLoading = false, errorMessage = result.exceptionOrNull()?.friendlyMessage())
+                it.copy(
+                    isLoading = false,
+                    errorMessage = result.exceptionOrNull()?.let { e -> AuthErrorMapper.messageForSignIn(e, email) },
+                )
             }
         }
     }
@@ -55,7 +59,7 @@ class AuthViewModel @Inject constructor(
     fun signInAnonymously() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val result = authRepository.continueAsGuest()
+            val result = authRepository.signInAnonymously()
             _uiState.update {
                 it.copy(isLoading = false, errorMessage = result.exceptionOrNull()?.friendlyMessage())
             }
@@ -99,11 +103,18 @@ class AuthViewModel @Inject constructor(
             _uiState.update { it.copy(errorMessage = "Fill in all fields") }
             return
         }
+        if (password.length < 8) {
+            _uiState.update { it.copy(errorMessage = "Password must be at least 8 characters.") }
+            return
+        }
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             val result = authRepository.signUp(email.trim(), password, displayName.trim())
             _uiState.update {
-                it.copy(isLoading = false, errorMessage = result.exceptionOrNull()?.friendlyMessage())
+                it.copy(
+                    isLoading = false,
+                    errorMessage = result.exceptionOrNull()?.let(AuthErrorMapper::messageForSignUp),
+                )
             }
         }
     }

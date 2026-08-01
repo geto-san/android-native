@@ -44,6 +44,7 @@ class IncidentRepositoryImplTest {
         every { authRepository.currentUser } returns MutableStateFlow(
             User(uid = "uid-1", email = "jane@example.com", displayName = "Jane Ranger"),
         )
+        every { remoteDataSource.observeChanges() } returns MutableSharedFlow()
         repository = IncidentRepositoryImpl(
             dao,
             remoteDataSource,

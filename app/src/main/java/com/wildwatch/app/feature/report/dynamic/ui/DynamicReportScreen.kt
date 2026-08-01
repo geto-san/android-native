@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -37,13 +38,15 @@ fun DynamicReportScreen(
     viewModel: DynamicReportViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    
+    val context = LocalContext.current
+
     LaunchedEffect(type, draftId) {
-        val questions = when (type) {
-            IncidentType.SIGHTING -> FormSchemas.SightingForm
-            IncidentType.CONFLICT -> FormSchemas.ConflictForm
-            else -> emptyList()
-        }
+        val questions = FormSchemaLoader.loadQuestions(context, type)
+            ?: when (type) {
+                IncidentType.SIGHTING -> FormSchemas.SightingForm
+                IncidentType.CONFLICT -> FormSchemas.ConflictForm
+                else -> emptyList()
+            }
         viewModel.initialize(type, questions, draftId)
     }
 

@@ -3,6 +3,7 @@ package com.wildwatch.app.feature.tracking
 import com.wildwatch.app.core.data.location.GeoLocation
 import com.wildwatch.app.core.data.location.LocationRepository
 import com.wildwatch.app.core.data.repository.ParkRepository
+import com.wildwatch.app.core.domain.usecase.GetIncidentsUseCase
 import com.wildwatch.app.core.model.NationalPark
 import com.google.firebase.firestore.GeoPoint
 import io.mockk.coEvery
@@ -24,6 +25,7 @@ class RangerTrackingViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private val locationRepository: LocationRepository = mockk()
     private val parkRepository: ParkRepository = mockk()
+    private val getIncidentsUseCase: GetIncidentsUseCase = mockk()
     private lateinit var viewModel: RangerTrackingViewModel
 
     @Before
@@ -34,7 +36,11 @@ class RangerTrackingViewModelTest {
             GeoLocation(0.0, 0.0, 0.0f)
         )
         coEvery { parkRepository.findNearestPark(any(), any()) } returns null
+        every { getIncidentsUseCase() } returns flowOf(emptyList())
     }
+
+    private fun createViewModel() =
+        RangerTrackingViewModel(locationRepository, parkRepository, getIncidentsUseCase)
 
     @After
     fun tearDown() {
@@ -46,7 +52,7 @@ class RangerTrackingViewModelTest {
         val location = GeoLocation(0.5, 0.5, 0.0f)
         coEvery { locationRepository.getCurrentLocation() } returns Result.success(location)
 
-        viewModel = RangerTrackingViewModel(locationRepository, parkRepository)
+        viewModel = createViewModel()
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
@@ -60,7 +66,7 @@ class RangerTrackingViewModelTest {
         val park = NationalPark("park-1", "Bwindi", GeoPoint(0.0, 0.0), emptyList(), "desc")
         every { parkRepository.getAttractions("park-1") } returns flowOf(emptyList())
 
-        viewModel = RangerTrackingViewModel(locationRepository, parkRepository)
+        viewModel = createViewModel()
         viewModel.setActivePark(park)
         advanceUntilIdle()
 
@@ -69,7 +75,7 @@ class RangerTrackingViewModelTest {
 
     @Test
     fun `toggleMapStyle flips isSatelliteView`() = runTest {
-        viewModel = RangerTrackingViewModel(locationRepository, parkRepository)
+        viewModel = createViewModel()
         
         val initial = viewModel.uiState.value.isSatelliteView
         viewModel.toggleMapStyle()

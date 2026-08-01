@@ -11,6 +11,8 @@ import com.wildwatch.app.core.database.SyncStatus
 import com.wildwatch.app.core.domain.usecase.GetIncidentByIdUseCase
 import com.wildwatch.app.core.domain.usecase.ObserveUserUseCase
 import com.wildwatch.app.core.model.Incident
+import com.wildwatch.app.core.model.User
+import com.wildwatch.app.core.model.UserRole
 import com.wildwatch.app.feature.incidentdetail.IncidentDetailViewModel
 import io.mockk.every
 import io.mockk.mockk
@@ -24,6 +26,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
@@ -67,7 +70,12 @@ class IncidentDetailViewModelTest {
     )
 
     private fun viewModelFor(id: String): IncidentDetailViewModel =
-        IncidentDetailViewModel(SavedStateHandle(mapOf("id" to id)), incidentRepository, getIncidentByIdUseCase, observeUserUseCase)
+        IncidentDetailViewModel(
+            SavedStateHandle(mapOf("id" to id)),
+            incidentRepository,
+            getIncidentByIdUseCase,
+            observeUserUseCase,
+        )
 
     @Test
     fun `resolves the incident matching the route id`() = runTest(testDispatcher) {
@@ -79,6 +87,20 @@ class IncidentDetailViewModelTest {
         viewModel.uiState.test {
             val state = awaitItem()
             assertEquals("b", state.incident?.id)
+        }
+    }
+
+    @Test
+    fun `rangers cannot self-assign`() = runTest(testDispatcher) {
+        every { getIncidentByIdUseCase("a") } returns flowOf(incident("a"))
+        every { observeUserUseCase() } returns MutableStateFlow(
+            User(uid = "r1", email = "r@x.com", displayName = "R", role = UserRole.RANGER, parkId = "p1"),
+        )
+
+        val viewModel = viewModelFor("a")
+
+        viewModel.uiState.test {
+            assertFalse(awaitItem().canAssignToSelf)
         }
     }
 

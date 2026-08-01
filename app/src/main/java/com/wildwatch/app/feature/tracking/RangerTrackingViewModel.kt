@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.mapbox.geojson.Point
 import com.wildwatch.app.core.data.location.LocationRepository
 import com.wildwatch.app.core.data.repository.ParkRepository
+import com.wildwatch.app.core.database.SyncStatus
+import com.wildwatch.app.core.domain.usecase.GetIncidentsUseCase
+import com.wildwatch.app.core.model.Incident
 import com.wildwatch.app.core.model.NationalPark
 import com.wildwatch.app.core.model.ParkAttraction
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,19 +19,29 @@ import javax.inject.Inject
 data class RangerTrackingUiState(
     val activePark: NationalPark? = null,
     val attractions: List<ParkAttraction> = emptyList(),
+    val incidents: List<Incident> = emptyList(),
     val isSatelliteView: Boolean = false,
     val is3DMode: Boolean = false,
     val showAttractions: Boolean = true,
+    val showIncidents: Boolean = true,
     val searchQuery: String = "",
     val isSearching: Boolean = false,
     val userLocation: Point? = null,
-    val error: String? = null
-)
+    val error: String? = null,
+) {
+    val mapStyleUri: String
+        get() = if (isSatelliteView) {
+            "mapbox://styles/mapbox/satellite-streets-v12"
+        } else {
+            "mapbox://styles/mapbox/streets-v12"
+        }
+}
 
 @HiltViewModel
 class RangerTrackingViewModel @Inject constructor(
     private val locationRepository: LocationRepository,
-    private val parkRepository: ParkRepository
+    private val parkRepository: ParkRepository,
+    getIncidentsUseCase: GetIncidentsUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RangerTrackingUiState())
@@ -36,6 +49,14 @@ class RangerTrackingViewModel @Inject constructor(
 
     init {
         detectActivePark()
+        getIncidentsUseCase()
+            .map { incidents ->
+                incidents.filter {
+                    it.syncStatus == SyncStatus.SYNCED && it.lat != 0.0 && it.lng != 0.0
+                }
+            }
+            .onEach { filtered -> _uiState.update { it.copy(incidents = filtered) } }
+            .launchIn(viewModelScope)
     }
 
     private fun detectActivePark() {
@@ -44,7 +65,7 @@ class RangerTrackingViewModel @Inject constructor(
                 locationRepository.getCurrentLocation().onSuccess { location ->
                     val userPoint = Point.fromLngLat(location.longitude, location.latitude)
                     _uiState.update { it.copy(userLocation = userPoint) }
-                    
+
                     val park = parkRepository.findNearestPark(location.latitude, location.longitude)
                     if (park != null) {
                         setActivePark(park)
@@ -86,6 +107,10 @@ class RangerTrackingViewModel @Inject constructor(
 
     fun toggleAttractionsVisibility() {
         _uiState.update { it.copy(showAttractions = !it.showAttractions) }
+    }
+
+    fun toggleIncidentsVisibility() {
+        _uiState.update { it.copy(showIncidents = !it.showIncidents) }
     }
 
     fun updateSearchQuery(query: String) {

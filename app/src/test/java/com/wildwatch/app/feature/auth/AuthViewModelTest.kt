@@ -86,7 +86,7 @@ class AuthViewModelTest {
     fun `signUp with a blank field sets an error without calling the repository`() {
         val viewModel = AuthViewModel(authRepository, observeUserUseCase)
 
-        viewModel.signUp(displayName = "", email = "a@b.com", password = "pw")
+        viewModel.signUp(displayName = "", email = "a@b.com", password = "password1")
 
         assertEquals("Fill in all fields", viewModel.uiState.value.errorMessage)
         coVerify(exactly = 0) { authRepository.signUp(any(), any(), any()) }
@@ -94,14 +94,14 @@ class AuthViewModelTest {
 
     @Test
     fun `signUp success clears loading and error`() = runTest(testDispatcher) {
-        coEvery { authRepository.signUp("a@b.com", "pw", "Jane") } returns Result.success(Unit)
+        coEvery { authRepository.signUp("a@b.com", "password1", "Jane") } returns Result.success(Unit)
         val viewModel = AuthViewModel(authRepository, observeUserUseCase)
 
-        viewModel.signUp(displayName = "Jane", email = "a@b.com", password = "pw")
+        viewModel.signUp(displayName = "Jane", email = "a@b.com", password = "password1")
         advanceUntilIdle()
 
         assertEquals(AuthUiState(isLoading = false, errorMessage = null), viewModel.uiState.value)
-        coVerify { authRepository.signUp("a@b.com", "pw", "Jane") }
+        coVerify { authRepository.signUp("a@b.com", "password1", "Jane") }
     }
 
     @Test

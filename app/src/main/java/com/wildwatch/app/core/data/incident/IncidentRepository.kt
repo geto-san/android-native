@@ -23,6 +23,9 @@ data class NewIncidentDetails(
     val lng: Double,
     val locationName: String?,
     val localImageUris: List<String>,
+    val animalSeen: Boolean? = null,
+    val answersJson: String? = null,
+    val schemaVersion: String? = null,
 )
 
 interface IncidentRepository {
