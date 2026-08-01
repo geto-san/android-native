@@ -33,10 +33,12 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setUserRole = exports.onUserCreated = void 0;
+exports.onFeedArticleCreated = exports.onSosAlertWritten = exports.onSightingWritten = exports.onIncidentWritten = exports.setUserRole = exports.onUserCreated = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const firestore_1 = require("firebase-admin/firestore");
+const bridge_1 = require("./bridge");
+const notifications_1 = require("./notifications");
 admin.initializeApp();
 exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
     if (!user.providerData || user.providerData.length === 0) {
@@ -69,7 +71,6 @@ exports.setUserRole = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError("invalid-argument", "The function must be called with targetUid and role.");
     }
     const callerRole = context.auth.token.role;
-    const callerParkId = context.auth.token.park_id;
     if (callerRole !== "uwa_official") {
         if (callerRole === "warden") {
             if (role === "uwa_official" || role === "warden") {
@@ -87,11 +88,85 @@ exports.setUserRole = functions.https.onCall(async (data, context) => {
             park_id: parkId || null,
             updated_at: firestore_1.FieldValue.serverTimestamp(),
         });
+        await admin.firestore().collection("role_audit").add({
+            targetUid,
+            newRole: role,
+            newParkId: parkId || null,
+            changedBy: context.auth.uid,
+            changedAt: firestore_1.FieldValue.serverTimestamp(),
+        });
         return { message: `Success! User ${targetUid} is now ${role}.` };
     }
     catch (error) {
         console.error("Error in setUserRole:", error);
         throw new functions.https.HttpsError("internal", "Failed to update user role.");
     }
+});
+function buildBridgePayload(change, docId) {
+    const before = change.before.exists
+        ? change.before.data()
+        : null;
+    const after = change.after.exists
+        ? change.after.data()
+        : null;
+    let eventType = "update";
+    if (!change.before.exists && change.after.exists) {
+        eventType = "create";
+    }
+    else if (change.before.exists && !change.after.exists) {
+        eventType = "delete";
+    }
+    return { docId, before, after, eventType };
+}
+function latestBridgeData(payload) {
+    return payload.after ?? payload.before;
+}
+exports.onIncidentWritten = functions.firestore
+    .document("incidents/{incidentId}")
+    .onWrite(async (change, context) => {
+    const payload = buildBridgePayload(change, context.params.incidentId);
+    const latest = latestBridgeData(payload);
+    if ((0, bridge_1.shouldSkipBridge)(latest)) {
+        console.log(`Skipping incidents bridge echo for ${payload.docId}`);
+        return;
+    }
+    await (0, bridge_1.postToLaravelWebhook)("incidents", payload);
+    if (payload.eventType === "create" && payload.after) {
+        await (0, notifications_1.handleIncidentCreateNotifications)(change, context);
+    }
+});
+exports.onSightingWritten = functions.firestore
+    .document("sightings/{sightingId}")
+    .onWrite(async (change, context) => {
+    const payload = buildBridgePayload(change, context.params.sightingId);
+    const latest = latestBridgeData(payload);
+    if ((0, bridge_1.shouldSkipBridge)(latest)) {
+        console.log(`Skipping sightings bridge echo for ${payload.docId}`);
+        return;
+    }
+    await (0, bridge_1.postToLaravelWebhook)("sightings", payload);
+    if (payload.eventType === "update") {
+        await (0, notifications_1.handleSightingApprovalNotifications)(change, context);
+    }
+});
+exports.onSosAlertWritten = functions
+    .runWith({ timeoutSeconds: 60 })
+    .firestore.document("sos_alerts/{sosAlertId}")
+    .onWrite(async (change, context) => {
+    const payload = buildBridgePayload(change, context.params.sosAlertId);
+    const latest = latestBridgeData(payload);
+    if ((0, bridge_1.shouldSkipBridge)(latest)) {
+        console.log(`Skipping sos_alerts bridge echo for ${payload.docId}`);
+        return;
+    }
+    await (0, bridge_1.postToLaravelWebhook)("sos-alerts", payload);
+    if (payload.eventType === "create" && payload.after) {
+        await (0, notifications_1.handleSosAlertCreateNotifications)(change, context);
+    }
+});
+exports.onFeedArticleCreated = functions.firestore
+    .document("feed/{articleId}")
+    .onCreate(async (snap, context) => {
+    await (0, notifications_1.handleFeedArticleCreateNotifications)(snap, context);
 });
 //# sourceMappingURL=index.js.map

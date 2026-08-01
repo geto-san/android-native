@@ -1,6 +1,17 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import {
+  BridgePayload,
+  postToLaravelWebhook,
+  shouldSkipBridge,
+} from "./bridge";
+import {
+  handleFeedArticleCreateNotifications,
+  handleIncidentCreateNotifications,
+  handleSightingApprovalNotifications,
+  handleSosAlertCreateNotifications,
+} from "./notifications";
 
 admin.initializeApp();
 
@@ -9,8 +20,6 @@ admin.initializeApp();
  * Sets the default 'public' role in custom claims and creates a Firestore user document.
  */
 export const onUserCreated = functions.auth.user().onCreate(async (user) => {
-  // Anonymous users (guests) don't have provider data.
-  // We skip creating a Firestore document for them per AGENTS.md requirements.
   if (!user.providerData || user.providerData.length === 0) {
     console.log(`Skipping Firestore profile for guest user: ${user.uid}`);
     return;
@@ -19,10 +28,8 @@ export const onUserCreated = functions.auth.user().onCreate(async (user) => {
   const role = "public";
 
   try {
-    // Set custom claims
     await admin.auth().setCustomUserClaims(user.uid, { role });
 
-    // Create shadow document in Firestore
     await admin.firestore().collection("users").doc(user.uid).set({
       uid: user.uid,
       email: user.email,
@@ -43,7 +50,6 @@ export const onUserCreated = functions.auth.user().onCreate(async (user) => {
  * In production, this should be restricted to 'uwa_official' or 'warden'.
  */
 export const setUserRole = functions.https.onCall(async (data, context) => {
-  // Authentication check
   if (!context.auth) {
     throw new functions.https.HttpsError(
       "unauthenticated",
@@ -60,9 +66,7 @@ export const setUserRole = functions.https.onCall(async (data, context) => {
     );
   }
 
-  // Basic authorization check (allow uwa_official to set any role, warden only rangers/public in their park)
   const callerRole = context.auth.token.role;
-  const callerParkId = context.auth.token.park_id;
 
   if (callerRole !== "uwa_official") {
     if (callerRole === "warden") {
@@ -72,8 +76,6 @@ export const setUserRole = functions.https.onCall(async (data, context) => {
           "Wardens cannot promote users to Warden or UWA Official."
         );
       }
-      // Ensure the target is in the same park or role change is valid for their scope
-      // (Simplified for now)
     } else {
       throw new functions.https.HttpsError(
         "permission-denied",
@@ -91,9 +93,116 @@ export const setUserRole = functions.https.onCall(async (data, context) => {
       updated_at: FieldValue.serverTimestamp(),
     });
 
+    await admin.firestore().collection("role_audit").add({
+      targetUid,
+      newRole: role,
+      newParkId: parkId || null,
+      changedBy: context.auth.uid,
+      changedAt: FieldValue.serverTimestamp(),
+    });
+
     return { message: `Success! User ${targetUid} is now ${role}.` };
   } catch (error) {
     console.error("Error in setUserRole:", error);
     throw new functions.https.HttpsError("internal", "Failed to update user role.");
   }
 });
+
+function buildBridgePayload(
+  change: functions.Change<FirebaseFirestore.DocumentSnapshot>,
+  docId: string
+): BridgePayload {
+  const before = change.before.exists
+    ? (change.before.data() as Record<string, unknown>)
+    : null;
+  const after = change.after.exists
+    ? (change.after.data() as Record<string, unknown>)
+    : null;
+
+  let eventType: BridgePayload["eventType"] = "update";
+  if (!change.before.exists && change.after.exists) {
+    eventType = "create";
+  } else if (change.before.exists && !change.after.exists) {
+    eventType = "delete";
+  }
+
+  return { docId, before, after, eventType };
+}
+
+function latestBridgeData(payload: BridgePayload): Record<string, unknown> | null {
+  return payload.after ?? payload.before;
+}
+
+/**
+ * Firestore → Laravel bridge for incidents, plus FCM fan-out on create.
+ */
+export const onIncidentWritten = functions.firestore
+  .document("incidents/{incidentId}")
+  .onWrite(async (change, context) => {
+    const payload = buildBridgePayload(change, context.params.incidentId);
+    const latest = latestBridgeData(payload);
+
+    if (shouldSkipBridge(latest)) {
+      console.log(`Skipping incidents bridge echo for ${payload.docId}`);
+      return;
+    }
+
+    await postToLaravelWebhook("incidents", payload);
+
+    if (payload.eventType === "create" && payload.after) {
+      await handleIncidentCreateNotifications(change, context);
+    }
+  });
+
+/**
+ * Firestore → Laravel bridge for wildlife sightings.
+ */
+export const onSightingWritten = functions.firestore
+  .document("sightings/{sightingId}")
+  .onWrite(async (change, context) => {
+    const payload = buildBridgePayload(change, context.params.sightingId);
+    const latest = latestBridgeData(payload);
+
+    if (shouldSkipBridge(latest)) {
+      console.log(`Skipping sightings bridge echo for ${payload.docId}`);
+      return;
+    }
+
+    await postToLaravelWebhook("sightings", payload);
+
+    if (payload.eventType === "update") {
+      await handleSightingApprovalNotifications(change, context);
+    }
+  });
+
+/**
+ * Firestore → Laravel bridge for SOS alerts.
+ * Runs synchronously (awaits webhook + notifications before returning).
+ */
+export const onSosAlertWritten = functions
+  .runWith({ timeoutSeconds: 60 })
+  .firestore.document("sos_alerts/{sosAlertId}")
+  .onWrite(async (change, context) => {
+    const payload = buildBridgePayload(change, context.params.sosAlertId);
+    const latest = latestBridgeData(payload);
+
+    if (shouldSkipBridge(latest)) {
+      console.log(`Skipping sos_alerts bridge echo for ${payload.docId}`);
+      return;
+    }
+
+    await postToLaravelWebhook("sos-alerts", payload);
+
+    if (payload.eventType === "create" && payload.after) {
+      await handleSosAlertCreateNotifications(change, context);
+    }
+  });
+
+/**
+ * Fan out a community feed article to all park alert subscribers.
+ */
+export const onFeedArticleCreated = functions.firestore
+  .document("feed/{articleId}")
+  .onCreate(async (snap, context) => {
+    await handleFeedArticleCreateNotifications(snap, context);
+  });

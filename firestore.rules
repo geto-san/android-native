@@ -77,6 +77,17 @@ service cloud.firestore {
       allow create: if isPublic();
     }
 
+    // SOS alerts
+    match /sos_alerts/{sosAlertId} {
+      allow read: if isSignedIn() && (
+        isUwaOfficial() ||
+        (isWarden() && belongsToPark(resource.data.park_id)) ||
+        request.auth.uid == resource.data.reporter_uid
+      );
+      allow create: if isRanger() || isPublic();
+      allow update: if isSignedIn() && (isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id)));
+    }
+
     // POIs
     match /pois/{poiId} {
       allow read: if true;
@@ -97,6 +108,12 @@ service cloud.firestore {
     match /notifications/{notifId} {
       allow read: if isSignedIn() && request.auth.uid == resource.data.target_uid;
       allow write: if false; // Only Cloud Functions (Admin SDK) should write
+    }
+
+    // Community news feed (portal-authored, mobile read-only)
+    match /feed/{articleId} {
+      allow read: if true;
+      allow write: if false; // Admin SDK / Laravel observer only
     }
   }
 }
