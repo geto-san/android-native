@@ -38,7 +38,7 @@ class AuthRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val fcmTopicManager: FcmTopicManager,
     private val fcmTokenRepository: FcmTokenRepository,
-    @ApplicationScope applicationScope: CoroutineScope,
+    @ApplicationScope private val applicationScope: CoroutineScope,
 ) : AuthRepository {
 
     private val localGuestUser = MutableStateFlow<User?>(null)
