@@ -55,7 +55,7 @@ class AuthViewModel @Inject constructor(
     fun signInAnonymously() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val result = authRepository.signInAnonymously()
+            val result = authRepository.continueAsGuest()
             _uiState.update {
                 it.copy(isLoading = false, errorMessage = result.exceptionOrNull()?.friendlyMessage())
             }

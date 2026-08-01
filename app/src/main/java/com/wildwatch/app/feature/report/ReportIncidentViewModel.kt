@@ -6,9 +6,11 @@ import androidx.lifecycle.viewModelScope
 import com.wildwatch.app.core.data.incident.IncidentRepository
 import com.wildwatch.app.core.data.incident.NewIncidentDetails
 import com.wildwatch.app.core.data.location.LocationRepository
+import com.wildwatch.app.core.data.repository.LocationHierarchyRepository
 import com.wildwatch.app.core.database.IncidentSeverity
 import com.wildwatch.app.core.database.IncidentType
 import com.wildwatch.app.core.database.Park
+import com.wildwatch.app.core.model.District
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +22,9 @@ import javax.inject.Inject
 data class ReportUiState(
     val type: IncidentType = IncidentType.SIGHTING,
     val park: Park = Park.BWINDI_IMPENETRABLE,
+    val district: String? = null,
+    val subCounty: String? = null,
+    val parish: String? = null,
     val community: String = "",
     val species: String = "",
     val severity: IncidentSeverity = IncidentSeverity.MEDIUM,
@@ -35,17 +40,31 @@ data class ReportUiState(
     val savedIncidentId: String? = null,
     val isLocationLoading: Boolean = false,
     val canSubmit: Boolean = false,
+    val districts: List<District> = emptyList(),
 )
 
 @HiltViewModel
 class ReportIncidentViewModel @Inject constructor(
     private val incidentRepository: IncidentRepository,
     private val locationRepository: LocationRepository,
+    private val locationHierarchyRepository: LocationHierarchyRepository,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ReportUiState())
     val uiState: StateFlow<ReportUiState> = _uiState.asStateFlow()
+
+    init {
+        loadDistricts()
+    }
+
+    private fun loadDistricts() {
+        viewModelScope.launch {
+            locationHierarchyRepository.getDistricts().collect { districts ->
+                _uiState.update { it.copy(districts = districts) }
+            }
+        }
+    }
 
     // Persisted fields for process death resilience
     var species: String
@@ -75,6 +94,19 @@ class ReportIncidentViewModel @Inject constructor(
         }
 
     fun updateType(type: IncidentType) { _uiState.update { it.copy(type = type) } }
+    fun updatePark(park: Park) { _uiState.update { it.copy(park = park) } }
+    fun updateDistrict(district: String?) { 
+        _uiState.update { it.copy(district = district, subCounty = null, parish = null) } 
+        validate()
+    }
+    fun updateSubCounty(subCounty: String?) { 
+        _uiState.update { it.copy(subCounty = subCounty, parish = null) } 
+        validate()
+    }
+    fun updateParish(parish: String?) { 
+        _uiState.update { it.copy(parish = parish) } 
+        validate()
+    }
     fun updateCommunity(community: String) { _uiState.update { it.copy(community = community) } }
     fun updateSeverity(severity: IncidentSeverity) { _uiState.update { it.copy(severity = severity) } }
 
@@ -84,11 +116,15 @@ class ReportIncidentViewModel @Inject constructor(
             locationRepository.getCurrentLocation()
                 .onSuccess { location ->
                     val name = locationRepository.reverseGeocode(location.latitude, location.longitude)
+                    val parkName = locationRepository.getParkFromLocation(location.latitude, location.longitude)
+                    val park = Park.entries.find { it.name.replace("_", " ").equals(parkName, ignoreCase = true) } ?: Park.BWINDI_IMPENETRABLE
+                    
                     _uiState.update {
                         it.copy(
                             lat = location.latitude,
                             lng = location.longitude,
                             locationName = name,
+                            park = park,
                             isLocationLoading = false
                         )
                     }
@@ -100,7 +136,9 @@ class ReportIncidentViewModel @Inject constructor(
     }
 
     private fun validate() {
-        _uiState.update { it.copy(canSubmit = species.isNotBlank() && description.isNotBlank()) }
+        val state = _uiState.value
+        val locationValid = state.district != null && state.subCounty != null && state.parish != null
+        _uiState.update { it.copy(canSubmit = species.isNotBlank() && description.isNotBlank() && locationValid) }
     }
 
     fun addPhoto(uri: String) {
@@ -125,11 +163,15 @@ class ReportIncidentViewModel @Inject constructor(
             _uiState.update { it.copy(isSaving = true, saveError = null) }
             try {
                 val countText = numberObserved.ifBlank { null }?.let { "Observed $it. " } ?: ""
+                val combinedCommunity = "${state.parish}, ${state.subCounty}, ${state.district}"
                 val incident = incidentRepository.create(
                     NewIncidentDetails(
                         type = state.type,
                         park = state.park,
-                        community = state.community,
+                        district = state.district,
+                        subCounty = state.subCounty,
+                        parish = state.parish,
+                        community = combinedCommunity,
                         species = species,
                         severity = state.severity,
                         category = behavior,

@@ -62,14 +62,26 @@ class LocationRepositoryImpl @Inject constructor(
     override fun getParkFromLocation(latitude: Double, longitude: Double): String? {
         // Rough bounding boxes for Uganda National Parks
         return when {
-            // Bwindi Impenetrable (approx)
+            // Bwindi Impenetrable
             latitude in -1.2..-0.8 && longitude in 29.5..29.9 -> "Bwindi Impenetrable"
-            // Queen Elizabeth (approx)
+            // Queen Elizabeth
             latitude in -0.5..0.2 && longitude in 29.7..30.3 -> "Queen Elizabeth"
-            // Murchison Falls (approx)
+            // Murchison Falls
             latitude in 1.8..2.5 && longitude in 31.3..32.3 -> "Murchison Falls"
-            // Kibale (approx)
+            // Kibale
             latitude in 0.3..0.7 && longitude in 30.2..30.6 -> "Kibale"
+            // Kidepo Valley
+            latitude in 3.6..4.1 && longitude in 33.5..34.2 -> "Kidepo Valley"
+            // Rwenzori Mountains
+            latitude in 0.1..0.6 && longitude in 29.7..30.1 -> "Rwenzori Mountains"
+            // Mount Elgon
+            latitude in 1.0..1.4 && longitude in 34.3..34.8 -> "Mount Elgon"
+            // Lake Mburo
+            latitude in -0.8..-0.4 && longitude in 30.8..31.2 -> "Lake Mburo"
+            // Semuliki
+            latitude in 0.7..0.9 && longitude in 29.9..30.2 -> "Semuliki"
+            // Mgahinga Gorilla
+            latitude in -1.4..-1.3 && longitude in 29.6..29.7 -> "Mgahinga Gorilla"
             else -> "Uganda Wildlife Reserve"
         }
     }

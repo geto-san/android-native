@@ -1,10 +1,12 @@
 package com.wildwatch.app.feature.dashboard
 
+import com.wildwatch.app.core.data.feed.ArticleRepository
 import com.wildwatch.app.core.data.notification.NotificationRepository
 import com.wildwatch.app.core.domain.usecase.GetIncidentsUseCase
 import com.wildwatch.app.core.domain.usecase.ObserveUserUseCase
 import com.wildwatch.app.core.database.IncidentStatus
 import com.wildwatch.app.core.database.SyncStatus
+import com.wildwatch.app.core.model.Article
 import com.wildwatch.app.core.model.Incident
 import dagger.hilt.android.lifecycle.HiltViewModel
 import androidx.lifecycle.ViewModel
@@ -30,11 +32,13 @@ data class HomeUiState(
     val pendingUploadsCount: Int = 0,
     val zones: List<String> = emptyList(),
     val communityAlerts: List<Incident> = emptyList(),
+    val newsArticles: List<Article> = emptyList(),
 )
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val incidentRepository: com.wildwatch.app.core.data.incident.IncidentRepository,
+    private val articleRepository: ArticleRepository,
     observeUserUseCase: ObserveUserUseCase,
     getIncidentsUseCase: GetIncidentsUseCase,
     notificationRepository: NotificationRepository,
@@ -44,7 +48,8 @@ class HomeViewModel @Inject constructor(
         observeUserUseCase(),
         getIncidentsUseCase(),
         notificationRepository.observeUnreadCount(),
-    ) { user, incidents, unreadNotifications ->
+        articleRepository.observeAll()
+    ) { user, incidents, unreadNotifications, articles ->
         val startOfMonth = Instant.now()
             .atZone(ZoneId.systemDefault())
             .toLocalDate()
@@ -76,11 +81,12 @@ class HomeViewModel @Inject constructor(
             unreadNotificationCount = unreadNotifications,
             recentReports = syncedReports
                 .sortedByDescending { runCatching { Instant.parse(it.reportedAt) }.getOrNull() ?: Instant.EPOCH }
-                .take(10),
+                .take(5), // Reduced for home screen
             drafts = drafts,
             pendingUploadsCount = pendingCount,
             zones = syncedReports.map { it.community }.distinct().sorted(),
             communityAlerts = communityAlerts,
+            newsArticles = articles.take(3) // Only a few for home screen
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeUiState())
 

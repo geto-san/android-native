@@ -17,6 +17,8 @@ interface AuthRepository {
 
     suspend fun signInAnonymously(): Result<Unit>
 
+    suspend fun continueAsGuest(): Result<Unit>
+
     suspend fun signInWithGoogle(idToken: String): Result<Unit>
 
     suspend fun signUp(email: String, password: String, displayName: String): Result<Unit>

@@ -19,12 +19,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wildwatch.app.core.model.Article
 import com.wildwatch.app.core.model.Incident
 import com.wildwatch.app.core.ui.component.IncidentListItem
 import com.wildwatch.app.core.ui.component.QuickReportCard
@@ -37,10 +39,10 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun HomeScreen(
     onIncidentClick: (String) -> Unit,
-    onReportSighting: () -> Unit,
-    onReportConflict: () -> Unit,
+    onReportIncident: () -> Unit,
     onEditDraft: (String, com.wildwatch.app.core.database.IncidentType) -> Unit,
     onNotificationsClick: () -> Unit,
+    onArticleClick: (String) -> Unit,
     onSeeAllClick: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
@@ -141,7 +143,7 @@ fun HomeScreen(
                 }
             }
 
-            // Quick Report Section
+            // Quick Report Section - Consolidated
             item {
                 Column {
                     Text(
@@ -150,68 +152,166 @@ fun HomeScreen(
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        QuickReportCard(
-                            title = "Wildlife Sighting",
-                            icon = Icons.Filled.AddAPhoto,
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            onClick = onReportSighting,
-                            modifier = Modifier.weight(1f)
-                        )
-                        QuickReportCard(
-                            title = "Human-Wildlife Conflict",
-                            icon = Icons.Filled.Warning,
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                            onClick = onReportConflict,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                    
+                    ReportIncidentCard(
+                        onClick = onReportIncident
+                    )
                 }
             }
 
             // Recent Reports Section
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "My recent reports",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "See all",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable { onSeeAllClick() }
-                    )
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "My recent reports",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "See all",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable { onSeeAllClick() }
+                        )
+                    }
+                    
+                    if (uiState.recentReports.isEmpty()) {
+                        EmptyFeedState()
+                    } else {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            uiState.recentReports.forEach { incident ->
+                                IncidentListItem(
+                                    title = incident.species,
+                                    subtitle = "${relativeDay(incident.reportedAt)} · ${incident.locationName ?: incident.community}",
+                                    status = incident.status.name,
+                                    statusColor = if (incident.status.name == "RESOLVED") Success else Warning,
+                                    icon = if (incident.type == com.wildwatch.app.core.database.IncidentType.SIGHTING) Icons.Filled.AddAPhoto else Icons.Filled.Warning,
+                                    iconContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    onClick = { onIncidentClick(incident.id) }
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
-            if (uiState.recentReports.isEmpty()) {
+            // Feed / News Section
+            if (uiState.newsArticles.isNotEmpty()) {
                 item {
-                    EmptyFeedState()
-                }
-            } else {
-                items(uiState.recentReports, key = { it.id }) { incident ->
-                    IncidentListItem(
-                        title = incident.species,
-                        subtitle = "${relativeDay(incident.reportedAt)} · ${incident.locationName ?: incident.community}",
-                        status = incident.status.name,
-                        statusColor = if (incident.status.name == "RESOLVED") Success else Warning,
-                        icon = Icons.Filled.AddAPhoto,
-                        iconContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        onClick = { onIncidentClick(incident.id) }
-                    )
+                    Column {
+                        Text(
+                            text = "Latest News",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            uiState.newsArticles.forEach { article ->
+                                HomeArticleCard(
+                                    article = article,
+                                    onClick = { onArticleClick(article.id) }
+                                )
+                            }
+                        }
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ReportIncidentCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(100.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick),
+        color = MaterialTheme.colorScheme.tertiary,
+        contentColor = MaterialTheme.colorScheme.onTertiary
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Filled.Campaign,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = Color.White
+                )
+            }
+            Spacer(modifier = Modifier.width(20.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Report Incident",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Sighting or Conflict",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.8f)
+                )
+            }
+            Icon(
+                Icons.Filled.Add,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = Color.White
+            )
+        }
+    }
+}
+
+@Composable
+private fun HomeArticleCard(
+    article: Article,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = article.source.uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = article.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+            Text(
+                text = article.excerpt,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
+                maxLines = 2
+            )
         }
     }
 }
@@ -396,7 +496,7 @@ private fun AlertListContent(alerts: List<Incident>, onSelect: (String) -> Unit)
 }
 
 @Composable
-private fun DetailRow(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+private fun DetailRow(label: String, value: String, icon: ImageVector) {
     Row(verticalAlignment = Alignment.Top) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp).padding(top = 2.dp), tint = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.width(12.dp))

@@ -27,6 +27,7 @@ import com.wildwatch.app.feature.report.dynamic.ui.DynamicReportScreen
 import com.wildwatch.app.feature.report.dynamic.DynamicReportViewModel
 import com.wildwatch.app.feature.report.CameraCaptureScreen
 import com.wildwatch.app.feature.report.ReportSubmittedScreen
+import com.wildwatch.app.feature.report.ReportSelectionScreen
 import com.wildwatch.app.feature.settings.AccountManagementScreen
 import com.wildwatch.app.ui.nav.MainTabShell
 import com.wildwatch.app.ui.nav.Route
@@ -72,8 +73,7 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
                 userRole = currentUser?.role ?: UserRole.PUBLIC,
                 onIncidentClick = { id -> navController.navigate(Route.IncidentDetail(id)) },
                 onSignInClick = { navController.navigate(Route.Auth(startOnSignIn = true)) },
-                onReportSighting = { navController.navigate(Route.WildlifeSightingReport()) },
-                onReportConflict = { navController.navigate(Route.ConflictReport()) },
+                onReportIncident = { navController.navigate(Route.ReportSelection) },
                 onEditDraft = { id, type ->
                     val route = if (type == IncidentType.SIGHTING) Route.WildlifeSightingReport(id) else Route.ConflictReport(id)
                     navController.navigate(route)
@@ -94,6 +94,14 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
 
         composable<Route.Profile> {
             ProfileScreen()
+        }
+
+        composable<Route.ReportSelection> {
+            ReportSelectionScreen(
+                onBack = { navController.popBackStack() },
+                onReportSighting = { navController.navigate(Route.WildlifeSightingReport()) },
+                onReportConflict = { navController.navigate(Route.ConflictReport()) }
+            )
         }
 
         composable<Route.WildlifeSightingReport> { backStackEntry ->

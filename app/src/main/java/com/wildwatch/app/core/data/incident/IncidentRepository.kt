@@ -11,6 +11,9 @@ data class SyncResult(val succeeded: Int, val failed: Int)
 data class NewIncidentDetails(
     val type: IncidentType,
     val park: Park,
+    val district: String? = null,
+    val subCounty: String? = null,
+    val parish: String? = null,
     val community: String,
     val species: String,
     val severity: IncidentSeverity,

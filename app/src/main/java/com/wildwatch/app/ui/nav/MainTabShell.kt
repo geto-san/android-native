@@ -12,10 +12,12 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Newspaper
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -32,7 +34,8 @@ import com.wildwatch.app.feature.profile.ProfileScreen
 import com.wildwatch.app.feature.tracking.RangerTrackingScreen
 
 private enum class MainTab {
-    Dashboard,
+    Home,
+    Professional,
     Feed,
     Tracking,
     Profile
@@ -43,8 +46,7 @@ fun MainTabShell(
     userRole: UserRole,
     onIncidentClick: (String) -> Unit,
     onSignInClick: () -> Unit,
-    onReportSighting: () -> Unit,
-    onReportConflict: () -> Unit,
+    onReportIncident: () -> Unit,
     onEditDraft: (String, com.wildwatch.app.core.database.IncidentType) -> Unit,
     onNotificationsClick: () -> Unit,
     onArticleClick: (String) -> Unit,
@@ -52,13 +54,13 @@ fun MainTabShell(
     onSeeAllReportsClick: () -> Unit,
 ) {
     val tabs = if (userRole == UserRole.RANGER) {
-        listOf(MainTab.Dashboard, MainTab.Tracking, MainTab.Profile)
+        listOf(MainTab.Home, MainTab.Professional, MainTab.Tracking, MainTab.Profile)
     } else {
-        listOf(MainTab.Dashboard, MainTab.Feed, MainTab.Profile)
+        listOf(MainTab.Home, MainTab.Feed, MainTab.Profile)
     }
 
     var selectedTab by rememberSaveable {
-        mutableStateOf(MainTab.Dashboard)
+        mutableStateOf(MainTab.Home)
     }
 
     Scaffold(
@@ -91,7 +93,8 @@ fun MainTabShell(
                             )
 
                             val icon = when (tab) {
-                                MainTab.Dashboard -> if (isSelected) Icons.Filled.Home else Icons.Outlined.Home
+                                MainTab.Home -> if (isSelected) Icons.Filled.Home else Icons.Outlined.Home
+                                MainTab.Professional -> if (isSelected) Icons.Filled.Work else Icons.Outlined.Work
                                 MainTab.Feed -> if (isSelected) Icons.Filled.Newspaper else Icons.Outlined.Newspaper
                                 MainTab.Tracking -> if (isSelected) Icons.Filled.LocationOn else Icons.Outlined.LocationOn
                                 MainTab.Profile -> if (isSelected) Icons.Filled.Person else Icons.Outlined.Person
@@ -103,7 +106,7 @@ fun MainTabShell(
                                     .scale(scale)
                                     .clickable(
                                         interactionSource = remember { MutableInteractionSource() },
-                                        indication = null // Remove default ripple
+                                        indication = null 
                                     ) { selectedTab = tab },
                                 contentAlignment = Alignment.Center
                             ) {
@@ -138,21 +141,18 @@ fun MainTabShell(
                 .padding(paddingValues)
         ) {
             when (selectedTab) {
-                MainTab.Dashboard -> if (userRole == UserRole.RANGER) {
-                    DashboardScreen(
-                        onIncidentClick = onIncidentClick,
-                        onNotificationsClick = onNotificationsClick,
-                    )
-                } else {
-                    HomeScreen(
-                        onIncidentClick = onIncidentClick,
-                        onReportSighting = onReportSighting,
-                        onReportConflict = onReportConflict,
-                        onEditDraft = onEditDraft,
-                        onNotificationsClick = onNotificationsClick,
-                        onSeeAllClick = onSeeAllReportsClick,
-                    )
-                }
+                MainTab.Home -> HomeScreen(
+                    onIncidentClick = onIncidentClick,
+                    onReportIncident = onReportIncident,
+                    onEditDraft = onEditDraft,
+                    onNotificationsClick = onNotificationsClick,
+                    onArticleClick = onArticleClick,
+                    onSeeAllClick = onSeeAllReportsClick,
+                )
+                MainTab.Professional -> DashboardScreen(
+                    onIncidentClick = onIncidentClick,
+                    onNotificationsClick = onNotificationsClick,
+                )
                 MainTab.Feed -> FeedScreen(
                     onArticleClick = onArticleClick
                 )

@@ -23,6 +23,9 @@ sealed interface Route {
     data object Profile : Route
 
     @Serializable
+    data object ReportSelection : Route
+
+    @Serializable
     data class WildlifeSightingReport(val draftId: String? = null) : Route
 
     @Serializable

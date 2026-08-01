@@ -20,8 +20,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wildwatch.app.core.database.IncidentSeverity
 import com.wildwatch.app.core.database.IncidentType
+import com.wildwatch.app.core.database.Park
+import com.wildwatch.app.core.model.District
+import com.wildwatch.app.core.model.SubCounty
 import com.wildwatch.app.core.ui.component.*
-import com.wildwatch.app.core.ui.theme.Grey500
+import java.util.Locale
 
 private val SPECIES_OPTIONS = listOf(
     "African Elephant", "Mountain Gorilla", "Cape Buffalo", "Grey Crowned Crane",
@@ -99,6 +102,57 @@ fun WildlifeSightingReportScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(24.dp)
             ) {
+                item {
+                    FieldLabel("National Park")
+                    WildWatchDropdownField(
+                        value = uiState.park,
+                        options = Park.entries,
+                        onSelect = { viewModel.updatePark(it) },
+                        displayName = { it.name.replace("_", " ").lowercase().replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() } }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+
+                item {
+                    FieldLabel("District")
+                    WildWatchDropdownField(
+                        value = uiState.districts.find { it.id == uiState.district } ?: District(label = "Select District"),
+                        options = uiState.districts,
+                        onSelect = { viewModel.updateDistrict(it.id) },
+                        displayName = { it.label }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+
+                if (uiState.district != null) {
+                    item {
+                        val subCounties = uiState.districts.find { it.id == uiState.district }?.sub_counties ?: emptyList()
+                        FieldLabel("Sub-county")
+                        WildWatchDropdownField(
+                            value = subCounties.find { it.id == uiState.subCounty } ?: SubCounty(label = "Select Sub-county"),
+                            options = subCounties,
+                            onSelect = { viewModel.updateSubCounty(it.id) },
+                            displayName = { it.label }
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+                }
+
+                if (uiState.subCounty != null) {
+                    item {
+                        val parishes = uiState.districts.find { it.id == uiState.district }
+                            ?.sub_counties?.find { it.id == uiState.subCounty }?.parishes ?: emptyList()
+                        FieldLabel("Parish")
+                        WildWatchDropdownField(
+                            value = uiState.parish ?: "Select Parish",
+                            options = parishes,
+                            onSelect = { viewModel.updateParish(it) },
+                            displayName = { it }
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+                }
+
                 item {
                     FieldLabel("Species")
                     WildWatchDropdownField(
@@ -181,7 +235,7 @@ fun WildlifeSightingReportScreen(
 
                     Button(
                         onClick = { viewModel.save() },
-                        modifier = Modifier.fillMaxWidth().height(56.dp), // Height increased for better touch target
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = MaterialTheme.shapes.medium,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.tertiary,

@@ -55,7 +55,7 @@ fun RangerTrackingScreen(
             if (uiState.showAttractions) {
                 uiState.attractions.forEach { attraction ->
                     PointAnnotation(
-                        point = attraction.location
+                        point = attraction.point
                     ) {
                         // Init block for annotation properties if needed
                     }

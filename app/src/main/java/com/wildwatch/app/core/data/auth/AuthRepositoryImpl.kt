@@ -8,9 +8,11 @@ import com.wildwatch.app.core.model.User
 import com.wildwatch.app.core.model.UserRole
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -33,7 +35,9 @@ class AuthRepositoryImpl @Inject constructor(
     @ApplicationScope applicationScope: CoroutineScope,
 ) : AuthRepository {
 
-    override val currentUser: StateFlow<User?> = callbackFlow {
+    private val localGuestUser = MutableStateFlow<User?>(null)
+
+    private val firebaseAuthFlow = callbackFlow {
         val listener = FirebaseAuth.IdTokenListener { auth ->
             launch {
                 val firebaseUser = auth.currentUser
@@ -60,25 +64,46 @@ class AuthRepositoryImpl @Inject constructor(
         }
         firebaseAuth.addIdTokenListener(listener)
         awaitClose { firebaseAuth.removeIdTokenListener(listener) }
+    }
+
+    override val currentUser: StateFlow<User?> = combine(
+        firebaseAuthFlow,
+        localGuestUser
+    ) { firebaseUser, guestUser ->
+        firebaseUser ?: guestUser
     }.stateIn(
         scope = applicationScope,
         started = SharingStarted.Eagerly,
-        initialValue = null, // Initial value is unknown until listener fires
+        initialValue = null,
     )
 
     override suspend fun signIn(email: String, password: String): Result<Unit> = runCatching {
         firebaseAuth.signInWithEmailAndPassword(email, password).await()
+        localGuestUser.value = null
         Unit
     }
 
     override suspend fun signInAnonymously(): Result<Unit> = runCatching {
         firebaseAuth.signInAnonymously().await()
+        localGuestUser.value = null
+        Unit
+    }
+
+    override suspend fun continueAsGuest(): Result<Unit> = runCatching {
+        localGuestUser.value = User(
+            uid = "offline_guest_${java.util.UUID.randomUUID()}",
+            email = null,
+            displayName = "Guest User",
+            role = UserRole.PUBLIC,
+            isGuest = true
+        )
         Unit
     }
 
     override suspend fun signInWithGoogle(idToken: String): Result<Unit> = runCatching {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         firebaseAuth.signInWithCredential(credential).await()
+        localGuestUser.value = null
         Unit
     }
 
@@ -86,10 +111,12 @@ class AuthRepositoryImpl @Inject constructor(
         val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
         val profileUpdate = userProfileChangeRequest { this.displayName = displayName }
         result.user?.updateProfile(profileUpdate)?.await()
+        localGuestUser.value = null
         Unit
     }
 
     override fun signOut() {
         firebaseAuth.signOut()
+        localGuestUser.value = null
     }
 }

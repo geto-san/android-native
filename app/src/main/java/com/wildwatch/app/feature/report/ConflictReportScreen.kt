@@ -14,9 +14,12 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wildwatch.app.core.database.IncidentSeverity
 import com.wildwatch.app.core.database.IncidentType
+import com.wildwatch.app.core.model.District
+import com.wildwatch.app.core.model.SubCounty
 import com.wildwatch.app.core.ui.component.*
 import com.wildwatch.app.core.ui.theme.Destructive
 import com.wildwatch.app.core.ui.theme.SunsetAmber
+import java.util.Locale
 
 private val CONFLICT_TYPES = listOf("Crop Damage", "Livestock Predation", "Property Damage", "Human Injury", "Other")
 private val SPECIES_OPTIONS = listOf("Elephant", "Lion", "Leopard", "Buffalo", "Hyena", "Other")
@@ -59,7 +62,7 @@ fun ConflictReportScreen(
             ) {
                 item {
                     Surface(
-                        color = SunsetAmber.copy(alpha = 0.1f), // Increased alpha for visibility
+                        color = SunsetAmber.copy(alpha = 0.1f), 
                         shape = MaterialTheme.shapes.small,
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -74,6 +77,57 @@ fun ConflictReportScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(24.dp))
+                }
+
+                item {
+                    FieldLabel("National Park")
+                    WildWatchDropdownField(
+                        value = uiState.park,
+                        options = com.wildwatch.app.core.database.Park.entries,
+                        onSelect = { viewModel.updatePark(it) },
+                        displayName = { it.name.replace("_", " ").lowercase().replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() } }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+
+                item {
+                    FieldLabel("District")
+                    WildWatchDropdownField(
+                        value = uiState.districts.find { it.id == uiState.district } ?: District(label = "Select District"),
+                        options = uiState.districts,
+                        onSelect = { viewModel.updateDistrict(it.id) },
+                        displayName = { it.label }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+
+                if (uiState.district != null) {
+                    item {
+                        val subCounties = uiState.districts.find { it.id == uiState.district }?.sub_counties ?: emptyList()
+                        FieldLabel("Sub-county")
+                        WildWatchDropdownField(
+                            value = subCounties.find { it.id == uiState.subCounty } ?: SubCounty(label = "Select Sub-county"),
+                            options = subCounties,
+                            onSelect = { viewModel.updateSubCounty(it.id) },
+                            displayName = { it.label }
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+                }
+
+                if (uiState.subCounty != null) {
+                    item {
+                        val parishes = uiState.districts.find { it.id == uiState.district }
+                            ?.sub_counties?.find { it.id == uiState.subCounty }?.parishes ?: emptyList()
+                        FieldLabel("Parish")
+                        WildWatchDropdownField(
+                            value = uiState.parish ?: "Select Parish",
+                            options = parishes,
+                            onSelect = { viewModel.updateParish(it) },
+                            displayName = { it }
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
                 }
 
                 item {
