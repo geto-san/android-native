@@ -7,6 +7,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.wildwatch.app.MainActivity
@@ -16,7 +19,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
+@AndroidEntryPoint
 @Suppress("DEPRECATION")
 class WildWatchMessagingService : FirebaseMessagingService() {
 
