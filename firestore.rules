@@ -54,15 +54,26 @@ service cloud.firestore {
       allow write: if isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id));
     }
 
+    function incidentParkId(data) {
+      return data.park_id != null ? data.park_id : data.park;
+    }
+
+    function incidentReporterUid(data) {
+      return data.reporter_uid != null ? data.reporter_uid : data.userId;
+    }
+
+    function canReadIncident(data) {
+      return isUwaOfficial() ||
+        (isWarden() && belongsToPark(incidentParkId(data))) ||
+        (isRanger() && belongsToPark(incidentParkId(data))) ||
+        request.auth.uid == incidentReporterUid(data);
+    }
+
     // Incidents
     match /incidents/{incidentId} {
-      allow read: if isSignedIn() && (
-        isUwaOfficial() ||
-        (isWarden() && belongsToPark(resource.data.park_id)) ||
-        request.auth.uid == resource.data.reporter_uid
-      );
+      allow read: if isSignedIn() && canReadIncident(resource.data);
       allow create: if isRanger() || isPublic();
-      allow update: if isSignedIn() && (isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id)));
+      allow update: if isSignedIn() && (isUwaOfficial() || (isWarden() && belongsToPark(incidentParkId(resource.data))));
     }
 
     // Patrol Logs
@@ -75,6 +86,17 @@ service cloud.firestore {
     match /sightings/{sightingId} {
       allow read: if isSignedIn() && (isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id)));
       allow create: if isPublic();
+    }
+
+    // SOS alerts
+    match /sos_alerts/{sosAlertId} {
+      allow read: if isSignedIn() && (
+        isUwaOfficial() ||
+        (isWarden() && belongsToPark(resource.data.park_id)) ||
+        request.auth.uid == resource.data.reporter_uid
+      );
+      allow create: if isRanger() || isPublic();
+      allow update: if isSignedIn() && (isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id)));
     }
 
     // POIs
@@ -97,6 +119,12 @@ service cloud.firestore {
     match /notifications/{notifId} {
       allow read: if isSignedIn() && request.auth.uid == resource.data.target_uid;
       allow write: if false; // Only Cloud Functions (Admin SDK) should write
+    }
+
+    // Community news feed (portal-authored, mobile read-only)
+    match /feed/{articleId} {
+      allow read: if true;
+      allow write: if false; // Admin SDK / Laravel observer only
     }
   }
 }
