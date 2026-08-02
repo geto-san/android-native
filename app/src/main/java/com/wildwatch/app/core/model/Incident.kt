@@ -24,6 +24,9 @@ data class Incident(
     val district: String? = null,
     val subCounty: String? = null,
     val parish: String? = null,
+    val animalSeen: Boolean? = null,
+    val answersJson: String? = null,
+    val schemaVersion: String? = null,
     val community: String,
     val species: String,
     val severity: IncidentSeverity,
@@ -64,6 +67,9 @@ data class Incident(
         district = district,
         subCounty = subCounty,
         parish = parish,
+        animalSeen = animalSeen,
+        answersJson = answersJson,
+        schemaVersion = schemaVersion,
         community = community,
         species = species,
         severity = severity,
@@ -99,6 +105,10 @@ data class Incident(
         "district" to district,
         "sub_county" to subCounty,
         "parish" to parish,
+        "animalSeen" to animalSeen,
+        "answers" to answersJson?.let { kotlinx.serialization.json.Json.parseToJsonElement(it) },
+        "schemaVersion" to schemaVersion,
+        "source_system" to "firestore",
         "community" to community,
         "species" to species,
         "severity" to severity.name.lowercase(),
@@ -134,6 +144,9 @@ data class Incident(
             district = entity.district,
             subCounty = entity.subCounty,
             parish = entity.parish,
+            animalSeen = entity.animalSeen,
+            answersJson = entity.answersJson,
+            schemaVersion = entity.schemaVersion,
             community = entity.community,
             species = entity.species,
             severity = entity.severity,
@@ -192,6 +205,23 @@ data class Incident(
                 else -> IncidentSeverity.MEDIUM
             }
 
+        private fun parseAnswersField(value: Any?): String? = when (value) {
+            null -> null
+            is String -> value.ifBlank { null }
+            is Map<*, *> -> {
+                val entries = value.entries.joinToString(prefix = "{", postfix = "}") { (k, v) ->
+                    val encoded = when (v) {
+                        null -> "null"
+                        is Boolean, is Number -> v.toString()
+                        else -> "\"${v.toString().replace("\"", "\\\"")}\""
+                    }
+                    "\"${k.toString()}\":$encoded"
+                }
+                entries
+            }
+            else -> null
+        }
+
         @Suppress("UNCHECKED_CAST")
         fun fromFirestoreDocument(documentId: String, data: Map<String, Any?>): Incident = Incident(
             id = documentId,
@@ -203,6 +233,9 @@ data class Incident(
             district = data["district"] as? String,
             subCounty = data["sub_county"] as? String,
             parish = data["parish"] as? String,
+            animalSeen = data["animalSeen"] as? Boolean,
+            answersJson = parseAnswersField(data["answers"]),
+            schemaVersion = data["schemaVersion"] as? String,
             community = data["community"] as? String ?: "",
             species = data["species"] as? String ?: "",
             severity = parseSeverity(data),

@@ -34,7 +34,7 @@ class ParkRepositoryImpl @Inject constructor(
     }
 
     override fun getAttractions(parkId: String): Flow<List<ParkAttraction>> = flow {
-        val snapshot = firestore.collection("attractions")
+        val snapshot = firestore.collection("pois")
             .whereEqualTo("parkId", parkId)
             .get(Source.DEFAULT)
             .await()

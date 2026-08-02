@@ -14,7 +14,10 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.wildwatch.app.MainActivity
 import com.wildwatch.app.R
-import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -22,19 +25,16 @@ import javax.inject.Inject
 @Suppress("DEPRECATION")
 class WildWatchMessagingService : FirebaseMessagingService() {
 
-    @Inject lateinit var firestore: FirebaseFirestore
-    @Inject lateinit var auth: FirebaseAuth
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
         Timber.d("From: ${message.from}")
 
-        // Check if message contains a notification payload.
         message.notification?.let {
             showNotification(it.title ?: "WildWatch", it.body ?: "")
         }
 
-        // Also handle data payload if needed for deep linking
         if (message.data.isNotEmpty()) {
             Timber.d("Message data payload: ${message.data}")
         }
@@ -46,12 +46,12 @@ class WildWatchMessagingService : FirebaseMessagingService() {
         }
         val pendingIntent = PendingIntent.getActivity(
             this, 0, intent,
-            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE,
         )
 
         val channelId = "default_channel"
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.mipmap.ic_launcher) // Fallback to launcher icon
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
             .setContentText(body)
             .setAutoCancel(true)
@@ -65,7 +65,7 @@ class WildWatchMessagingService : FirebaseMessagingService() {
             val channel = NotificationChannel(
                 channelId,
                 "WildWatch Alerts",
-                NotificationManager.IMPORTANCE_HIGH
+                NotificationManager.IMPORTANCE_HIGH,
             ).apply {
                 description = "Urgent conservation and security updates"
                 enableLights(true)
@@ -80,13 +80,9 @@ class WildWatchMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Timber.d("FCM token refreshed: $token")
-        val uid = auth.currentUser?.uid ?: return
-        
-        firestore.collection("users").document(uid)
-            .update("fcm_tokens", FieldValue.arrayUnion(token))
-            .addOnFailureListener { e ->
-                Timber.e(e, "Failed to sync FCM token to Firestore")
-            }
+        Timber.d("FCM token refreshed")
+        serviceScope.launch {
+            fcmTokenRepository().syncToken(token)
+        }
     }
 }

@@ -1,11 +1,11 @@
 package com.wildwatch.app.ui.nav
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.wildwatch.app.core.model.UserRole
+import kotlinx.coroutines.flow.first
 import com.wildwatch.app.feature.alerts.CommunityAlertsScreen
 import com.wildwatch.app.feature.auth.AuthScreen
 import com.wildwatch.app.feature.auth.AuthViewModel
@@ -30,16 +31,25 @@ import com.wildwatch.app.feature.report.ReportSubmittedScreen
 import com.wildwatch.app.feature.report.ReportSelectionScreen
 import com.wildwatch.app.feature.settings.AccountManagementScreen
 import com.wildwatch.app.ui.nav.MainTabShell
+import com.wildwatch.app.ui.nav.NavMotion
 import com.wildwatch.app.ui.nav.Route
 
 @Composable
 fun WildWatchNavHost(navController: NavHostController = rememberNavController()) {
     val authViewModel: AuthViewModel = hiltViewModel()
     val currentUser by authViewModel.currentUser.collectAsStateWithLifecycle()
+    var authReady by remember { mutableStateOf(false) }
 
-    val startDestination = remember {
-        if (authViewModel.currentUser.value != null) Route.Main else Route.Auth(startOnSignIn = true)
+    LaunchedEffect(Unit) {
+        authViewModel.currentUser.first()
+        authReady = true
     }
+
+    if (!authReady) {
+        return
+    }
+
+    val startDestination = if (currentUser != null) Route.Main else Route.Auth(startOnSignIn = true)
 
     LaunchedEffect(currentUser) {
         if (currentUser == null) {
@@ -58,10 +68,26 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
     NavHost(
         navController = navController, 
         startDestination = startDestination,
-        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400)) + fadeIn(tween(400)) },
-        exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(400)) + fadeOut(tween(400)) },
-        popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400)) + fadeIn(tween(400)) },
-        popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(400)) + fadeOut(tween(400)) }
+        enterTransition = {
+            if (initialState.destination.route?.contains("Auth") == true ||
+                targetState.destination.route?.contains("Auth") == true
+            ) {
+                NavMotion.fadeThroughEnter()
+            } else {
+                NavMotion.forwardEnter()
+            }
+        },
+        exitTransition = {
+            if (initialState.destination.route?.contains("Auth") == true ||
+                targetState.destination.route?.contains("Auth") == true
+            ) {
+                NavMotion.fadeThroughExit()
+            } else {
+                NavMotion.forwardExit()
+            }
+        },
+        popEnterTransition = { NavMotion.backwardEnter() },
+        popExitTransition = { NavMotion.backwardExit() },
     ) {
         composable<Route.Auth> { backStackEntry ->
             val args = backStackEntry.toRoute<Route.Auth>()
@@ -143,13 +169,9 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
         }
 
         composable<Route.CameraCapture> { backStackEntry ->
-            val args = backStackEntry.toRoute<Route.CameraCapture>()
             val parentEntry = remember(backStackEntry) {
-                if (args.source == "conflict") {
-                    navController.getBackStackEntry(Route.ConflictReport)
-                } else {
-                    navController.getBackStackEntry(Route.WildlifeSightingReport)
-                }
+                navController.previousBackStackEntry
+                    ?: error("CameraCapture requires a report screen on the back stack")
             }
             val reportViewModel: DynamicReportViewModel = hiltViewModel(parentEntry)
             CameraCaptureScreen(

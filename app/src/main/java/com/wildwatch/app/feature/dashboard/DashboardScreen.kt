@@ -135,8 +135,8 @@ fun DashboardScreen(
                 items(uiState.activeAlerts, key = { "alert_${it.id}" }) { incident ->
                     DashboardIncidentItem(
                         incident = incident,
-                        actionLabel = stringResource(R.string.dash_assign_to_me),
-                        onAction = { viewModel.assignToSelf(incident.id) }
+                        actionLabel = stringResource(R.string.dash_attend_to),
+                        onAction = { onIncidentClick(incident.id) }
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = Grey200, modifier = Modifier.padding(start = 16.dp))
                 }

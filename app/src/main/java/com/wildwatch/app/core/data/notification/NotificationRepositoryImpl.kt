@@ -30,6 +30,20 @@ class NotificationRepositoryImpl @Inject constructor(
         notificationDao.markRead(id)
     }
 
+    override suspend fun notifyPendingSync(incidentId: String) = withContext(ioDispatcher) {
+        notificationDao.insertAll(
+            listOf(
+                NotificationEntity(
+                    id = "pending-sync-$incidentId",
+                    type = NotificationType.PENDING_SYNC,
+                    title = "Report pending upload",
+                    message = "Your report is queued and will sync when connectivity allows.",
+                    createdAt = System.currentTimeMillis(),
+                ),
+            ),
+        )
+    }
+
     private suspend fun seedIfEmpty() = withContext(ioDispatcher) {
         if (notificationDao.count() > 0) return@withContext
         val now = System.currentTimeMillis()

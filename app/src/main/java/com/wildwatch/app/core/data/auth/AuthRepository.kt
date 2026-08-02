@@ -15,13 +15,15 @@ interface AuthRepository {
 
     suspend fun signIn(email: String, password: String): Result<Unit>
 
+    /** Firebase anonymous auth — use for guest browse, reporting, and notifications. */
     suspend fun signInAnonymously(): Result<Unit>
-
-    suspend fun continueAsGuest(): Result<Unit>
 
     suspend fun signInWithGoogle(idToken: String): Result<Unit>
 
     suspend fun signUp(email: String, password: String, displayName: String): Result<Unit>
 
     fun signOut()
+
+    /** Force-refresh Firebase custom claims and re-sync FCM topic subscriptions. */
+    suspend fun refreshRoleClaims(): Result<Unit>
 }

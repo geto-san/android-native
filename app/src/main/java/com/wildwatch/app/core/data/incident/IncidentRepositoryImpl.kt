@@ -31,6 +31,10 @@ class IncidentRepositoryImpl @Inject constructor(
     @ApplicationScope private val applicationScope: CoroutineScope,
 ) : IncidentRepository {
 
+    init {
+        startObservingRemoteChanges()
+    }
+
     private val syncMutex = Mutex()
 
     override fun observeAll(): Flow<List<Incident>> =
@@ -51,6 +55,9 @@ class IncidentRepositoryImpl @Inject constructor(
             district = details.district,
             subCounty = details.subCounty,
             parish = details.parish,
+            animalSeen = details.animalSeen,
+            answersJson = details.answersJson,
+            schemaVersion = details.schemaVersion,
             community = details.community,
             species = details.species,
             severity = details.severity,
@@ -79,6 +86,9 @@ class IncidentRepositoryImpl @Inject constructor(
             district = details.district,
             subCounty = details.subCounty,
             parish = details.parish,
+            animalSeen = details.animalSeen,
+            answersJson = details.answersJson,
+            schemaVersion = details.schemaVersion,
             community = details.community,
             species = details.species,
             severity = details.severity,

@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 5,
-    "identityHash": "8f9ce11b759696e7003255f619e2cd68",
+    "identityHash": "7e58bf25a49b3a9733d73e73d3857081",
     "entities": [
       {
         "tableName": "incidents",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `type` TEXT NOT NULL, `status` TEXT NOT NULL, `rangerProgress` TEXT, `isEscalated` INTEGER NOT NULL, `park` TEXT NOT NULL, `district` TEXT, `subCounty` TEXT, `parish` TEXT, `community` TEXT NOT NULL, `species` TEXT NOT NULL, `severity` TEXT NOT NULL, `category` TEXT, `summary` TEXT, `lat` REAL NOT NULL, `lng` REAL NOT NULL, `locationName` TEXT, `userName` TEXT, `userEmail` TEXT, `userId` TEXT, `reportedAt` TEXT NOT NULL, `assignedTo` TEXT, `assignedToName` TEXT, `hasEvidence` INTEGER NOT NULL, `evidenceCount` INTEGER NOT NULL, `evidencePhotoUrls` TEXT NOT NULL, `localImageUris` TEXT NOT NULL, `voiceNoteUrl` TEXT, `voiceNoteDurationSec` INTEGER, `syncStatus` TEXT NOT NULL, `syncedAt` TEXT, `lastModified` INTEGER NOT NULL, `sourceSystem` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `type` TEXT NOT NULL, `status` TEXT NOT NULL, `rangerProgress` TEXT, `isEscalated` INTEGER NOT NULL, `park` TEXT NOT NULL, `district` TEXT, `subCounty` TEXT, `parish` TEXT, `animalSeen` INTEGER, `answersJson` TEXT, `schemaVersion` TEXT, `community` TEXT NOT NULL, `species` TEXT NOT NULL, `severity` TEXT NOT NULL, `category` TEXT, `summary` TEXT, `lat` REAL NOT NULL, `lng` REAL NOT NULL, `locationName` TEXT, `userName` TEXT, `userEmail` TEXT, `userId` TEXT, `reportedAt` TEXT NOT NULL, `assignedTo` TEXT, `assignedToName` TEXT, `hasEvidence` INTEGER NOT NULL, `evidenceCount` INTEGER NOT NULL, `evidencePhotoUrls` TEXT NOT NULL, `localImageUris` TEXT NOT NULL, `voiceNoteUrl` TEXT, `voiceNoteDurationSec` INTEGER, `syncStatus` TEXT NOT NULL, `syncedAt` TEXT, `lastModified` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -56,6 +56,21 @@
           {
             "fieldPath": "parish",
             "columnName": "parish",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "animalSeen",
+            "columnName": "animalSeen",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "answersJson",
+            "columnName": "answersJson",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "schemaVersion",
+            "columnName": "schemaVersion",
             "affinity": "TEXT"
           },
           {
@@ -183,12 +198,6 @@
             "fieldPath": "lastModified",
             "columnName": "lastModified",
             "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "sourceSystem",
-            "columnName": "sourceSystem",
-            "affinity": "TEXT",
             "notNull": true
           }
         ],
@@ -376,7 +385,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8f9ce11b759696e7003255f619e2cd68')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7e58bf25a49b3a9733d73e73d3857081')"
     ]
   }
 }

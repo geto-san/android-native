@@ -22,6 +22,8 @@ import com.wildwatch.app.core.data.incident.IncidentRemoteDataSource
 import com.wildwatch.app.core.data.incident.IncidentRemoteDataSourceImpl
 import com.wildwatch.app.core.data.incident.IncidentRepository
 import com.wildwatch.app.core.data.incident.IncidentRepositoryImpl
+import com.wildwatch.app.feature.dashboard.CommunityAlertPreferences
+import com.wildwatch.app.feature.dashboard.CommunityAlertPreferencesImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -63,4 +65,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindLocationHierarchyRepository(impl: LocationHierarchyRepositoryImpl): LocationHierarchyRepository
+
+    @Binds
+    abstract fun bindCommunityAlertPreferences(impl: CommunityAlertPreferencesImpl): CommunityAlertPreferences
 }

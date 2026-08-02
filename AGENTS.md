@@ -120,10 +120,13 @@ The app follows an **Offline-First Outbox Pattern**:
 - **Media Optimization**: Cloudinary or R2 will be used for large media files to stay within Firebase Storage free-tier limits.
 - **Ranger Login**: Use `ranger@wildwatch.com` (pw: `password123`) in development to access professional features.
 
-## 11. Local-first Docker development (see ../wildwatch-local/WildWatch-Platform-Plan.md §10-11)
-- This app has a `USE_LOCAL_BACKEND` build flag (local.properties-driven, same
-  pattern as PUBLIC_MAPBOX_ACCESS_TOKEN) that points Firebase SDKs at the
-  local emulator suite instead of production.
-- Never hardcode emulator hosts/ports outside that one gated path.
-- Match the existing repository-interface + Hilt-binding pattern; don't call
-  Firebase SDKs directly from ViewModels or Composables.
+## 11. Local-first Docker development
+
+See `../wildwatch-local-development-env-setup/SETUP.md` and workspace `REPOS.md`.
+
+- `USE_LOCAL_BACKEND` + `LOCAL_BACKEND_HOST` in `local.properties` → `BuildConfig` → `FirebaseModule.kt` emulator wiring.
+- Never hardcode emulator hosts/ports outside that gated path.
+- Repository-interface + Hilt-binding pattern; no Firebase SDK calls from ViewModels/Composables.
+- **FCM topics** (via `FcmTopicManager`): after login/token refresh, subscribe `park_alerts_{parkId}` + role topic (`park_alerts_all`, `ranger_{parkId}`, `warden_{parkId}`, `uwa_official`); unsubscribe previous topics first.
+- **Community feed:** portal writes Firestore `feed/{id}`; mobile reads via `ArticleRepositoryImpl` (Room cache + Firestore listener) → `FeedScreen`.
+- **Bridge:** mobile data authoritative in Firestore; portal relational data in Laravel/MySQL; `source_system` prevents echo loops.

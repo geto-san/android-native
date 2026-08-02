@@ -73,25 +73,6 @@ fun HomeScreen(
                     windowInsets = WindowInsets.statusBars
                 )
                 
-                if (uiState.pendingUploadsCount > 0) {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth().clickable { viewModel.triggerSync() },
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 20.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Text(
-                                "${uiState.pendingUploadsCount} reports pending upload. Tap to sync.",
-                                style = MaterialTheme.typography.labelSmall,
-                                modifier = Modifier.padding(start = 8.dp).weight(1f)
-                            )
-                            Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(14.dp))
-                        }
-                    }
-                }
             }
         },
         containerColor = MaterialTheme.colorScheme.background,
@@ -109,7 +90,9 @@ fun HomeScreen(
                 item {
                     CommunityAlertsCard(
                         alerts = uiState.communityAlerts,
-                        parkName = uiState.park
+                        parkName = uiState.park,
+                        onDismiss = viewModel::dismissAlert,
+                        onView = viewModel::markAlertSeen,
                     )
                 }
             }
@@ -186,15 +169,18 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             uiState.recentReports.forEach { incident ->
-                                IncidentListItem(
+                                key(incident.id) {
+                                    IncidentListItem(
                                     title = incident.species,
-                                    subtitle = "${relativeDay(incident.reportedAt)} · ${incident.locationName ?: incident.community}",
+                                    subtitle = buildReportSubtitle(incident),
                                     status = incident.status.name,
                                     statusColor = if (incident.status.name == "RESOLVED") Success else Warning,
+                                    syncStatus = incident.syncStatus,
                                     icon = if (incident.type == com.wildwatch.app.core.database.IncidentType.SIGHTING) Icons.Filled.AddAPhoto else Icons.Filled.Warning,
                                     iconContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                                     onClick = { onIncidentClick(incident.id) }
                                 )
+                                }
                             }
                         }
                     }
@@ -316,17 +302,34 @@ private fun HomeArticleCard(
     }
 }
 
+private fun buildReportSubtitle(incident: Incident): String {
+    val locationParts = listOfNotNull(incident.parish, incident.subCounty, incident.district, incident.community)
+        .distinct()
+        .joinToString(" · ")
+        .ifBlank { incident.locationName ?: incident.community }
+    return "${relativeDay(incident.reportedAt)} · $locationParts"
+}
+
 @Composable
 private fun CommunityAlertsCard(
     alerts: List<Incident>,
-    parkName: String
+    parkName: String,
+    onDismiss: (String) -> Unit,
+    onView: (String) -> Unit,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     var selectedAlertId by remember { mutableStateOf<String?>(null) }
 
-    // Reset selected alert when collapsing
     LaunchedEffect(isExpanded) {
-        if (!isExpanded) selectedAlertId = null
+        if (!isExpanded) {
+            selectedAlertId = null
+        } else if (alerts.size == 1) {
+            onView(alerts.first().id)
+        }
+    }
+
+    LaunchedEffect(selectedAlertId) {
+        selectedAlertId?.let(onView)
     }
 
     val selectedAlert = remember(selectedAlertId, alerts) {
@@ -368,33 +371,20 @@ private fun CommunityAlertsCard(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = if (isExpanded) "Tap to collapse" else "${alerts.size} active alerts in $parkName",
+                        text = if (isExpanded) "Tap to collapse" else "Active alerts near $parkName",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                if (!isExpanded) {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.error),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = alerts.size.toString(),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                IconButton(
+                    onClick = {
+                        val target = selectedAlert?.id ?: alerts.firstOrNull()?.id
+                        if (target != null) onDismiss(target)
+                    },
+                    modifier = Modifier.size(32.dp),
+                ) {
+                    Icon(Icons.Filled.Close, contentDescription = "Dismiss alert", tint = MaterialTheme.colorScheme.outline, modifier = Modifier.size(16.dp))
                 }
-                Icon(
-                    if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.ChevronRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.outline,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
             }
 
             if (isExpanded) {
@@ -434,7 +424,7 @@ private fun CommunityAlertsCard(
 private fun AlertDetailContent(incident: Incident) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         DetailRow("Species", incident.species, Icons.Filled.Pets)
-        DetailRow("Location", incident.locationName ?: incident.community, Icons.Filled.LocationOn)
+        DetailRow("Location", listOfNotNull(incident.parish, incident.subCounty, incident.district, incident.community).joinToString(" · ").ifBlank { incident.locationName ?: incident.community }, Icons.Filled.LocationOn)
         incident.summary?.let {
             DetailRow("Summary", it, Icons.Filled.Notes)
         }

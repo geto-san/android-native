@@ -75,8 +75,6 @@ class OfflineAuthRepositoryImpl @Inject constructor(
         return Result.success(Unit)
     }
 
-    override suspend fun continueAsGuest(): Result<Unit> = signInAnonymously()
-
     override suspend fun signInWithGoogle(idToken: String): Result<Unit> {
         // Mock a Google sign-in by just activating the session if an account exists,
         // or creating a default mock one if not.
@@ -108,6 +106,8 @@ class OfflineAuthRepositoryImpl @Inject constructor(
         // suspending, matching the synchronous AuthRepository.signOut() signature.
         applicationScope.launch { dataStore.edit { it[KEY_SESSION_ACTIVE] = false } }
     }
+
+    override suspend fun refreshRoleClaims(): Result<Unit> = Result.success(Unit)
 
     private fun Preferences.toUserIfSessionActive(): User? {
         if (this[KEY_SESSION_ACTIVE] != true) return null

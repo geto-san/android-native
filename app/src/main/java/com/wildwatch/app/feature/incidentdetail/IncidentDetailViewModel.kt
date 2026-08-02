@@ -2,6 +2,8 @@ package com.wildwatch.app.feature.incidentdetail
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.navigation.toRoute
+import com.wildwatch.app.ui.nav.Route
 import androidx.lifecycle.viewModelScope
 import com.wildwatch.app.core.data.incident.IncidentRepository
 import com.wildwatch.app.core.domain.usecase.GetIncidentByIdUseCase
@@ -28,7 +30,7 @@ data class IncidentDetailUiState(
     // view with actions at all, so Community stays strictly read-only here.
     val isRanger: Boolean get() = currentUser?.role == UserRole.RANGER
     val isAssignedToMe: Boolean get() = incident?.assignedTo != null && incident.assignedTo == currentUser?.uid
-    val canAssignToSelf: Boolean get() = isRanger && incident?.assignedTo == null
+    val canAssignToSelf: Boolean get() = false
 }
 
 @HiltViewModel
@@ -38,7 +40,11 @@ class IncidentDetailViewModel @Inject constructor(
     getIncidentByIdUseCase: GetIncidentByIdUseCase,
     observeUserUseCase: ObserveUserUseCase,
 ) : ViewModel() {
-    private val incidentId: String = checkNotNull(savedStateHandle["id"]) // Route param is 'id'
+    private val incidentId: String = runCatching {
+        savedStateHandle.toRoute<Route.IncidentDetail>().id
+    }.getOrElse {
+        checkNotNull(savedStateHandle["id"]) { "Missing incident id in navigation args" }
+    }
 
     private val _distanceKm = MutableStateFlow<Double?>(null)
 

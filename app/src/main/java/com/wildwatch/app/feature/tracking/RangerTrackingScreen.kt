@@ -50,15 +50,17 @@ fun RangerTrackingScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         MapboxMap(
             modifier = Modifier.fillMaxSize(),
-            mapViewportState = viewportState
+            mapViewportState = viewportState,
+            style = { com.mapbox.maps.extension.compose.style.MapStyle(uiState.mapStyleUri) },
         ) {
             if (uiState.showAttractions) {
                 uiState.attractions.forEach { attraction ->
-                    PointAnnotation(
-                        point = attraction.point
-                    ) {
-                        // Init block for annotation properties if needed
-                    }
+                    PointAnnotation(point = attraction.point) {}
+                }
+            }
+            if (uiState.showIncidents) {
+                uiState.incidents.forEach { incident ->
+                    PointAnnotation(point = Point.fromLngLat(incident.lng, incident.lat)) {}
                 }
             }
         }

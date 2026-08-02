@@ -5,7 +5,7 @@ import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.storage.FirebaseStorage
 import dagger.Module
 import dagger.Provides
@@ -68,5 +68,9 @@ object FirebaseModule {
 
     @Provides
     @Singleton
-    fun providesFirebaseMessaging(): FirebaseMessaging = FirebaseMessaging.getInstance()
+    fun providesFirebaseFunctions(): FirebaseFunctions = FirebaseFunctions.getInstance().apply {
+        if (com.wildwatch.app.BuildConfig.USE_LOCAL_BACKEND) {
+            useEmulator(com.wildwatch.app.BuildConfig.LOCAL_BACKEND_HOST, 5001)
+        }
+    }
 }
