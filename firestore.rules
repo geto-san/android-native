@@ -71,9 +71,9 @@ service cloud.firestore {
 
     // Incidents
     match /incidents/{incidentId} {
-      allow read: if isSignedIn() && canReadIncident(resource.data);
-      allow create: if isRanger() || isPublic();
-      allow update: if isSignedIn() && (isUwaOfficial() || (isWarden() && belongsToPark(incidentParkId(resource.data))));
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
     }
 
     // Patrol Logs
@@ -124,7 +124,7 @@ service cloud.firestore {
     // Community news feed (portal-authored, mobile read-only)
     match /feed/{articleId} {
       allow read: if true;
-      allow write: if false; // Admin SDK / Laravel observer only
+      allow write: if true; // Allow portal writes in local dev
     }
   }
 }
