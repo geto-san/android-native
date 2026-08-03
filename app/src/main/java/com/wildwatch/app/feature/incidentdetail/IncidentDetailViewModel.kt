@@ -6,6 +6,8 @@ import androidx.navigation.toRoute
 import com.wildwatch.app.ui.nav.Route
 import androidx.lifecycle.viewModelScope
 import com.wildwatch.app.core.data.incident.IncidentRepository
+import com.wildwatch.app.core.data.location.LocationRepository
+import com.wildwatch.app.core.data.location.haversineKm
 import com.wildwatch.app.core.domain.usecase.GetIncidentByIdUseCase
 import com.wildwatch.app.core.domain.usecase.ObserveUserUseCase
 import com.wildwatch.app.core.model.Incident
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 data class IncidentDetailUiState(
@@ -37,6 +40,7 @@ data class IncidentDetailUiState(
 class IncidentDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val incidentRepository: IncidentRepository,
+    private val locationRepository: LocationRepository,
     getIncidentByIdUseCase: GetIncidentByIdUseCase,
     observeUserUseCase: ObserveUserUseCase,
 ) : ViewModel() {
@@ -57,7 +61,19 @@ class IncidentDetailViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), IncidentDetailUiState())
 
     fun loadDistance() {
-        // Implement logic
+        viewModelScope.launch {
+            val incident = incidentRepository.getById(incidentId) ?: return@launch
+            locationRepository.getCurrentLocation()
+                .onSuccess { location ->
+                    _distanceKm.value = haversineKm(
+                        lat1 = location.latitude,
+                        lng1 = location.longitude,
+                        lat2 = incident.lat,
+                        lng2 = incident.lng,
+                    )
+                }
+                .onFailure { Timber.w(it, "Unable to resolve distance to incident $incidentId") }
+        }
     }
 
     fun assignToSelf() {

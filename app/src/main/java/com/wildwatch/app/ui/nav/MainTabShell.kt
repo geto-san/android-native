@@ -10,11 +10,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Newspaper
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Work
@@ -31,6 +33,7 @@ import com.wildwatch.app.feature.dashboard.DashboardScreen
 import com.wildwatch.app.feature.dashboard.HomeScreen
 import com.wildwatch.app.feature.feed.FeedScreen
 import com.wildwatch.app.feature.profile.ProfileScreen
+import com.wildwatch.app.feature.publicmap.PublicMapScreen
 import com.wildwatch.app.feature.tracking.RangerTrackingScreen
 
 private enum class MainTab {
@@ -38,6 +41,7 @@ private enum class MainTab {
     Professional,
     Feed,
     Tracking,
+    Map,
     Profile
 }
 
@@ -56,7 +60,7 @@ fun MainTabShell(
     val tabs = if (userRole == UserRole.RANGER) {
         listOf(MainTab.Home, MainTab.Professional, MainTab.Tracking, MainTab.Profile)
     } else {
-        listOf(MainTab.Home, MainTab.Feed, MainTab.Profile)
+        listOf(MainTab.Home, MainTab.Feed, MainTab.Map, MainTab.Profile)
     }
 
     var selectedTab by rememberSaveable {
@@ -97,6 +101,7 @@ fun MainTabShell(
                                 MainTab.Professional -> if (isSelected) Icons.Filled.Work else Icons.Outlined.Work
                                 MainTab.Feed -> if (isSelected) Icons.Filled.Newspaper else Icons.Outlined.Newspaper
                                 MainTab.Tracking -> if (isSelected) Icons.Filled.LocationOn else Icons.Outlined.LocationOn
+                                MainTab.Map -> if (isSelected) Icons.Filled.Map else Icons.Outlined.Map
                                 MainTab.Profile -> if (isSelected) Icons.Filled.Person else Icons.Outlined.Person
                             }
 
@@ -157,6 +162,7 @@ fun MainTabShell(
                     onArticleClick = onArticleClick
                 )
                 MainTab.Tracking -> RangerTrackingScreen(onIncidentClick = onIncidentClick)
+                MainTab.Map -> PublicMapScreen()
                 MainTab.Profile -> ProfileScreen(
                     onSignInClick = onSignInClick,
                     onAccountManagementClick = onAccountManagementClick

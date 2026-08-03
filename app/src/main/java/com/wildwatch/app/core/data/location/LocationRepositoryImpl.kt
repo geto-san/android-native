@@ -5,10 +5,17 @@ import android.content.Context
 import android.location.Address
 import android.location.Geocoder
 import android.os.Build
+import android.os.Looper
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
@@ -57,6 +64,20 @@ class LocationRepositoryImpl @Inject constructor(
             Timber.w(e, "Reverse geocoding failed for %f, %f", latitude, longitude)
             null
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    override fun observeLocationUpdates(intervalMs: Long): Flow<GeoLocation> = callbackFlow {
+        val request = LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, intervalMs).build()
+        val callback = object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                result.lastLocation?.let {
+                    trySend(GeoLocation(it.latitude, it.longitude, it.accuracy))
+                }
+            }
+        }
+        fusedLocationClient.requestLocationUpdates(request, callback, Looper.getMainLooper())
+        awaitClose { fusedLocationClient.removeLocationUpdates(callback) }
     }
 
     override fun getParkFromLocation(latitude: Double, longitude: Double): String? {

@@ -31,5 +31,6 @@ class WildWatchApplication : Application(), Configuration.Provider {
 
         // Initialize background sync cycles
         syncScheduler.schedulePeriodicSync()
+        syncScheduler.schedulePeriodicPatrolSync()
     }
 }

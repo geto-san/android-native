@@ -12,4 +12,11 @@ class Converters {
     @TypeConverter
     fun toStringList(value: String): List<String> =
         if (value.isBlank()) emptyList() else Json.decodeFromString(value)
+
+    @TypeConverter
+    fun fromRoutePointList(value: List<RoutePoint>): String = Json.encodeToString(value)
+
+    @TypeConverter
+    fun toRoutePointList(value: String): List<RoutePoint> =
+        if (value.isBlank()) emptyList() else Json.decodeFromString(value)
 }
