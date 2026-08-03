@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 data class AuthUiState(
@@ -47,10 +48,14 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             val result = authRepository.signIn(email.trim(), password)
+            val exception = result.exceptionOrNull()
+            if (exception != null) {
+                Timber.e(exception, "Sign-in failed")
+            }
             _uiState.update {
                 it.copy(
                     isLoading = false,
-                    errorMessage = result.exceptionOrNull()?.let { e -> AuthErrorMapper.messageForSignIn(e, email) },
+                    errorMessage = exception?.let { e -> AuthErrorMapper.messageForSignIn(e, email) },
                 )
             }
         }
