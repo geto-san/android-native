@@ -1,0 +1,917 @@
+{
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/build.gradle.kts": {
+    "mtime": 1785577380.752081,
+    "ast_hash": "2281c9a3a22c72204788c27b0edae710",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/gradlew": {
+    "mtime": 1785577380.7550807,
+    "ast_hash": "d1188de28ac163173008bf4ee8f972ad",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/settings.gradle.kts": {
+    "mtime": 1785577380.7550807,
+    "ast_hash": "7ba2c1b2cfca381f7ef1fea01e68d130",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/scripts/convert_form_schema.py": {
+    "mtime": 1785611230.5145295,
+    "ast_hash": "39bf5d7635a282d721257e95c0c76149",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/art/questions/filtered_questions.json": {
+    "mtime": 1785607516.8492537,
+    "ast_hash": "5397b5796607d371edf8a32a67b346bf",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/art/questions/all_questions.json": {
+    "mtime": 1785607516.8482537,
+    "ast_hash": "7eff41f8ef7f63060a51cc12ccfc3f51",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/google-services.json": {
+    "mtime": 1785577380.6540828,
+    "ast_hash": "2a8ff0eed74c25a038c990acab3082a0",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/build.gradle.kts": {
+    "mtime": 1785613705.8080852,
+    "ast_hash": "77c4dba16d3da20b7a43b8cbe114d192",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/schemas/com.wildwatch.app.data.local.db.AppDatabase/2.json": {
+    "mtime": 1785577380.6550827,
+    "ast_hash": "a05d78bff1f68528d7d2279bbda385c2",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/schemas/com.wildwatch.app.data.local.db.AppDatabase/1.json": {
+    "mtime": 1785577380.6550827,
+    "ast_hash": "747e2e1926cd2b374ae143b3fd3c19b6",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/schemas/com.wildwatch.app.core.database.AppDatabase/2.json": {
+    "mtime": 1785577380.6540828,
+    "ast_hash": "a05d78bff1f68528d7d2279bbda385c2",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/schemas/com.wildwatch.app.core.database.AppDatabase/5.json": {
+    "mtime": 1785611557.0868037,
+    "ast_hash": "82a360af0ae84620c63a0bbb4af56bc9",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/schemas/com.wildwatch.app.core.database.AppDatabase/4.json": {
+    "mtime": 1785577380.6550827,
+    "ast_hash": "3287e9f1a8e0fa4c3226eab96148928e",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/schemas/com.wildwatch.app.core.database.AppDatabase/3.json": {
+    "mtime": 1785577380.6540828,
+    "ast_hash": "39e870de44fcd791e056b1a7d5c8e227",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/MainActivity.kt": {
+    "mtime": 1785577380.6580827,
+    "ast_hash": "ef6c9594230cae686728f58a749d58be",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/WildWatchApplication.kt": {
+    "mtime": 1785577380.6580827,
+    "ast_hash": "f3d9d905d1da3f331a6f5aa5fdf919dd",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/tracking/RangerTrackingViewModel.kt": {
+    "mtime": 1785612054.2489853,
+    "ast_hash": "402a99623e4fd2e4ff1c2c2d4429a309",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/tracking/RangerTrackingScreen.kt": {
+    "mtime": 1785612054.791979,
+    "ast_hash": "1467007f4b78a00743963f8ddc4f3f46",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/incidentdetail/IncidentDetailViewModel.kt": {
+    "mtime": 1785612595.389553,
+    "ast_hash": "6ac3be8800e5acb9c41da8acc5286814",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/incidentdetail/IncidentDetailScreen.kt": {
+    "mtime": 1785577380.7260814,
+    "ast_hash": "7cde5c9f9a3696c914c911b9cbc1eaf3",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/report/CameraCaptureScreen.kt": {
+    "mtime": 1785577380.7290814,
+    "ast_hash": "ef778635b720c646f98200ebd1c1bff6",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/report/WildlifeSightingReportScreen.kt": {
+    "mtime": 1785577380.7300813,
+    "ast_hash": "f44d0c0033596b8c5f987e6c3a6baf7e",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/report/ConflictReportScreen.kt": {
+    "mtime": 1785577380.7290814,
+    "ast_hash": "c436c9058e6676526bc18a441ac82139",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/report/ReportSelectionScreen.kt": {
+    "mtime": 1785577380.7300813,
+    "ast_hash": "be5ea3ff95a6ac6b56815de120b6f0c6",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/report/ReportIncidentViewModel.kt": {
+    "mtime": 1785577380.7300813,
+    "ast_hash": "f653ced3328206e0fb0334a8d2e6511c",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/report/CameraCaptureViewModel.kt": {
+    "mtime": 1785577380.7290814,
+    "ast_hash": "b5b9df77cd8c88dd809e32dc33b752d6",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/report/ReportSubmittedScreen.kt": {
+    "mtime": 1785577380.7300813,
+    "ast_hash": "506b00c4b67393fd034dc50bdf415fd0",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/report/dynamic/DynamicReportViewModel.kt": {
+    "mtime": 1785611794.0422091,
+    "ast_hash": "90f4744b050336f4f94e6d44b11ad1ec",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/report/dynamic/ui/QuestionRenderers.kt": {
+    "mtime": 1785577380.7320812,
+    "ast_hash": "882d09815a78d5a5d93e9ab07fcce7ae",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/report/dynamic/ui/DynamicReportScreen.kt": {
+    "mtime": 1785611243.0202186,
+    "ast_hash": "1808eb4b30da4a130aa6b8cb60987948",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/report/dynamic/model/FormSchemas.kt": {
+    "mtime": 1785577380.7310812,
+    "ast_hash": "81e61edc4c89daa1beaeebbf883e589d",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/report/dynamic/model/FormSchemaLoader.kt": {
+    "mtime": 1785611235.0694158,
+    "ast_hash": "608679338407555f1614342be0b11239",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/report/dynamic/model/FormEngine.kt": {
+    "mtime": 1785611241.5702543,
+    "ast_hash": "f7f16f000388e79c32fddd015d3af57b",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/report/dynamic/model/RelevanceEvaluator.kt": {
+    "mtime": 1785611235.0064173,
+    "ast_hash": "4e5f3cd6c580603453d8ee019ff1a898",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/report/dynamic/model/FormModel.kt": {
+    "mtime": 1785577380.7310812,
+    "ast_hash": "04e217a843f48d53291cfd48f7df56ae",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/report/dynamic/model/CanonicalFormSchema.kt": {
+    "mtime": 1785611234.575428,
+    "ast_hash": "f6f18cf5e0f7fe9c4d43f213462ddf5d",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/alerts/AlertViewModel.kt": {
+    "mtime": 1785577380.7220814,
+    "ast_hash": "3aff84c0a1c74b5dc8f1650c8b846643",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/alerts/CommunityAlertsScreen.kt": {
+    "mtime": 1785577380.7230814,
+    "ast_hash": "49cc1e2123f648ca0cb276b06c4c4eb6",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/auth/AuthScreen.kt": {
+    "mtime": 1785577380.7230814,
+    "ast_hash": "0e368794b8d5d1996e6f2b5b28641dd8",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/auth/AuthViewModel.kt": {
+    "mtime": 1785613241.3259983,
+    "ast_hash": "c056f4644948ba79175226aeb2d0ba65",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/dashboard/HistoryPlaceholderScreen.kt": {
+    "mtime": 1785577380.7240815,
+    "ast_hash": "5a25a3a3f494dfeb6000007cb1bee36d",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/dashboard/DashboardViewModel.kt": {
+    "mtime": 1785577380.7240815,
+    "ast_hash": "cc85add3d7514330a06d5efa27bdeaa9",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/dashboard/CommunityAlertFilter.kt": {
+    "mtime": 1785612837.4924052,
+    "ast_hash": "b4c2c39086e77dcb137da67b248d1ff5",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/dashboard/CommunityAlertPreferences.kt": {
+    "mtime": 1785611837.837623,
+    "ast_hash": "c06898b8aff2875878cd22375d94d8c6",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/dashboard/HomeViewModel.kt": {
+    "mtime": 1785612842.3403633,
+    "ast_hash": "4105b5da37977813b19c07542ab635a0",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/dashboard/DashboardScreen.kt": {
+    "mtime": 1785611910.0586984,
+    "ast_hash": "e3260d012b41a9f556acca41ae5ae677",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/dashboard/HomeScreen.kt": {
+    "mtime": 1785613267.4577317,
+    "ast_hash": "4b68036cf39ad01f72c6361235c3e51e",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/dashboard/component/CommunityAlertComponents.kt": {
+    "mtime": 1785577380.7250814,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/profile/ProfileViewModel.kt": {
+    "mtime": 1785577380.7280812,
+    "ast_hash": "2e036a2d91c0839d6a2e2624933f7153",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/profile/ProfileScreen.kt": {
+    "mtime": 1785577380.7280812,
+    "ast_hash": "3ade1592bb5e0da8ffe154210e685852",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/settings/AccountManagementScreen.kt": {
+    "mtime": 1785577380.7320812,
+    "ast_hash": "e689d0b2c6c76dbc5ad0d2b49fde280b",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/settings/SettingsViewModel.kt": {
+    "mtime": 1785577380.7320812,
+    "ast_hash": "02c7482d3ccade01526f656ab3b54aa5",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/feed/FeedScreen.kt": {
+    "mtime": 1785577380.7260814,
+    "ast_hash": "08c3843ac7285acaa9dde4d8a25ac70b",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/feed/ArticleViewModel.kt": {
+    "mtime": 1785577380.7250814,
+    "ast_hash": "7c86c674878bc8caf50a9dbf76904a5e",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/feed/ArticleDetailScreen.kt": {
+    "mtime": 1785577380.7250814,
+    "ast_hash": "d716ae5fb0e4d1024f79d0cd4ec180c1",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/notifications/NotificationsScreen.kt": {
+    "mtime": 1785577380.7270813,
+    "ast_hash": "8d822d1105f6872309389ace52cd6a80",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/feature/notifications/NotificationViewModel.kt": {
+    "mtime": 1785577380.7270813,
+    "ast_hash": "b269f9fa5dc134407839c8b399191e3e",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/ui/nav/NavMotion.kt": {
+    "mtime": 1785613326.4400527,
+    "ast_hash": "331b07da8c2ac5d4fd2097e3ec5b6edb",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/ui/nav/Route.kt": {
+    "mtime": 1785577380.7340813,
+    "ast_hash": "353c64209f95cfb1a852885246ecf848",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/ui/nav/WildWatchNavHost.kt": {
+    "mtime": 1785613254.231887,
+    "ast_hash": "e1ac4119d991e859fb6e8c2421d65af4",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/ui/nav/MainTabShell.kt": {
+    "mtime": 1785577380.733081,
+    "ast_hash": "23a8a02452091e0dd7a6fa46aed69f6d",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/sync/SyncScheduler.kt": {
+    "mtime": 1785577380.7080817,
+    "ast_hash": "5c673583346aa046aa75cc768cb0a10c",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/sync/IncidentSyncWorker.kt": {
+    "mtime": 1785577380.7080817,
+    "ast_hash": "8b81e13f2f192c211af1599f20883bf9",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/connectivity/ConnectivityObserverImpl.kt": {
+    "mtime": 1785577380.687082,
+    "ast_hash": "25410d478f83fa3d36e7d50c72736920",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/connectivity/ConnectivityObserver.kt": {
+    "mtime": 1785577380.6860821,
+    "ast_hash": "7af48f18257ff5845e7d2a0fb56d7c8b",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/camera/CameraController.kt": {
+    "mtime": 1785611151.4273689,
+    "ast_hash": "ac8b24971f41c095b90b61bc18c36338",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/incident/RemoteIncidentChange.kt": {
+    "mtime": 1785577380.6880822,
+    "ast_hash": "8366fbc0a2d15e731eaeec5eaebc0d49",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/incident/IncidentRemoteDataSource.kt": {
+    "mtime": 1785577380.687082,
+    "ast_hash": "c69a2268dee82c993d0bb91713456033",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/incident/IncidentRemoteDataSourceImpl.kt": {
+    "mtime": 1785577380.6880822,
+    "ast_hash": "40183ea6f47d81f87df1a9911dfc110f",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/incident/IncidentRepositoryImpl.kt": {
+    "mtime": 1785611742.7709227,
+    "ast_hash": "7e5a3f27cec98251794f9a2e010f1761",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/incident/IncidentRepository.kt": {
+    "mtime": 1785611742.7699225,
+    "ast_hash": "093c9a6fed9d8d7a592877a7e7b91dde",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/auth/DeviceSessionRepository.kt": {
+    "mtime": 1785613716.5189805,
+    "ast_hash": "e146fda1689940a3a6fd21215ed9fecf",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/auth/AuthRepositoryImpl.kt": {
+    "mtime": 1785613703.8361044,
+    "ast_hash": "4823e792c80f6201f74c0c32c25ab681",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/auth/OfflineAuthRepositoryImpl.kt": {
+    "mtime": 1785613705.3500896,
+    "ast_hash": "25e75c216f3fcf37f7323cd482384044",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/auth/DeviceSessionStore.kt": {
+    "mtime": 1785613689.878241,
+    "ast_hash": "66e0c84ffb819b912226bd489c382a48",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/auth/AuthRepository.kt": {
+    "mtime": 1785613704.3500993,
+    "ast_hash": "e7df5a7e062ca896a6cb414610362b32",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/auth/AuthErrorMapper.kt": {
+    "mtime": 1785611745.485884,
+    "ast_hash": "9928c785d70c6f6b1f6181529ca98646",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/repository/LocationHierarchyRepository.kt": {
+    "mtime": 1785577380.690082,
+    "ast_hash": "37568e6e8b12b93ee9bfb651b66b9f94",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/repository/ParkRepository.kt": {
+    "mtime": 1785611909.8247013,
+    "ast_hash": "296a0af45735de47b9b4ec75720b4aae",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/feed/ArticleRepositoryImpl.kt": {
+    "mtime": 1785584942.6370585,
+    "ast_hash": "305418066bbd999eeeb1a6f7b31d3f66",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/feed/ArticleRepository.kt": {
+    "mtime": 1785577380.687082,
+    "ast_hash": "140c83e73fc1fc102cebad9ec73fd7d3",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/feed/FeedRemoteDataSource.kt": {
+    "mtime": 1785584935.9991918,
+    "ast_hash": "e3650795e914ee9fcaa76f17713fe089",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/notification/NotificationRepository.kt": {
+    "mtime": 1785611831.1987104,
+    "ast_hash": "361e784105e6663ab255532949504af5",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/notification/NotificationRepositoryImpl.kt": {
+    "mtime": 1785611858.2953558,
+    "ast_hash": "47779ba43f86b3fbc8fefe8038885d03",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/user/UserDataRepository.kt": {
+    "mtime": 1785577380.690082,
+    "ast_hash": "e0f66d27e62184bf057cac0e0ad3e966",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/location/LocationRepository.kt": {
+    "mtime": 1785577380.6890821,
+    "ast_hash": "53cdc34fc1f091feb2c14a59919958a5",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/location/LocationRepositoryImpl.kt": {
+    "mtime": 1785577380.6890821,
+    "ast_hash": "bc66dea96a5bb58e5e182dba4e78ef4e",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/location/GeoUtils.kt": {
+    "mtime": 1785577380.6890821,
+    "ast_hash": "eeac6c4299df9c1f0899ed852802da6b",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/alert/AlertRepository.kt": {
+    "mtime": 1785577380.6590827,
+    "ast_hash": "9d676d23117571f5ac8ce3acb79931cf",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/data/alert/AlertRepositoryImpl.kt": {
+    "mtime": 1785577380.6590827,
+    "ast_hash": "6656485fcbd8ec7b35d3f773c1682df9",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/ui/theme/Color.kt": {
+    "mtime": 1785577380.7210815,
+    "ast_hash": "6ccd5053b9d0320573e1dcec338957c1",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/ui/theme/Theme.kt": {
+    "mtime": 1785577380.7220814,
+    "ast_hash": "c553639650ef2664a187b646a183d4b2",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/ui/theme/Type.kt": {
+    "mtime": 1785577380.7220814,
+    "ast_hash": "2b45b0c4da6f8f899276aae6a8afb5d9",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/ui/component/Headers.kt": {
+    "mtime": 1785577380.7180815,
+    "ast_hash": "213dec179458fb49b21a84d791363edb",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/ui/component/SegmentedControl.kt": {
+    "mtime": 1785577380.7200816,
+    "ast_hash": "3f79447ad0a1ec428ebc5eec64de9ef0",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/ui/component/QuickReportCard.kt": {
+    "mtime": 1785577380.7200816,
+    "ast_hash": "9fa8d657743b17298a4b94ea85a9ac83",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/ui/component/Shimmer.kt": {
+    "mtime": 1785577380.7200816,
+    "ast_hash": "4b1e07aa68f0ac4a0d6e9a1ed917e05d",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/ui/component/Buttons.kt": {
+    "mtime": 1785577380.7170815,
+    "ast_hash": "1286f042f2262e0b4dab7fbbc9af372e",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/ui/component/PermissionDialog.kt": {
+    "mtime": 1785577380.7200816,
+    "ast_hash": "e67cb375ae1ff003a79a8ad1f3099b3d",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/ui/component/Surfaces.kt": {
+    "mtime": 1785577380.7210815,
+    "ast_hash": "00427f5183d4db29f9fa7117b76a6a8c",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/ui/component/Badges.kt": {
+    "mtime": 1785577380.7170815,
+    "ast_hash": "a651cfd4f3316c9bd3481ce64c89de26",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/ui/component/CommonReportComponents.kt": {
+    "mtime": 1785577380.7180815,
+    "ast_hash": "ca750cfd74d22fb8233467264397d8f9",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/ui/component/Fields.kt": {
+    "mtime": 1785577380.7180815,
+    "ast_hash": "51b4e45d5367b8846294329cca04b402",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/ui/component/IncidentListItem.kt": {
+    "mtime": 1785611981.4368303,
+    "ast_hash": "91f2259921d96f6c6dbaed24e26eae3a",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/IncidentStatus.kt": {
+    "mtime": 1785577380.702082,
+    "ast_hash": "c100366291bf4aab0d7a17884887f360",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/ArticleEntity.kt": {
+    "mtime": 1785577380.7010818,
+    "ast_hash": "8bf08350bb51c834f3ffb0366907c6d4",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/NotificationType.kt": {
+    "mtime": 1785611161.0713358,
+    "ast_hash": "75e76f87b0c0eaa4fb709580b682ab2a",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/Park.kt": {
+    "mtime": 1785577380.7030818,
+    "ast_hash": "69c062678df36796b52022ebfe99d844",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/AlertEntity.kt": {
+    "mtime": 1785577380.699082,
+    "ast_hash": "e92fd5f8db6dacb1156078ba75d020a6",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/AlertDao.kt": {
+    "mtime": 1785577380.699082,
+    "ast_hash": "798b1cc165a9cd8ad5eae0cc3187a1b2",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/NotificationEntity.kt": {
+    "mtime": 1785577380.7030818,
+    "ast_hash": "1c96aaa4b2fef4f6b90ea12f9f36ddf8",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/AppDatabase.kt": {
+    "mtime": 1785611161.0713358,
+    "ast_hash": "fe6768ce239130586a30a4084be5a029",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/ArticleTheme.kt": {
+    "mtime": 1785577380.702082,
+    "ast_hash": "cab2a8bcb141641da59904a623bda845",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/Converters.kt": {
+    "mtime": 1785577380.702082,
+    "ast_hash": "c7b15fda695786cfde9deeb6f40b9cc0",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/IncidentDao.kt": {
+    "mtime": 1785577380.702082,
+    "ast_hash": "7a0f9818698521dd493eb5f83141ef6d",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/AlertSeverity.kt": {
+    "mtime": 1785577380.699082,
+    "ast_hash": "2e784408557ccb32f2c716ed576b3fec",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/ArticleDao.kt": {
+    "mtime": 1785584940.465102,
+    "ast_hash": "049a287e42f5ba48d9749d019fc1ac65",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/AlertCategory.kt": {
+    "mtime": 1785577380.699082,
+    "ast_hash": "18ee945ad53b8a2de311ac8ea210e8a5",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/SyncStatus.kt": {
+    "mtime": 1785577380.7030818,
+    "ast_hash": "d625502fc012642391b391d0199c8021",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/IncidentType.kt": {
+    "mtime": 1785577380.702082,
+    "ast_hash": "fd130c4414182019a6c8db06159778ca",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/RangerProgress.kt": {
+    "mtime": 1785577380.7030818,
+    "ast_hash": "6cd8905d8a3aae0a79bc28b14e8acd4d",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/IncidentEntity.kt": {
+    "mtime": 1785611161.0713358,
+    "ast_hash": "f9006adb534a8987d9c60478fcd33209",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/NotificationDao.kt": {
+    "mtime": 1785577380.7030818,
+    "ast_hash": "5d7b48d35c126a7dad1ccf20e8a3e827",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/database/IncidentSeverity.kt": {
+    "mtime": 1785577380.702082,
+    "ast_hash": "d2d97e2cd91ea01e3db92e609650c04d",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/domain/usecase/ObserveUserUseCase.kt": {
+    "mtime": 1785577380.7050817,
+    "ast_hash": "ab6c6dc160bee122ca08c7bf800a3719",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/domain/usecase/GetActiveCommunityAlertsUseCase.kt": {
+    "mtime": 1785577380.7050817,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/domain/usecase/GetIncidentByIdUseCase.kt": {
+    "mtime": 1785577380.7050817,
+    "ast_hash": "fab9f66dc5fa392a42e9f970f9cfce46",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/domain/usecase/GetArticleByIdUseCase.kt": {
+    "mtime": 1785577380.7050817,
+    "ast_hash": "a76aca0b0f6c287825b3a6f729d54f2d",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/domain/usecase/GetIncidentsUseCase.kt": {
+    "mtime": 1785577380.7050817,
+    "ast_hash": "c71c9ddbe6f408dabb539259abc6d485",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/domain/usecase/GetArticlesUseCase.kt": {
+    "mtime": 1785577380.7050817,
+    "ast_hash": "fe012ba74a5daf48aa5ff82c68afcda5",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/notifications/FcmTopicManager.kt": {
+    "mtime": 1785582245.4926858,
+    "ast_hash": "3379f25e5b530c117b4ef60ab7f1f2b7",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/notifications/FcmTokenEntryPoint.kt": {
+    "mtime": 1785584944.2590258,
+    "ast_hash": "038ad587d3d6de0d365c421e72d573ec",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/notifications/FcmTokenRepository.kt": {
+    "mtime": 1785584937.7031574,
+    "ast_hash": "10781c7f63c0aa623b897c847d1ac996",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/notifications/WildWatchMessagingService.kt": {
+    "mtime": 1785584961.361686,
+    "ast_hash": "ecc6f1aaa85f2aafd3503e0695c961c7",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/di/DataStoreModule.kt": {
+    "mtime": 1785577380.7040818,
+    "ast_hash": "511736392a229b2b4dfe5049bfcbd5dc",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/di/DatabaseModule.kt": {
+    "mtime": 1785577380.7040818,
+    "ast_hash": "d934c4169114efa00703730905115cc1",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/di/FeedModule.kt": {
+    "mtime": 1785584944.5710196,
+    "ast_hash": "c9275d75b836f7cec1508bcb89acddd5",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/di/FirebaseModule.kt": {
+    "mtime": 1785613710.2530417,
+    "ast_hash": "38d5702dc8faa0369b2b8d98f6bb1531",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/di/DispatchersModule.kt": {
+    "mtime": 1785577380.7040818,
+    "ast_hash": "077657b20472d90a3511ff0a309241e6",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/di/RepositoryModule.kt": {
+    "mtime": 1785611886.4379952,
+    "ast_hash": "43b27028dfef886912bb34ff4f4b78ef",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/di/WorkManagerModule.kt": {
+    "mtime": 1785577380.7040818,
+    "ast_hash": "a32ea0f981aceedccf8094bb9bc1d5a2",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/model/Notification.kt": {
+    "mtime": 1785577380.7060819,
+    "ast_hash": "1c79f3e0937aaaa6dd36d2a01616f21a",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/model/CommunityAlert.kt": {
+    "mtime": 1785577380.7060819,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/model/User.kt": {
+    "mtime": 1785582251.8477023,
+    "ast_hash": "759b331c838b0e67141a47ed862fdeb1",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/model/LocationHierarchy.kt": {
+    "mtime": 1785577380.7060819,
+    "ast_hash": "0e959684eb84d89ce649fcdbc2f35717",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/model/Article.kt": {
+    "mtime": 1785584939.866114,
+    "ast_hash": "47a684f6b1762f46ef01e6beb74b2cb2",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/model/ParkModel.kt": {
+    "mtime": 1785577380.7060819,
+    "ast_hash": "e31413ca0724c5940e2af5ab3e434e04",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/model/Incident.kt": {
+    "mtime": 1785611735.2880294,
+    "ast_hash": "5040ed16363e2ffe0c0301b260e8204d",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/java/com/wildwatch/app/core/model/Alert.kt": {
+    "mtime": 1785577380.7050817,
+    "ast_hash": "0bd2611c92b93f7fc1c6398a29fd9238",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/main/assets/forms/wildwatch_schema.json": {
+    "mtime": 1785611241.2772617,
+    "ast_hash": "da0786677672f7eca70e728c39a3e298",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/test/java/com/wildwatch/app/ExampleUnitTest.kt": {
+    "mtime": 1785577380.737081,
+    "ast_hash": "87a121598aa8af8ba01827408724098b",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/test/java/com/wildwatch/app/feature/tracking/RangerTrackingViewModelTest.kt": {
+    "mtime": 1785612834.977427,
+    "ast_hash": "bba86c52a4a73a93067e421d7c176842",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/test/java/com/wildwatch/app/feature/incidentdetail/IncidentDetailViewModelTest.kt": {
+    "mtime": 1785612598.0965285,
+    "ast_hash": "8061698d2267a878021127e8262b146b",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/test/java/com/wildwatch/app/feature/report/ReportIncidentViewModelTest.kt": {
+    "mtime": 1785607516.8472538,
+    "ast_hash": "423a2572066a1d6d13577c25fa2797c3",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/test/java/com/wildwatch/app/feature/alerts/AlertViewModelTest.kt": {
+    "mtime": 1785607516.8472538,
+    "ast_hash": "6f4bef1083e4b359b42855684ed327a4",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/test/java/com/wildwatch/app/feature/auth/AuthViewModelTest.kt": {
+    "mtime": 1785613438.3468182,
+    "ast_hash": "9621bb1a1e90eae2a5ed6cc350309ecf",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/test/java/com/wildwatch/app/feature/dashboard/HomeViewModelAlertFilterTest.kt": {
+    "mtime": 1785612847.566318,
+    "ast_hash": "4e81ac31ef79d3863f15534db64c8147",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/test/java/com/wildwatch/app/feature/dashboard/DashboardViewModelTest.kt": {
+    "mtime": 1785577380.7390811,
+    "ast_hash": "83fd76c031065f0aa225c7b24fe33a0f",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/test/java/com/wildwatch/app/feature/profile/ProfileViewModelTest.kt": {
+    "mtime": 1785577380.740081,
+    "ast_hash": "f10fc6fdd5713c04697812811752abf4",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/test/java/com/wildwatch/app/core/data/incident/IncidentRepositoryImplTest.kt": {
+    "mtime": 1785613437.3158293,
+    "ast_hash": "c76f210c4de5f161c7e91fda880e5e5d",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/test/java/com/wildwatch/app/core/data/location/GeoUtilsTest.kt": {
+    "mtime": 1785577380.7380812,
+    "ast_hash": "baa1becffb56b065208be49a9610c9e4",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/androidTest/java/com/wildwatch/app/CustomTestRunner.kt": {
+    "mtime": 1785577380.6560829,
+    "ast_hash": "b3aa203e59c817575be578079d4e0f69",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/androidTest/java/com/wildwatch/app/ExampleInstrumentedTest.kt": {
+    "mtime": 1785577380.6560829,
+    "ast_hash": "819cd362672df6f7299a1ccff95ed559",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/androidTest/java/com/wildwatch/app/feature/report/ReportIncidentUiTest.kt": {
+    "mtime": 1785577380.6570828,
+    "ast_hash": "a3be2cc0c84dceb7385076bb3ecfd1b7",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/androidTest/java/com/wildwatch/app/sync/IncidentSyncWorkerTest.kt": {
+    "mtime": 1785577380.6570828,
+    "ast_hash": "76541fedd751d0c256922e547ad2bf58",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/androidTest/java/com/wildwatch/app/data/local/db/IncidentDaoTest.kt": {
+    "mtime": 1785577380.6560829,
+    "ast_hash": "a0d99fd0e1af11d3508f545ea2ec80d8",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/app/src/androidTest/java/com/wildwatch/app/di/HiltInjectionSmokeTest.kt": {
+    "mtime": 1785577380.6570828,
+    "ast_hash": "7da59fb5b772b77d34e1813913bf57c7",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/AGENTS.md": {
+    "mtime": 1785585037.0482385,
+    "ast_hash": "9ec1ea3a320a7a27cc2733d92e880ab6",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/README.md": {
+    "mtime": 1785577380.6530828,
+    "ast_hash": "4a55394b3b1ae9bdd42722996f89d6ef",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/config/detekt/detekt.yml": {
+    "mtime": 1785577380.7530808,
+    "ast_hash": "d62c0feba1c36c756d6fc152d571af4a",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/docs/schema-v1.md": {
+    "mtime": 1785585037.8222241,
+    "ast_hash": "5ce885ca8fabc6ab74e8ce7b67ad0c22",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/physical_screen.png": {
+    "mtime": 1785607516.8492537,
+    "ast_hash": "1a9062d36b279ab452cf1aaa4e437405",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/emulator_screen.png": {
+    "mtime": 1785607516.8492537,
+    "ast_hash": "544b126dc80ba13f87dacad9d33a0bed",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/art/icons/ic_launcher_foreground_exact.svg": {
+    "mtime": 1785577380.741081,
+    "ast_hash": "12c5c5fab103b9149856604a035dba16",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/art/icons/wildwatch_app_icon.png": {
+    "mtime": 1785577380.744081,
+    "ast_hash": "fd6eae45fca313f681becaba7c7e7036",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/art/icons/ic_launcher_foreground_exact.png": {
+    "mtime": 1785577380.741081,
+    "ast_hash": "962b64320a3f472bc3464dc917d45645",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/art/icons/wildwatch_app_icon.svg": {
+    "mtime": 1785577380.744081,
+    "ast_hash": "c90c2a063b5fea577bd31aae52883c49",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/art/screenshots/profile_dark.png": {
+    "mtime": 1785577380.7510808,
+    "ast_hash": "59fcc76d2d47267772da5adeda0392f6",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/art/screenshots/profile_light.png": {
+    "mtime": 1785577380.752081,
+    "ast_hash": "cdf17c550627102df40ec1a9ee6d2ea4",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/art/screenshots/home_light.png": {
+    "mtime": 1785577380.7500808,
+    "ast_hash": "056b523008baef6a285625c8cba87bdf",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/art/screenshots/feed_light.png": {
+    "mtime": 1785577380.747081,
+    "ast_hash": "cd63c9540216a9fbeed65508c55490c9",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/art/screenshots/home_dark.png": {
+    "mtime": 1785577380.748081,
+    "ast_hash": "87bdfbf4c6e7968365c0bb1daef7325e",
+    "semantic_hash": ""
+  },
+  "/home/nyson/Downloads/WildWatch/android-native-master-branch/art/screenshots/feed_dark.png": {
+    "mtime": 1785577380.7460809,
+    "ast_hash": "ddeab805cf3bcb1b109dce91065600ce",
+    "semantic_hash": ""
+  }
+}

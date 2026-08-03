@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug-build-only override (app/src/debug wins over app/src/main for debug
+  builds via Android resource merging). Permits cleartext HTTP to ANY host so
+  local Docker backend access keeps working regardless of which LAN IP the
+  dev machine currently has (DHCP), without editing this file per-machine.
+  Never packaged into release builds - app/src/main/res/xml/network_security_config.xml
+  (allowlist-only) still applies there.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

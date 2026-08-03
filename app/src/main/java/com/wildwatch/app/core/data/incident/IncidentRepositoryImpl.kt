@@ -49,6 +49,7 @@ class IncidentRepositoryImpl @Inject constructor(
         val user = authRepository.currentUser.first()
         val incident = Incident(
             id = java.util.UUID.randomUUID().toString(),
+            // ...
             type = details.type,
             status = IncidentStatus.OPEN,
             park = details.park,

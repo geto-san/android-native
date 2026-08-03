@@ -92,9 +92,21 @@ class HomeViewModel @Inject constructor(
             it.syncStatus == SyncStatus.PENDING || it.syncStatus == SyncStatus.PENDING_UPDATE
         }
         val syncedReports = incidents.filter { it.syncStatus != SyncStatus.DRAFT }
+        // "My recent reports" must only ever show the signed-in user's own
+        // submissions - syncedReports/incidents mirror the shared Firestore
+        // collection (every user's reports), so this needs an explicit
+        // userId scope rather than reusing syncedReports directly.
+        val myReports = syncedReports.filter { it.userId != null && it.userId == user?.uid }
 
         val communityAlerts = syncedReports.filter { incident ->
-            CommunityAlertFilter.shouldShow(incident, user?.uid, dismissedIds, seenTimestamps)
+            CommunityAlertFilter.shouldShow(
+                incident = incident,
+                currentUserId = user?.uid,
+                currentUserParkId = user?.parkId,
+                currentUserRole = user?.role,
+                dismissedIds = dismissedIds,
+                seenTimestamps = seenTimestamps,
+            )
         }.sortedByDescending { runCatching { Instant.parse(it.reportedAt) }.getOrNull() ?: Instant.EPOCH }
 
         return HomeUiState(
@@ -102,7 +114,7 @@ class HomeViewModel @Inject constructor(
             reportsThisMonth = thisMonth.size,
             resolvedThisMonth = thisMonth.count { it.status == IncidentStatus.RESOLVED },
             unreadNotificationCount = core.unreadNotifications,
-            recentReports = syncedReports
+            recentReports = myReports
                 .sortedByDescending { runCatching { Instant.parse(it.reportedAt) }.getOrNull() ?: Instant.EPOCH }
                 .take(5),
             drafts = drafts,

@@ -14,6 +14,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.wildwatch.app.MainActivity
 import com.wildwatch.app.R
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -24,6 +25,9 @@ import javax.inject.Inject
 @AndroidEntryPoint
 @Suppress("DEPRECATION")
 class WildWatchMessagingService : FirebaseMessagingService() {
+
+    @Inject
+    lateinit var fcmTokenRepository: FcmTokenRepository
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -82,7 +86,7 @@ class WildWatchMessagingService : FirebaseMessagingService() {
         super.onNewToken(token)
         Timber.d("FCM token refreshed")
         serviceScope.launch {
-            fcmTokenRepository().syncToken(token)
+            fcmTokenRepository.syncToken(token)
         }
     }
 }

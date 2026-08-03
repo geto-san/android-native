@@ -6,6 +6,7 @@ import com.wildwatch.app.core.database.IncidentType
 import com.wildwatch.app.core.database.Park
 import com.wildwatch.app.core.database.SyncStatus
 import com.wildwatch.app.core.model.Incident
+import com.wildwatch.app.core.model.UserRole
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -44,6 +45,8 @@ class HomeViewModelAlertFilterTest {
         val result = CommunityAlertFilter.shouldShow(
             incident = incident(id = "1", userId = "self"),
             currentUserId = "self",
+            currentUserParkId = null,
+            currentUserRole = UserRole.RANGER,
             dismissedIds = emptySet(),
             seenTimestamps = emptyMap(),
         )
@@ -55,6 +58,8 @@ class HomeViewModelAlertFilterTest {
         val result = CommunityAlertFilter.shouldShow(
             incident = incident(id = "1", animalSeen = false),
             currentUserId = "self",
+            currentUserParkId = null,
+            currentUserRole = UserRole.RANGER,
             dismissedIds = emptySet(),
             seenTimestamps = emptyMap(),
         )
@@ -66,6 +71,8 @@ class HomeViewModelAlertFilterTest {
         val result = CommunityAlertFilter.shouldShow(
             incident = incident(id = "1", syncStatus = SyncStatus.PENDING),
             currentUserId = "self",
+            currentUserParkId = null,
+            currentUserRole = UserRole.RANGER,
             dismissedIds = emptySet(),
             seenTimestamps = emptyMap(),
         )
@@ -77,6 +84,47 @@ class HomeViewModelAlertFilterTest {
         val result = CommunityAlertFilter.shouldShow(
             incident = incident(id = "1", userId = "other", animalSeen = true),
             currentUserId = "self",
+            currentUserParkId = null,
+            currentUserRole = UserRole.RANGER,
+            dismissedIds = emptySet(),
+            seenTimestamps = emptyMap(),
+        )
+        assertTrue(result)
+    }
+
+    @Test
+    fun `excludes incidents from a different park`() {
+        val result = CommunityAlertFilter.shouldShow(
+            incident = incident(id = "1", userId = "other"), // park = BWINDI_IMPENETRABLE
+            currentUserId = "self",
+            currentUserParkId = "queen-elizabeth",
+            currentUserRole = UserRole.RANGER,
+            dismissedIds = emptySet(),
+            seenTimestamps = emptyMap(),
+        )
+        assertFalse(result)
+    }
+
+    @Test
+    fun `includes incidents from the same park regardless of id format`() {
+        val result = CommunityAlertFilter.shouldShow(
+            incident = incident(id = "1", userId = "other"), // park = BWINDI_IMPENETRABLE
+            currentUserId = "self",
+            currentUserParkId = "bwindi-impenetrable",
+            currentUserRole = UserRole.RANGER,
+            dismissedIds = emptySet(),
+            seenTimestamps = emptyMap(),
+        )
+        assertTrue(result)
+    }
+
+    @Test
+    fun `includes incidents from any park for a UWA official`() {
+        val result = CommunityAlertFilter.shouldShow(
+            incident = incident(id = "1", userId = "other"), // park = BWINDI_IMPENETRABLE
+            currentUserId = "self",
+            currentUserParkId = "queen-elizabeth",
+            currentUserRole = UserRole.UWA_OFFICIAL,
             dismissedIds = emptySet(),
             seenTimestamps = emptyMap(),
         )

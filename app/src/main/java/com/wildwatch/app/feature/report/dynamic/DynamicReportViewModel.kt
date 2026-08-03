@@ -67,6 +67,7 @@ class DynamicReportViewModel @Inject constructor(
     }
 
     fun initialize(type: IncidentType, questions: List<Question>, draftId: String? = null, schemaVersion: String? = null) {
+        android.util.Log.d("WildWatch", "Initializing ViewModel with type: $type")
         val newEngine = FormEngine(questions)
         engine = newEngine
         _uiState.update {
@@ -147,21 +148,20 @@ class DynamicReportViewModel @Inject constructor(
     }
 
     private fun validate() {
-        val questions = engine?.questions ?: return
-        val answers = _uiState.value.answers
+        val state = _uiState.value
+        val answers = state.answers
+        
+        val isTypeSpecificValid = when (state.type) {
+            IncidentType.SIGHTING -> answers.containsKey("Have_you_seen_the_wild_animal_")
+            IncidentType.CONFLICT -> answers.containsKey("What_effect_conflict_has_the_")
+            else -> true
+        }
 
-        val allRequiredFilled = questions
-            .filter { it.isRequired }
-            .filter { it.visibilityCondition?.invoke(answers) ?: true }
-            .all { q ->
-                val ans = answers[q.id]
-                when (q.type) {
-                    QuestionType.PHOTOS -> (ans as? List<*>)?.isNotEmpty() ?: false
-                    else -> ans?.toString()?.isNotBlank() ?: false
-                }
-            }
-
-        _uiState.update { it.copy(canSubmit = allRequiredFilled) }
+        val canSubmit = isTypeSpecificValid && 
+                answers.containsKey("District") && 
+                answers.containsKey("Sub_county")
+        
+        _uiState.update { it.copy(canSubmit = canSubmit) }
     }
 
     fun save(asDraft: Boolean = false) {
@@ -228,10 +228,10 @@ class DynamicReportViewModel @Inject constructor(
     }
 
     private fun encodeAnswers(answers: Map<String, Any?>): String {
-        val serializable = answers.mapValues { (_, value) ->
+        val serializable: Map<String, String?> = answers.mapValues { (_, value) ->
             when (value) {
                 null -> null
-                is List<*> -> value.map { it?.toString() }
+                is List<*> -> value.joinToString(",") { it?.toString() ?: "" }
                 else -> value.toString()
             }
         }

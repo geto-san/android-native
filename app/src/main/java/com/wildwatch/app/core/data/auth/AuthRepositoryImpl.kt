@@ -11,7 +11,6 @@ import com.wildwatch.app.core.model.User
 import com.wildwatch.app.core.model.UserRole
 import com.wildwatch.app.core.notifications.FcmTokenRepository
 import com.wildwatch.app.core.notifications.FcmTopicManager
-import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.SharingStarted
@@ -157,34 +156,5 @@ class AuthRepositoryImpl @Inject constructor(
             val token = FirebaseMessaging.getInstance().token.await()
             fcmTokenRepository.syncToken(token)
         }.onFailure { Timber.w(it, "Failed to sync FCM registration token after auth") }
-    }
-
-    private fun syncFcmTokenAndTopics(user: User) {
-        applicationScope.launch {
-            try {
-                // 1. Sync FCM token to Firestore
-                val token = firebaseMessaging.getToken().await()
-                firestore.collection("users").document(user.uid)
-                    .update("fcm_tokens", FieldValue.arrayUnion(token))
-                    .await()
-
-                // 2. Subscribe to topics
-                firebaseMessaging.subscribeToTopic("park_alerts_all").await()
-                
-                val roleTopic = when (user.role) {
-                    UserRole.RANGER -> "role_ranger"
-                    UserRole.PUBLIC -> "role_public"
-                }
-                firebaseMessaging.subscribeToTopic(roleTopic).await()
-
-                user.parkId?.let { parkId ->
-                    firebaseMessaging.subscribeToTopic("park_alerts_$parkId").await()
-                }
-
-                Timber.d("FCM token and topics synced for user ${user.uid}")
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to sync FCM token or topics")
-            }
-        }
     }
 }
