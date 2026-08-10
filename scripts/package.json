@@ -2,7 +2,7 @@
   "name": "wildwatch-scripts",
   "version": "1.0.0",
   "description": "Scripts for WildWatch backend",
-  "main": "seed.js",
+  "main": "seed.ts",
   "scripts": {
     "seed": "ts-node seed.ts"
   },

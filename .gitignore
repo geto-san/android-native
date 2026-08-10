@@ -1,2 +1,8 @@
 node_modules
-firestore-debug.logfirebase-debug.log
+firestore-debug.log
+firebase-debug.log
+firebase-export-*/
+
+# compiled Cloud Functions output
+functions/lib/
+functions/graphify-out/

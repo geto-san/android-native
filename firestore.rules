@@ -102,7 +102,15 @@ service cloud.firestore {
     // POIs
     match /pois/{poiId} {
       allow read: if true;
-      allow write: if isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id));
+      // `create` has no existing `resource` yet - must check the incoming
+      // `request.resource.data`, not `resource.data` (which was the bug here:
+      // resource.data is null on create, so the old single `write` rule using
+      // it silently denied every create, including warden/UWA ones).
+      // Rangers can add points (e.g. a danger zone flagged on discovery) but
+      // not edit/delete existing ones - that stays warden/UWA moderation.
+      allow create: if isUwaOfficial() ||
+        ((isWarden() || isRanger()) && belongsToPark(request.resource.data.parkId));
+      allow update, delete: if isUwaOfficial() || (isWarden() && belongsToPark(resource.data.parkId));
     }
 
     // Tasks
