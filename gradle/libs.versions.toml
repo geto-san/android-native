@@ -5,7 +5,6 @@ ksp = "2.3.10"
 coreKtx = "1.19.0"
 coreSplashScreen = "1.2.0"
 lifecycle = "2.11.0"
-activityCompose = "1.13.0"
 composeBom = "2026.06.01"
 hilt = "2.60.1"
 hiltNavigationCompose = "1.4.0"
@@ -20,12 +19,10 @@ firebaseAppCheck = "19.3.0"
 playServicesLocation = "21.4.0"
 mapbox = "11.10.1"
 camerax = "1.6.1"
-biometric = "1.1.0"
 credentials = "1.6.0"
 googleid = "1.2.0"
 coroutines = "1.11.0"
 sqlcipher = "4.5.4"
-sqlite = "2.7.0"
 junit = "4.13.2"
 androidxTestExtJunit = "1.3.0"
 espressoCore = "3.7.0"
@@ -43,7 +40,7 @@ core-splashscreen = { group = "androidx.core", name = "core-splashscreen", versi
 lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
 lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+activity-compose = { group = "androidx.activity", name = "activity-compose" }
 
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 compose-ui = { group = "androidx.compose.ui", name = "ui" }
@@ -82,7 +79,6 @@ firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging
 firebase-functions = { group = "com.google.firebase", name = "firebase-functions" }
 firebase-appcheck-playintegrity = { group = "com.google.firebase", name = "firebase-appcheck-playintegrity", version.ref = "firebaseAppCheck" }
 firebase-appcheck-debug = { group = "com.google.firebase", name = "firebase-appcheck-debug", version.ref = "firebaseAppCheck" }
-firebase-ai = { group = "com.google.firebase", name = "firebase-ai" }
 
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 mapbox-maps = { group = "com.mapbox.maps", name = "android", version.ref = "mapbox" }
@@ -97,10 +93,7 @@ credentials = { group = "androidx.credentials", name = "credentials", version.re
 credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
 googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
 
-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
-
 sqlcipher = { group = "net.zetetic", name = "android-database-sqlcipher", version.ref = "sqlcipher" }
-sqlite-ktx = { group = "androidx.sqlite", name = "sqlite-ktx", version.ref = "sqlite" }
 
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }

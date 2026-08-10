@@ -13,3 +13,6 @@ local.properties
 *.aab
 .artifacts
 wireframes
+
+# Generated graph/static-analysis output (graphify)
+graphify-out/
