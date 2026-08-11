@@ -118,7 +118,7 @@ The app follows an **Offline-First Outbox Pattern**:
 
 - **Guest Notifications**: Topic-based messaging (e.g., `park_alerts_all`) will allow Guests to receive info without being logged in.
 - **Media Optimization**: Cloudinary or R2 will be used for large media files to stay within Firebase Storage free-tier limits.
-- **Ranger Login**: Use `ranger@wildwatch.com` (pw: `password123`) in development to access professional features.
+- **Ranger Login**: Use `ranger@wildwatch.app` (pw: `password123`) in development to access professional features (see `android-native-backend-branch/scripts/seed.ts`).
 
 ## 11. Local-first Docker development
 

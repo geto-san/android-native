@@ -7,6 +7,7 @@ import com.wildwatch.app.core.database.AppDatabase
 import com.wildwatch.app.core.database.ArticleDao
 import com.wildwatch.app.core.database.IncidentDao
 import com.wildwatch.app.core.database.NotificationDao
+import com.wildwatch.app.core.database.PatrolLogDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -51,4 +52,7 @@ object DatabaseModule {
 
     @Provides
     fun providesNotificationDao(database: AppDatabase): NotificationDao = database.notificationDao()
+
+    @Provides
+    fun providesPatrolLogDao(database: AppDatabase): PatrolLogDao = database.patrolLogDao()
 }

@@ -16,6 +16,10 @@ private const val PERIODIC_SYNC_WORK_NAME = "incident_periodic_sync"
 private const val IMMEDIATE_SYNC_WORK_NAME = "incident_immediate_sync"
 private const val PERIODIC_SYNC_INTERVAL_MINUTES = 15L
 
+private const val PATROL_PERIODIC_SYNC_WORK_NAME = "patrol_periodic_sync"
+private const val PATROL_IMMEDIATE_SYNC_WORK_NAME = "patrol_immediate_sync"
+private const val PATROL_PERIODIC_SYNC_INTERVAL_MINUTES = 15L
+
 @Singleton
 class SyncScheduler @Inject constructor(private val workManager: WorkManager) {
 
@@ -52,6 +56,37 @@ class SyncScheduler @Inject constructor(private val workManager: WorkManager) {
 
         workManager.enqueueUniqueWork(
             IMMEDIATE_SYNC_WORK_NAME,
+            ExistingWorkPolicy.REPLACE,
+            request,
+        )
+    }
+
+    // Same KEEP/REPLACE reasoning as the incident jobs above, mirrored for
+    // patrol_logs - a separate uniquely-named job so the two sync engines
+    // never contend with or cancel each other.
+    fun schedulePeriodicPatrolSync() {
+        val request = PeriodicWorkRequestBuilder<PatrolSyncWorker>(
+            PATROL_PERIODIC_SYNC_INTERVAL_MINUTES,
+            TimeUnit.MINUTES,
+        )
+            .setConstraints(networkConnectedConstraint())
+            .build()
+
+        workManager.enqueueUniquePeriodicWork(
+            PATROL_PERIODIC_SYNC_WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            request,
+        )
+    }
+
+    fun triggerImmediatePatrolSync() {
+        val request = OneTimeWorkRequestBuilder<PatrolSyncWorker>()
+            .setConstraints(networkConnectedConstraint())
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+            .build()
+
+        workManager.enqueueUniqueWork(
+            PATROL_IMMEDIATE_SYNC_WORK_NAME,
             ExistingWorkPolicy.REPLACE,
             request,
         )

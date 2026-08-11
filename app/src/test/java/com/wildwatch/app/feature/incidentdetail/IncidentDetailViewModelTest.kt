@@ -3,6 +3,8 @@ package com.wildwatch.app.core.feature.incidentdetail
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.wildwatch.app.core.data.incident.IncidentRepository
+import com.wildwatch.app.core.data.location.GeoLocation
+import com.wildwatch.app.core.data.location.LocationRepository
 import com.wildwatch.app.core.database.IncidentSeverity
 import com.wildwatch.app.core.database.IncidentStatus
 import com.wildwatch.app.core.database.IncidentType
@@ -14,6 +16,7 @@ import com.wildwatch.app.core.model.Incident
 import com.wildwatch.app.core.model.User
 import com.wildwatch.app.core.model.UserRole
 import com.wildwatch.app.feature.incidentdetail.IncidentDetailViewModel
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +39,7 @@ class IncidentDetailViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var incidentRepository: IncidentRepository
+    private lateinit var locationRepository: LocationRepository
     private lateinit var getIncidentByIdUseCase: GetIncidentByIdUseCase
     private lateinit var observeUserUseCase: ObserveUserUseCase
 
@@ -43,6 +47,7 @@ class IncidentDetailViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         incidentRepository = mockk()
+        locationRepository = mockk()
         getIncidentByIdUseCase = mockk()
         observeUserUseCase = mockk()
         every { observeUserUseCase() } returns MutableStateFlow(null)
@@ -73,6 +78,7 @@ class IncidentDetailViewModelTest {
         IncidentDetailViewModel(
             SavedStateHandle(mapOf("id" to id)),
             incidentRepository,
+            locationRepository,
             getIncidentByIdUseCase,
             observeUserUseCase,
         )
@@ -109,6 +115,40 @@ class IncidentDetailViewModelTest {
         every { getIncidentByIdUseCase("a") } returns flowOf(incident("a"))
 
         val viewModel = viewModelFor("a")
+
+        viewModel.uiState.test {
+            assertNull(awaitItem().distanceKm)
+        }
+    }
+
+    @Test
+    fun `loadDistance computes distance from current location to the incident`() = runTest(testDispatcher) {
+        val testIncident = incident("a") // lat -1.0, lng 29.0
+        every { getIncidentByIdUseCase("a") } returns flowOf(testIncident)
+        coEvery { incidentRepository.getById("a") } returns testIncident
+        // Roughly 1 degree of latitude south of the incident (~111km).
+        coEvery { locationRepository.getCurrentLocation() } returns
+            Result.success(GeoLocation(latitude = -2.0, longitude = 29.0, accuracyMeters = 5f))
+
+        val viewModel = viewModelFor("a")
+        viewModel.loadDistance()
+
+        viewModel.uiState.test {
+            val distance = awaitItem().distanceKm
+            assertEquals(111.0, distance ?: 0.0, 2.0)
+        }
+    }
+
+    @Test
+    fun `loadDistance leaves distance null when location is unavailable`() = runTest(testDispatcher) {
+        val testIncident = incident("a")
+        every { getIncidentByIdUseCase("a") } returns flowOf(testIncident)
+        coEvery { incidentRepository.getById("a") } returns testIncident
+        coEvery { locationRepository.getCurrentLocation() } returns
+            Result.failure(IllegalStateException("Location unavailable"))
+
+        val viewModel = viewModelFor("a")
+        viewModel.loadDistance()
 
         viewModel.uiState.test {
             assertNull(awaitItem().distanceKm)

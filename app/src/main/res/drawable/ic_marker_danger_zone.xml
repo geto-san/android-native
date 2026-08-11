@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="44dp"
+    android:height="44dp"
+    android:viewportWidth="44"
+    android:viewportHeight="44">
+    <!-- Triangle hazard marker, distinct shape from the circular incident/POI
+         pins so danger zones stand out at a glance. -->
+    <path
+        android:pathData="M22,4 L42,40 L2,40 Z"
+        android:fillColor="#B91C1C"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"/>
+</vector>

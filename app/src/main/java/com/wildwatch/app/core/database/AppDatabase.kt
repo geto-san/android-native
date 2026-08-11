@@ -10,8 +10,9 @@ import androidx.room.TypeConverters
         AlertEntity::class,
         ArticleEntity::class,
         NotificationEntity::class,
+        PatrolLogEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -20,4 +21,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun alertDao(): AlertDao
     abstract fun articleDao(): ArticleDao
     abstract fun notificationDao(): NotificationDao
+    abstract fun patrolLogDao(): PatrolLogDao
 }
