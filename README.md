@@ -14,7 +14,7 @@ Deploying the Firestore rules, Storage rules, and Cloud Functions to a real proj
 
 ## Running locally
 
-The Firebase Emulator Suite (Auth, Firestore, Storage, and Functions) can still run this backend entirely locally, most easily through the Docker stack at `../wildwatch-local-development-env-setup/`, which wires this repository's emulators together with the Laravel API, a MySQL database, and the portal frontend. That directory's own setup runbook has the full procedure. This stack has not been retired, but the hosted-services path above is now the primary documented workflow.
+The Firebase Emulator Suite (Auth, Firestore, Storage, and Functions) can still run this backend entirely locally, using the emulator configuration already present in this repository's `firebase.json`, with the Firebase CLI's `emulators:start` command. The Docker stack that used to wire these emulators together with the Laravel API, a MySQL database, and the portal frontend for a full-fidelity local environment has been retired; running the emulators alone (without the rest of the stack) is now the only local option short of the hosted-services path above.
 
 ## Testing
 
