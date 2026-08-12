@@ -96,5 +96,10 @@
       "laravel_roles": ["Community Member"],
       "park_id": null
     }
-  ]
+  ],
+  "admin": {
+    "email": "admin@uwa.go.ug",
+    "password": "Password123!",
+    "laravel_roles": ["System Administrator"]
+  }
 }
