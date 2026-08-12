@@ -115,6 +115,41 @@ class AuthViewModelTest {
     }
 
     @Test
+    fun `sendPasswordReset with blank email sets an error without calling the repository`() {
+        val viewModel = AuthViewModel(authRepository, observeUserUseCase)
+
+        viewModel.sendPasswordReset("")
+
+        assertEquals("Enter your email address first", viewModel.uiState.value.errorMessage)
+        coVerify(exactly = 0) { authRepository.sendPasswordResetEmail(any()) }
+    }
+
+    @Test
+    fun `sendPasswordReset success sets an info message`() = runTest(testDispatcher) {
+        coEvery { authRepository.sendPasswordResetEmail("a@b.com") } returns Result.success(Unit)
+        val viewModel = AuthViewModel(authRepository, observeUserUseCase)
+
+        viewModel.sendPasswordReset("a@b.com")
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertEquals("Password reset email sent to a@b.com", viewModel.uiState.value.infoMessage)
+        assertNull(viewModel.uiState.value.errorMessage)
+    }
+
+    @Test
+    fun `sendPasswordReset failure surfaces the exception message`() = runTest(testDispatcher) {
+        coEvery { authRepository.sendPasswordResetEmail(any()) } returns Result.failure(Exception("no such user"))
+        val viewModel = AuthViewModel(authRepository, observeUserUseCase)
+
+        viewModel.sendPasswordReset("a@b.com")
+        advanceUntilIdle()
+
+        assertEquals("no such user", viewModel.uiState.value.errorMessage)
+        assertNull(viewModel.uiState.value.infoMessage)
+    }
+
+    @Test
     fun `clearError resets the error message`() = runTest(testDispatcher) {
         coEvery { authRepository.signIn(any(), any()) } returns Result.failure(Exception("oops"))
         val viewModel = AuthViewModel(authRepository, observeUserUseCase)

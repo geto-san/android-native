@@ -25,6 +25,7 @@ import javax.inject.Inject
 data class AuthUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
+    val infoMessage: String? = null,
 )
 
 // Per guardrail G7, LoginScreen/SignUpScreen only ever call this ViewModel - never
@@ -124,12 +125,30 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun sendPasswordReset(email: String) {
+        if (email.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "Enter your email address first") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
+            val result = authRepository.sendPasswordResetEmail(email.trim())
+            _uiState.update {
+                if (result.isSuccess) {
+                    it.copy(isLoading = false, infoMessage = "Password reset email sent to $email")
+                } else {
+                    it.copy(isLoading = false, errorMessage = result.exceptionOrNull()?.friendlyMessage())
+                }
+            }
+        }
+    }
+
     fun signOut() {
         authRepository.signOut()
     }
 
     fun clearError() {
-        _uiState.update { it.copy(errorMessage = null) }
+        _uiState.update { it.copy(errorMessage = null, infoMessage = null) }
     }
 
     private fun Throwable.friendlyMessage(): String = message ?: "Something went wrong. Please try again."

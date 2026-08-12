@@ -65,6 +65,10 @@ class NotificationRepositoryImpl @Inject constructor(
         )
     }
 
+    override suspend fun clearAll() = withContext(ioDispatcher) {
+        notificationDao.deleteAll()
+    }
+
     private suspend fun seedIfEmpty() = withContext(ioDispatcher) {
         if (notificationDao.count() > 0) return@withContext
         val now = System.currentTimeMillis()

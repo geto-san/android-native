@@ -21,7 +21,11 @@ data class ProfileUiState(
     val email: String? = null,
     val role: UserRole = UserRole.PUBLIC,
     val isGuest: Boolean = true,
-    val isDarkTheme: Boolean = false,
+    // null = no explicit preference saved yet - the actually-rendered theme (see
+    // MainActivity) falls back to isSystemInDarkTheme() in that case. Left nullable here
+    // rather than collapsed to false so the UI layer can resolve it the same way and keep
+    // this switch in sync with what's really on screen instead of always showing "off".
+    val isDarkTheme: Boolean? = null,
     // Community: incidents this account reported (Incident.userId).
     // Ranger: incidents this account is/was assigned to (Incident.assignedTo).
     // Never the whole table's counts - those aren't "mine" for either role.
@@ -58,7 +62,7 @@ class ProfileViewModel @Inject constructor(
             email = user?.email,
             role = role,
             isGuest = user?.isGuest ?: true,
-            isDarkTheme = darkTheme ?: false,
+            isDarkTheme = darkTheme,
             primaryCount = mine.size,
             resolvedCount = mine.count { it.status == IncidentStatus.RESOLVED },
             zones = mine.map { it.community }.distinct(),

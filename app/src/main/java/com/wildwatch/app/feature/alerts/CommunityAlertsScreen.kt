@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -75,7 +75,13 @@ fun CommunityAlertsScreen(onBack: () -> Unit, viewModel: AlertViewModel = hiltVi
     val alerts by viewModel.alerts.collectAsStateWithLifecycle()
     var selectedFilter by remember { mutableStateOf(CATEGORY_FILTERS.first()) }
 
-    Surface(modifier = Modifier.fillMaxSize().safeDrawingPadding(), color = MaterialTheme.colorScheme.background) {
+    // fillMaxSize() only (no safeDrawingPadding here) so this Surface's background paints
+    // all the way behind the status/nav bars, matching the app's edge-to-edge window -
+    // otherwise the OS shows its default (light) window background through that strip
+    // instead of this screen's theme color. BackHeader applies its own statusBarsPadding
+    // for the content below it; the LazyColumn's navigationBarsPadding (below) covers the
+    // bottom edge.
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
@@ -114,7 +120,7 @@ fun CommunityAlertsScreen(onBack: () -> Unit, viewModel: AlertViewModel = hiltVi
                 EmptyAlertsState()
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().navigationBarsPadding(),
                 ) {
                     items(filtered, key = { it.id }) { alert ->
                         AlertItem(alert)

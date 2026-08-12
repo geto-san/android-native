@@ -6,6 +6,7 @@ import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
+import com.wildwatch.app.core.data.notification.NotificationRepository
 import com.wildwatch.app.core.di.ApplicationScope
 import com.wildwatch.app.core.model.User
 import com.wildwatch.app.core.model.UserRole
@@ -40,6 +41,7 @@ class AuthRepositoryImpl @Inject constructor(
     private val fcmTokenRepository: FcmTokenRepository,
     private val deviceSessionRepository: DeviceSessionRepository,
     private val deviceSessionStore: DeviceSessionStore,
+    private val notificationRepository: NotificationRepository,
     @ApplicationScope private val applicationScope: CoroutineScope,
 ) : AuthRepository {
 
@@ -118,6 +120,10 @@ class AuthRepositoryImpl @Inject constructor(
         Unit
     }
 
+    override suspend fun sendPasswordResetEmail(email: String): Result<Unit> = runCatching {
+        firebaseAuth.sendPasswordResetEmail(email).await()
+    }
+
     override suspend fun refreshRoleClaims(): Result<Unit> = runCatching {
         refreshClaimsAndTopics(forceRefresh = true)
         Unit
@@ -130,6 +136,7 @@ class AuthRepositoryImpl @Inject constructor(
         applicationScope.launch {
             fcmTopicManager.clearTopics()
             deviceSessionRepository.clearLocalSession()
+            notificationRepository.clearAll()
         }
         firebaseAuth.signOut()
     }

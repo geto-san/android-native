@@ -1,8 +1,14 @@
 package com.wildwatch.app.feature.auth
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,11 +17,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -75,14 +83,20 @@ fun AuthScreen(
                 modifier = Modifier.padding(top = 16.dp, bottom = 40.dp)
             )
 
-            if (!signInSelected) {
-                WildWatchTextField(
-                    value = fullName,
-                    onValueChange = { fullName = it },
-                    placeholder = "Full Name",
-                    imeAction = ImeAction.Next,
-                )
-                Spacer(modifier = Modifier.height(12.dp))
+            AnimatedVisibility(
+                visible = !signInSelected,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
+                Column {
+                    WildWatchTextField(
+                        value = fullName,
+                        onValueChange = { fullName = it },
+                        placeholder = "Full Name",
+                        imeAction = ImeAction.Next,
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
             }
 
             WildWatchTextField(
@@ -113,7 +127,7 @@ fun AuthScreen(
 
             if (signInSelected) {
                 TextButton(
-                    onClick = {},
+                    onClick = { viewModel.sendPasswordReset(emailOrPhone) },
                 ) {
                     Text(
                         "Forgot password?",
@@ -135,6 +149,15 @@ fun AuthScreen(
                 )
             }
 
+            uiState.infoMessage?.let { info ->
+                Text(
+                    text = info,
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(bottom = 16.dp),
+                )
+            }
+
             Button(
                 onClick = {
                     if (signInSelected) {
@@ -150,10 +173,18 @@ fun AuthScreen(
                 ),
                 enabled = !uiState.isLoading
             ) {
-                Text(
-                    if (signInSelected) "Log In" else "Sign Up",
-                    fontWeight = FontWeight.Bold
-                )
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Text(
+                        if (signInSelected) "Log In" else "Sign Up",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
             Row(
@@ -175,14 +206,23 @@ fun AuthScreen(
                 onClick = { viewModel.onGoogleSignInClick(context) },
                 modifier = Modifier.fillMaxWidth().height(44.dp),
                 shape = MaterialTheme.shapes.extraSmall,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                enabled = !uiState.isLoading
             ) {
-                Text(
-                    "Continue with Google",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Text(
+                        "Continue with Google",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -194,12 +234,20 @@ fun AuthScreen(
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                 enabled = !uiState.isLoading
             ) {
-                Text(
-                    "Continue without account",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Text(
+                        "Continue without account",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(40.dp))

@@ -2,6 +2,7 @@ package com.wildwatch.app.feature.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -53,6 +54,12 @@ private fun ProfileContent(
     onThemeToggle: (Boolean) -> Unit,
     onAccountManagementClick: () -> Unit
 ) {
+    // uiState.isDarkTheme is null until the user picks an explicit preference - resolve
+    // against the system default here so this switch always matches what's actually on
+    // screen (MainActivity resolves the real theme the same way), instead of showing "off"
+    // while the app is visibly dark because it's following the system.
+    val resolvedDarkTheme = uiState.isDarkTheme ?: isSystemInDarkTheme()
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -100,9 +107,9 @@ private fun ProfileContent(
                         ),
                         SettingsItemData(
                             title = "Dark mode", 
-                            icon = Icons.Default.DarkMode, 
+                            icon = Icons.Default.DarkMode,
                             showSwitch = true,
-                            switchChecked = uiState.isDarkTheme,
+                            switchChecked = resolvedDarkTheme,
                             onSwitchChange = onThemeToggle
                         ),
                         SettingsItemData(

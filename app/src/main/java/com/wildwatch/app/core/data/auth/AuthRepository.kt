@@ -22,6 +22,9 @@ interface AuthRepository {
 
     suspend fun signUp(email: String, password: String, displayName: String): Result<Unit>
 
+    /** Sends Firebase's password-reset email. Used by AuthScreen's "Forgot password?" link. */
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit>
+
     fun signOut()
 
     /** Force-refresh Firebase custom claims and re-sync FCM topic subscriptions. */
