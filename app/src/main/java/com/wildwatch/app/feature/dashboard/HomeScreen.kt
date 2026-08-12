@@ -259,7 +259,7 @@ private fun ReportIncidentCard(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Sighting or Conflict",
+                    text = "Fast, one-screen submission",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.8f)
                 )

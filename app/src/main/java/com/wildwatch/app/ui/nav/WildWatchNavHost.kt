@@ -23,12 +23,10 @@ import com.wildwatch.app.feature.incidentdetail.IncidentDetailScreen
 import com.wildwatch.app.feature.feed.ArticleDetailScreen
 import com.wildwatch.app.feature.notifications.NotificationsScreen
 import com.wildwatch.app.feature.profile.ProfileScreen
-import com.wildwatch.app.core.database.IncidentType
-import com.wildwatch.app.feature.report.dynamic.ui.DynamicReportScreen
-import com.wildwatch.app.feature.report.dynamic.DynamicReportViewModel
 import com.wildwatch.app.feature.report.CameraCaptureScreen
+import com.wildwatch.app.feature.report.ReportIncidentScreen
+import com.wildwatch.app.feature.report.ReportIncidentViewModel
 import com.wildwatch.app.feature.report.ReportSubmittedScreen
-import com.wildwatch.app.feature.report.ReportSelectionScreen
 import com.wildwatch.app.feature.settings.AccountManagementScreen
 import com.wildwatch.app.ui.nav.MainTabShell
 import com.wildwatch.app.ui.nav.NavMotion
@@ -61,21 +59,23 @@ fun WildWatchNavHost(
         pendingRoute?.let { navController.navigate(it) }
     }
 
-//    val startDestination = if (currentUser != null) Route.Main else Route.Auth(startOnSignIn = true)
+    // Guest browsing is supported (README "Capabilities"), so Main is always the start
+    // destination regardless of auth state - unauthenticated users are never forced onto
+    // the Auth screen. This effect only ever pushes the OTHER direction: once a sign-in/
+    // sign-up/anonymous/Google flow actually succeeds while the Auth screen is showing,
+    // leave it and land on Main. (A previous version of this effect also force-navigated
+    // to Auth whenever currentUser was null, which broke guest browsing on cold start -
+    // removed, not restored.)
     val startDestination = Route.Main
-//    LaunchedEffect(currentUser) {
-//        if (currentUser == null) {
-//            if (navController.currentBackStackEntry?.destination?.route?.contains("Auth") != true) {
-//                navController.navigate(Route.Auth(startOnSignIn = true)) {
-//                    popUpTo(0) { inclusive = true }
-//                }
-//            }
-//        } else if (navController.currentBackStackEntry?.destination?.route?.contains("Auth") == true) {
-//            navController.navigate(Route.Main) {
-//                popUpTo(0) { inclusive = true }
-//            }
-//        }
-//    }
+    LaunchedEffect(currentUser) {
+        if (currentUser != null &&
+            navController.currentBackStackEntry?.destination?.route?.contains("Auth") == true
+        ) {
+            navController.navigate(Route.Main) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
     NavHost(
         navController = navController, 
@@ -111,11 +111,8 @@ fun WildWatchNavHost(
                 userRole = currentUser?.role ?: UserRole.PUBLIC,
                 onIncidentClick = { id -> navController.navigate(Route.IncidentDetail(id)) },
                 onSignInClick = { navController.navigate(Route.Auth(startOnSignIn = true)) },
-                onReportIncident = { navController.navigate(Route.ReportSelection) },
-                onEditDraft = { id, type ->
-                    val route = if (type == IncidentType.SIGHTING) Route.WildlifeSightingReport(id) else Route.ConflictReport(id)
-                    navController.navigate(route)
-                },
+                onReportIncident = { navController.navigate(Route.ReportIncident()) },
+                onEditDraft = { id, _ -> navController.navigate(Route.ReportIncident(draftId = id)) },
                 onNotificationsClick = { navController.navigate(Route.Notifications) },
                 onArticleClick = { id -> navController.navigate(Route.ArticleDetail(id)) },
                 onAccountManagementClick = { navController.navigate(Route.AccountManagement) },
@@ -134,18 +131,9 @@ fun WildWatchNavHost(
             ProfileScreen()
         }
 
-        composable<Route.ReportSelection> {
-            ReportSelectionScreen(
-                onBack = { navController.popBackStack() },
-                onReportSighting = { navController.navigate(Route.WildlifeSightingReport()) },
-                onReportConflict = { navController.navigate(Route.ConflictReport()) }
-            )
-        }
-
-        composable<Route.WildlifeSightingReport> { backStackEntry ->
-            val args = backStackEntry.toRoute<Route.WildlifeSightingReport>()
-            DynamicReportScreen(
-                type = IncidentType.SIGHTING,
+        composable<Route.ReportIncident> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.ReportIncident>()
+            ReportIncidentScreen(
                 draftId = args.draftId,
                 onBack = { navController.popBackStack() },
                 onSubmitted = { incidentId ->
@@ -154,21 +142,6 @@ fun WildWatchNavHost(
                     }
                 },
                 onNavigateToCamera = { navController.navigate(Route.CameraCapture()) },
-            )
-        }
-
-        composable<Route.ConflictReport> { backStackEntry ->
-            val args = backStackEntry.toRoute<Route.ConflictReport>()
-            DynamicReportScreen(
-                type = IncidentType.CONFLICT,
-                draftId = args.draftId,
-                onBack = { navController.popBackStack() },
-                onSubmitted = { incidentId ->
-                    navController.navigate(Route.ReportSubmitted(incidentId)) {
-                        popUpTo(Route.Main) { inclusive = false }
-                    }
-                },
-                onNavigateToCamera = { category -> navController.navigate(Route.CameraCapture(category, source = "conflict")) },
             )
         }
 
@@ -185,11 +158,10 @@ fun WildWatchNavHost(
                 navController.previousBackStackEntry
                     ?: error("CameraCapture requires a report screen on the back stack")
             }
-            val reportViewModel: DynamicReportViewModel = hiltViewModel(parentEntry)
+            val reportViewModel: ReportIncidentViewModel = hiltViewModel(parentEntry)
             CameraCaptureScreen(
                 onPhotoCaptured = { uri ->
-                    val currentPhotos = (reportViewModel.uiState.value.answers["photos"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-                    reportViewModel.updateAnswer("photos", currentPhotos + uri)
+                    reportViewModel.addPhoto(uri)
                     navController.popBackStack()
                 },
                 onCancel = { navController.popBackStack() },

@@ -17,17 +17,11 @@ import androidx.compose.ui.unit.dp
 import com.wildwatch.app.core.ui.theme.Grey500
 import com.wildwatch.app.core.ui.theme.WildWatchTheme
 
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountManagementScreen(
     onBack: () -> Unit,
-    viewModel: SettingsViewModel = hiltViewModel()
 ) {
-    val formViewMode by viewModel.formViewMode.collectAsStateWithLifecycle()
-    
     Scaffold(
         topBar = {
             TopAppBar(
@@ -69,23 +63,6 @@ fun AccountManagementScreen(
                 ManagementRow(title = "Email address", value = "ranger@wildwatch.app")
                 ManagementRow(title = "Password", value = "**********")
                 ManagementRow(title = "Country/Region", value = "Uganda")
-            }
-
-            item {
-                Text(
-                    text = "App Preferences",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Grey500,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
-                )
-            }
-
-            item {
-                ManagementRow(
-                    title = "Default form view", 
-                    value = if (formViewMode == "FLOW") "Flow (Vertical List)" else "Paging (One by one)",
-                    onClick = { viewModel.toggleFormViewMode() }
-                )
             }
 
             item {
