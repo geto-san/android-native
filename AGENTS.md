@@ -122,7 +122,7 @@ The app follows an **Offline-First Outbox Pattern**:
 
 ## 11. Local-first Docker development
 
-See `../wildwatch-local-development-env-setup/SETUP.md` and workspace `REPOS.md`.
+The local Docker stack this section used to point at has been retired (2026-08-12) — see `../HOSTED-CUTOVER-PLAN.md` for the hosted-services replacement and workspace `../REPOS.md` for the current repo map. Firebase's own emulator suite can still be run directly from `android-native-backend-branch/` if a local backend target is needed.
 
 - `USE_LOCAL_BACKEND` + `LOCAL_BACKEND_HOST` in `local.properties` → `BuildConfig` → `FirebaseModule.kt` emulator wiring.
 - Never hardcode emulator hosts/ports outside that gated path.
