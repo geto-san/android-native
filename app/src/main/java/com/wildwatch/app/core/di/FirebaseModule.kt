@@ -27,10 +27,12 @@ object FirebaseModule {
     @Singleton
     fun providesFirebaseAppCheck(): FirebaseAppCheck {
         val appCheck = FirebaseAppCheck.getInstance()
-        // Play Integrity is the recommended provider for Android.
-        // Since the user cannot access Play Console yet, we use the Debug provider
-        // for debug builds to allow development to continue.
-        if (com.wildwatch.app.BuildConfig.DEBUG) {
+        // Play Integrity is the recommended provider for Android, but it requires
+        // Play-channel distribution/attestation to actually pass. Both debug and the
+        // debug-signed "staging" QA build (see build.gradle.kts) are sideloaded, not
+        // Play-distributed, so both use the Debug provider - checking BuildConfig.DEBUG
+        // alone would miss staging and silently install a provider that always fails there.
+        if (com.wildwatch.app.BuildConfig.BUILD_TYPE != "release") {
             appCheck.installAppCheckProviderFactory(
                 DebugAppCheckProviderFactory.getInstance()
             )

@@ -68,6 +68,31 @@ android {
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+        // Distributable QA/test build: same shrinking as release (the debug build type
+        // never enables isMinifyEnabled/isShrinkResources, which is most of why a debug
+        // APK runs ~100MB+ of unshrunk dex for this dependency set), but signed with the
+        // built-in debug key since there's no real release keystore yet - installs
+        // directly via adb/sideload without one. Not for production distribution; swap to
+        // a real signing config once one exists. Build with `./gradlew assembleStaging`.
+        create("staging") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+        }
+    }
+
+    // Splits by ABI rather than shipping one APK bundling all four (arm64-v8a,
+    // armeabi-v7a, x86, x86_64) copies of Mapbox's and SQLCipher's native libraries -
+    // most of a test device's install only ever needs one. isUniversalApk stays false
+    // since sideload-testing targets a real device's specific ABI, not an emulator
+    // needing every architecture in one file.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = false
+        }
     }
 
     compileOptions {
@@ -161,6 +186,10 @@ dependencies {
     implementation(libs.firebase.functions)
     implementation(libs.firebase.appcheck.playintegrity)
     debugImplementation(libs.firebase.appcheck.debug)
+    // staging is a debug-signed sideload/QA build, not a Play-distributed release - Play
+    // Integrity attestation would fail for it the same way it would for a debug build, so
+    // it needs the same Debug App Check provider (see FirebaseModule).
+    "stagingImplementation"(libs.firebase.appcheck.debug)
 
     implementation(libs.play.services.location)
     implementation(libs.mapbox.maps)
