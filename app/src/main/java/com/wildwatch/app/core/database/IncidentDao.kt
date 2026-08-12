@@ -55,6 +55,26 @@ interface IncidentDao {
         localImageUris: List<String> = emptyList(),
     )
 
+    // Persists evidence-photo bookkeeping (real Storage URLs, cleared local URIs) without
+    // touching syncStatus - used when the Firestore leg of a sync succeeded but a later leg
+    // (the Laravel bridge call) failed, so a retry doesn't re-upload images that already made
+    // it to Storage while the row correctly stays PENDING/PENDING_UPDATE.
+    @Query(
+        """
+        UPDATE incidents
+        SET evidencePhotoUrls = :evidencePhotoUrls, hasEvidence = :hasEvidence,
+            evidenceCount = :evidenceCount, localImageUris = :localImageUris
+        WHERE id = :id
+        """,
+    )
+    suspend fun updateEvidenceBookkeeping(
+        id: String,
+        evidencePhotoUrls: List<String>,
+        hasEvidence: Boolean,
+        evidenceCount: Int,
+        localImageUris: List<String> = emptyList(),
+    )
+
     @Query("DELETE FROM incidents WHERE id = :id")
     suspend fun deleteById(id: String)
 

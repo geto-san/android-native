@@ -22,7 +22,7 @@ class IncidentRemoteDataSourceImpl @Inject constructor(
     private val storage: FirebaseStorage,
 ) : IncidentRemoteDataSource {
 
-    override suspend fun upsert(incident: Incident): Result<Unit> = runCatching {
+    override suspend fun upsert(incident: Incident): Result<Incident> = runCatching {
         var finalIncident = incident
         if (incident.localImageUris.isNotEmpty()) {
             val urls = uploadImages(incident.localImageUris, incident.id)
@@ -35,6 +35,7 @@ class IncidentRemoteDataSourceImpl @Inject constructor(
             .document(finalIncident.id)
             .set(finalIncident.toFirestoreMap())
             .await()
+        finalIncident
     }
 
     private suspend fun uploadImages(localUris: List<String>, incidentId: String): List<String> {

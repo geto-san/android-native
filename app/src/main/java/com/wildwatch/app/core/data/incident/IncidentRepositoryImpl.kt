@@ -1,5 +1,6 @@
 package com.wildwatch.app.core.data.incident
 
+import com.wildwatch.app.core.data.bridge.LaravelBridgeDataSource
 import com.wildwatch.app.core.database.IncidentDao
 import com.wildwatch.app.core.database.IncidentStatus
 import com.wildwatch.app.core.database.RangerProgress
@@ -18,6 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,6 +27,7 @@ import javax.inject.Singleton
 class IncidentRepositoryImpl @Inject constructor(
     private val incidentDao: IncidentDao,
     private val remoteDataSource: IncidentRemoteDataSource,
+    private val laravelBridgeDataSource: LaravelBridgeDataSource,
     private val authRepository: AuthRepository,
     private val locationRepository: LocationRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
@@ -127,16 +130,48 @@ class IncidentRepositoryImpl @Inject constructor(
         withContext(ioDispatcher) {
             val pending = incidentDao.getBySyncStatus(SyncStatus.PENDING)
             val pendingUpdates = incidentDao.getBySyncStatus(SyncStatus.PENDING_UPDATE)
-            
+
             var succeeded = 0
             var failed = 0
-            
+
             (pending + pendingUpdates).forEach { entity ->
-                val result = remoteDataSource.upsert(Incident.fromEntity(entity))
-                if (result.isSuccess) {
-                    incidentDao.updateSyncStatus(entity.id, SyncStatus.SYNCED)
+                val eventType = if (entity.syncStatus == SyncStatus.PENDING) "create" else "update"
+
+                val firestoreResult = remoteDataSource.upsert(Incident.fromEntity(entity))
+                val syncedIncident = firestoreResult.getOrNull()
+                if (syncedIncident == null) {
+                    failed++
+                    return@forEach
+                }
+
+                // Persisted regardless of the Laravel leg's outcome below, so a retry never
+                // re-uploads images that already made it to Storage (see updateEvidenceBookkeeping).
+                incidentDao.updateEvidenceBookkeeping(
+                    id = syncedIncident.id,
+                    evidencePhotoUrls = syncedIncident.evidencePhotoUrls,
+                    hasEvidence = syncedIncident.hasEvidence,
+                    evidenceCount = syncedIncident.evidenceCount,
+                    localImageUris = syncedIncident.localImageUris,
+                )
+
+                val laravelResult = laravelBridgeDataSource.postIncidentEvent(syncedIncident, eventType)
+                if (laravelResult.isSuccess) {
+                    incidentDao.markSynced(
+                        id = syncedIncident.id,
+                        syncStatus = SyncStatus.SYNCED,
+                        syncedAt = java.time.Instant.now().toString(),
+                        evidencePhotoUrls = syncedIncident.evidencePhotoUrls,
+                        hasEvidence = syncedIncident.hasEvidence,
+                        evidenceCount = syncedIncident.evidenceCount,
+                        localImageUris = syncedIncident.localImageUris,
+                    )
                     succeeded++
                 } else {
+                    Timber.w(
+                        laravelResult.exceptionOrNull(),
+                        "Laravel bridge call failed for incident %s; will retry",
+                        syncedIncident.id,
+                    )
                     failed++
                 }
             }

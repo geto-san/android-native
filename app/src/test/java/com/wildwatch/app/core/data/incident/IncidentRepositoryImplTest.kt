@@ -1,6 +1,7 @@
 package com.wildwatch.app.core.data.incident
 
 import com.wildwatch.app.core.data.auth.AuthRepository
+import com.wildwatch.app.core.data.bridge.LaravelBridgeDataSource
 import com.wildwatch.app.core.database.IncidentDao
 import com.wildwatch.app.core.database.IncidentEntity
 import com.wildwatch.app.core.database.IncidentSeverity
@@ -33,6 +34,7 @@ class IncidentRepositoryImplTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var dao: IncidentDao
     private lateinit var remoteDataSource: IncidentRemoteDataSource
+    private lateinit var laravelBridgeDataSource: LaravelBridgeDataSource
     private lateinit var authRepository: AuthRepository
     private lateinit var repository: IncidentRepositoryImpl
 
@@ -40,6 +42,7 @@ class IncidentRepositoryImplTest {
     fun setUp() {
         dao = mockk(relaxUnitFun = true)
         remoteDataSource = mockk()
+        laravelBridgeDataSource = mockk()
         authRepository = mockk()
         every { authRepository.currentUser } returns MutableStateFlow(
             User(uid = "uid-1", email = "jane@example.com", displayName = "Jane Ranger"),
@@ -48,6 +51,7 @@ class IncidentRepositoryImplTest {
         repository = IncidentRepositoryImpl(
             dao,
             remoteDataSource,
+            laravelBridgeDataSource,
             authRepository,
             mockk(), // locationRepository not used
             testDispatcher,
@@ -159,17 +163,65 @@ class IncidentRepositoryImplTest {
     }
 
     @Test
-    fun `syncPending flips a successful upload to SYNCED`() =
+    fun `syncPending flips a successful upload to SYNCED once both Firestore and Laravel succeed`() =
         runTest(testDispatcher) {
             val row = entity(localImageUris = listOf("file:///photo1.jpg"))
+            val uploaded = incident(id = row.id).copy(evidencePhotoUrls = listOf("https://storage/photo1.jpg"))
             coEvery { dao.getBySyncStatus(SyncStatus.PENDING) } returns listOf(row)
             coEvery { dao.getBySyncStatus(SyncStatus.PENDING_UPDATE) } returns emptyList()
-            coEvery { remoteDataSource.upsert(any()) } returns Result.success(Unit)
+            coEvery { remoteDataSource.upsert(any()) } returns Result.success(uploaded)
+            coEvery { laravelBridgeDataSource.postIncidentEvent(any(), any()) } returns Result.success(Unit)
 
             val result = repository.syncPending()
 
             assertEquals(SyncResult(succeeded = 1, failed = 0), result)
-            coVerify { dao.updateSyncStatus(row.id, SyncStatus.SYNCED) }
+            coVerify { dao.updateEvidenceBookkeeping(row.id, uploaded.evidencePhotoUrls, true, 1, emptyList()) }
+            coVerify {
+                dao.markSynced(
+                    id = row.id,
+                    syncStatus = SyncStatus.SYNCED,
+                    syncedAt = any(),
+                    evidencePhotoUrls = uploaded.evidencePhotoUrls,
+                    hasEvidence = true,
+                    evidenceCount = 1,
+                    localImageUris = emptyList(),
+                )
+            }
+            coVerify { laravelBridgeDataSource.postIncidentEvent(uploaded, "create") }
+        }
+
+    @Test
+    fun `syncPending keeps the row pending for retry when the Laravel call fails`() =
+        runTest(testDispatcher) {
+            val row = entity()
+            val uploaded = incident(id = row.id)
+            coEvery { dao.getBySyncStatus(SyncStatus.PENDING) } returns listOf(row)
+            coEvery { dao.getBySyncStatus(SyncStatus.PENDING_UPDATE) } returns emptyList()
+            coEvery { remoteDataSource.upsert(any()) } returns Result.success(uploaded)
+            coEvery { laravelBridgeDataSource.postIncidentEvent(any(), any()) } returns
+                Result.failure(java.io.IOException("HTTP 401"))
+
+            val result = repository.syncPending()
+
+            assertEquals(SyncResult(succeeded = 0, failed = 1), result)
+            // Evidence bookkeeping still gets saved so a retry doesn't re-upload images -
+            // just the sync-status flip to SYNCED is what's withheld.
+            coVerify { dao.updateEvidenceBookkeeping(row.id, uploaded.evidencePhotoUrls, false, 0, emptyList()) }
+            coVerify(exactly = 0) { dao.markSynced(any(), any(), any(), any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `syncPending counts a Firestore failure without ever calling Laravel`() =
+        runTest(testDispatcher) {
+            val row = entity()
+            coEvery { dao.getBySyncStatus(SyncStatus.PENDING) } returns listOf(row)
+            coEvery { dao.getBySyncStatus(SyncStatus.PENDING_UPDATE) } returns emptyList()
+            coEvery { remoteDataSource.upsert(any()) } returns Result.failure(java.io.IOException("offline"))
+
+            val result = repository.syncPending()
+
+            assertEquals(SyncResult(succeeded = 0, failed = 1), result)
+            coVerify(exactly = 0) { laravelBridgeDataSource.postIncidentEvent(any(), any()) }
         }
 
     @Test

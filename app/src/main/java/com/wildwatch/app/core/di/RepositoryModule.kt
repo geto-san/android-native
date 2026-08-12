@@ -4,6 +4,8 @@ import com.wildwatch.app.core.data.alert.AlertRepository
 import com.wildwatch.app.core.data.alert.AlertRepositoryImpl
 import com.wildwatch.app.core.data.auth.AuthRepository
 import com.wildwatch.app.core.data.auth.AuthRepositoryImpl
+import com.wildwatch.app.core.data.bridge.LaravelBridgeDataSource
+import com.wildwatch.app.core.data.bridge.LaravelBridgeDataSourceImpl
 import com.wildwatch.app.core.data.connectivity.ConnectivityObserver
 import com.wildwatch.app.core.data.connectivity.ConnectivityObserverImpl
 import com.wildwatch.app.core.data.feed.ArticleRepository
@@ -47,6 +49,9 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindIncidentRemoteDataSource(impl: IncidentRemoteDataSourceImpl): IncidentRemoteDataSource
+
+    @Binds
+    abstract fun bindLaravelBridgeDataSource(impl: LaravelBridgeDataSourceImpl): LaravelBridgeDataSource
 
     @Binds
     abstract fun bindLocationRepository(impl: LocationRepositoryImpl): LocationRepository

@@ -45,6 +45,21 @@ android {
 
         val localBackendHost = localProperties.getProperty("LOCAL_BACKEND_HOST") ?: "10.0.2.2"
         buildConfigField("String", "LOCAL_BACKEND_HOST", "\"$localBackendHost\"")
+
+        // Laravel API base URL for the mobile-direct bridge calls (Spark plan: no Cloud
+        // Functions relay, so this app calls Laravel itself after writing to Firestore -
+        // see IncidentRepositoryImpl.syncPending() and BRIDGE-CONTRACT.md). Mirrors
+        // USE_LOCAL_BACKEND/LOCAL_BACKEND_HOST above when pointed at a local Laravel
+        // instance; otherwise reads the deployed Render URL from local.properties. The
+        // .invalid fallback (RFC 2606 reserved, resolves to nothing) fails loudly with a
+        // network error instead of silently pointing at an unintended real host.
+        val laravelApiBaseUrl =
+            if (useLocalBackend) {
+                "http://$localBackendHost:8000/api/"
+            } else {
+                localProperties.getProperty("LARAVEL_API_BASE_URL") ?: "https://unset.invalid/api/"
+            }
+        buildConfigField("String", "LARAVEL_API_BASE_URL", "\"$laravelApiBaseUrl\"")
     }
 
     buildTypes {
@@ -163,6 +178,9 @@ dependencies {
     implementation(libs.sqlcipher)
 
     implementation(libs.kotlinx.coroutines.android)
+
+    implementation(libs.retrofit)
+    implementation(libs.okhttp)
 
     implementation(libs.timber)
 

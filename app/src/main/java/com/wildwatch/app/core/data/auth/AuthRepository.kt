@@ -26,4 +26,13 @@ interface AuthRepository {
 
     /** Force-refresh Firebase custom claims and re-sync FCM topic subscriptions. */
     suspend fun refreshRoleClaims(): Result<Unit>
+
+    /**
+     * The current user's Firebase ID token, for authenticating calls the app makes directly to
+     * the Laravel API (see LaravelBridgeDataSource) - null if signed out. Firebase caches the
+     * token and refreshes it locally when it's close to expiring, so [forceRefresh] is normally
+     * unnecessary; pass true only to force a fresh token immediately (e.g. after the server
+     * reported it as invalid/expired).
+     */
+    suspend fun getIdToken(forceRefresh: Boolean = false): String?
 }
