@@ -35,7 +35,10 @@ import com.wildwatch.app.ui.nav.NavMotion
 import com.wildwatch.app.ui.nav.Route
 
 @Composable
-fun WildWatchNavHost(navController: NavHostController = rememberNavController()) {
+fun WildWatchNavHost(
+    navController: NavHostController = rememberNavController(),
+    pendingRoute: Route? = null,
+) {
     val authViewModel: AuthViewModel = hiltViewModel()
     val currentUser by authViewModel.currentUser.collectAsStateWithLifecycle()
     var authReady by remember { mutableStateOf(false) }
@@ -49,21 +52,30 @@ fun WildWatchNavHost(navController: NavHostController = rememberNavController())
         return
     }
 
-    val startDestination = if (currentUser != null) Route.Main else Route.Auth(startOnSignIn = true)
-
-    LaunchedEffect(currentUser) {
-        if (currentUser == null) {
-            if (navController.currentBackStackEntry?.destination?.route?.contains("Auth") != true) {
-                navController.navigate(Route.Auth(startOnSignIn = true)) {
-                    popUpTo(0) { inclusive = true }
-                }
-            }
-        } else if (navController.currentBackStackEntry?.destination?.route?.contains("Auth") == true) {
-            navController.navigate(Route.Main) {
-                popUpTo(0) { inclusive = true }
-            }
-        }
+    // A notification tap launched the app with a specific screen in mind -
+    // navigate there once the graph below exists. Keyed on the route value
+    // itself (not Unit) so recomposition never re-fires this for the same
+    // instance, but a *new* MainActivity/pendingRoute (a second notification
+    // tap while the process is still alive) does navigate again.
+    LaunchedEffect(pendingRoute) {
+        pendingRoute?.let { navController.navigate(it) }
     }
+
+//    val startDestination = if (currentUser != null) Route.Main else Route.Auth(startOnSignIn = true)
+    val startDestination = Route.Main
+//    LaunchedEffect(currentUser) {
+//        if (currentUser == null) {
+//            if (navController.currentBackStackEntry?.destination?.route?.contains("Auth") != true) {
+//                navController.navigate(Route.Auth(startOnSignIn = true)) {
+//                    popUpTo(0) { inclusive = true }
+//                }
+//            }
+//        } else if (navController.currentBackStackEntry?.destination?.route?.contains("Auth") == true) {
+//            navController.navigate(Route.Main) {
+//                popUpTo(0) { inclusive = true }
+//            }
+//        }
+//    }
 
     NavHost(
         navController = navController, 

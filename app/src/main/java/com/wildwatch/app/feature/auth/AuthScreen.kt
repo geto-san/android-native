@@ -1,5 +1,6 @@
 package com.wildwatch.app.feature.auth
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,11 +12,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -29,8 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -77,6 +80,7 @@ fun AuthScreen(
                     value = fullName,
                     onValueChange = { fullName = it },
                     placeholder = "Full Name",
+                    imeAction = ImeAction.Next,
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
@@ -86,6 +90,7 @@ fun AuthScreen(
                 onValueChange = { emailOrPhone = it },
                 placeholder = "Email address",
                 keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next,
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -94,13 +99,21 @@ fun AuthScreen(
                 onValueChange = { password = it },
                 placeholder = "Password",
                 keyboardType = KeyboardType.Password,
-                visualTransformation = PasswordVisualTransformation(),
+                imeAction = ImeAction.Done,
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        if (signInSelected) {
+                            viewModel.signIn(emailOrPhone, password)
+                        } else {
+                            viewModel.signUp(fullName, emailOrPhone, password)
+                        }
+                    }
+                )
             )
 
             if (signInSelected) {
                 TextButton(
                     onClick = {},
-                    modifier = Modifier.align(Alignment.End),
                 ) {
                     Text(
                         "Forgot password?",
@@ -158,22 +171,32 @@ fun AuthScreen(
                 HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outline)
             }
 
-            TextButton(onClick = { viewModel.onGoogleSignInClick(context) }) {
+            OutlinedButton(
+                onClick = { viewModel.onGoogleSignInClick(context) },
+                modifier = Modifier.fillMaxWidth().height(44.dp),
+                shape = MaterialTheme.shapes.extraSmall,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+            ) {
                 Text(
                     "Continue with Google",
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
 
-            TextButton(
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedButton(
                 onClick = viewModel::signInAnonymously,
+                modifier = Modifier.fillMaxWidth().height(44.dp),
+                shape = MaterialTheme.shapes.extraSmall,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                 enabled = !uiState.isLoading
             ) {
                 Text(
                     "Continue without account",
-                    color = MaterialTheme.colorScheme.secondary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodyMedium
                 )

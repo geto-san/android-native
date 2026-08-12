@@ -10,6 +10,8 @@ import com.wildwatch.app.core.data.feed.ArticleRepository
 import com.wildwatch.app.core.data.feed.ArticleRepositoryImpl
 import com.wildwatch.app.core.data.location.LocationRepository
 import com.wildwatch.app.core.data.location.LocationRepositoryImpl
+import com.wildwatch.app.core.data.map.MapOfflineRepository
+import com.wildwatch.app.core.data.map.MapOfflineRepositoryImpl
 import com.wildwatch.app.core.data.notification.NotificationRepository
 import com.wildwatch.app.core.data.notification.NotificationRepositoryImpl
 import com.wildwatch.app.core.data.patrol.PatrolRemoteDataSource
@@ -78,4 +80,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindPatrolRemoteDataSource(impl: PatrolRemoteDataSourceImpl): PatrolRemoteDataSource
+
+    @Binds
+    abstract fun bindMapOfflineRepository(impl: MapOfflineRepositoryImpl): MapOfflineRepository
 }

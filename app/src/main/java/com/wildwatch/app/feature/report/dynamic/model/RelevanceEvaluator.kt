@@ -25,27 +25,28 @@ object RelevanceEvaluator {
         if (trimmed.isEmpty()) return true
 
         selectedPattern.matchEntire(trimmed)?.let { match ->
-            val questionId = match.groupValues[1].trim()
+            val questionId = match.groupValues[1].trim().removePrefix("/")
             val value = match.groupValues[2].replace("\\'", "'")
             return isSelected(answers, questionId, value)
         }
 
         val notEqualIndex = trimmed.indexOf("!=")
         if (notEqualIndex >= 0) {
-            val questionId = trimmed.substring(0, notEqualIndex).trim()
+            val questionId = trimmed.substring(0, notEqualIndex).trim().removePrefix("/")
             val expected = parseLiteral(trimmed.substring(notEqualIndex + 2).trim())
             return !valueEquals(answers[questionId], expected)
         }
 
         val equalIndex = trimmed.indexOf('=')
         if (equalIndex >= 0) {
-            val questionId = trimmed.substring(0, equalIndex).trim()
+            val questionId = trimmed.substring(0, equalIndex).trim().removePrefix("/")
             val expected = parseLiteral(trimmed.substring(equalIndex + 1).trim())
             return valueEquals(answers[questionId], expected)
         }
 
-        return isTruthy(answers[trimmed])
+        return isTruthy(answers[trimmed.removePrefix("/")])
     }
+
 
     private fun splitTopLevel(expression: String, delimiter: String): List<String> {
         val parts = mutableListOf<String>()

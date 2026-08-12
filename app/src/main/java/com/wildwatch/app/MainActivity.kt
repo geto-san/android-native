@@ -16,7 +16,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.wildwatch.app.core.data.user.UserDataRepository
+import com.wildwatch.app.core.notifications.NotificationPayload
+import com.wildwatch.app.core.notifications.WildWatchMessagingService
 import com.wildwatch.app.ui.nav.WildWatchNavHost
+import com.wildwatch.app.ui.nav.routeForNotification
 import com.wildwatch.app.core.ui.theme.WildWatchTheme
 import com.wildwatch.app.feature.auth.AuthViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -58,12 +61,18 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
+        val notificationType = NotificationPayload.parseType(
+            intent.getStringExtra(WildWatchMessagingService.EXTRA_NOTIFICATION_TYPE),
+        )
+        val notificationTargetId = intent.getStringExtra(WildWatchMessagingService.EXTRA_NOTIFICATION_TARGET_ID)
+        val pendingRoute = routeForNotification(notificationType, notificationTargetId)
+
         setContent {
             val darkThemeConfig by userDataRepository.darkThemeConfig.collectAsStateWithLifecycle(initialValue = null)
             val useDarkTheme = darkThemeConfig ?: isSystemInDarkTheme()
 
             WildWatchTheme(darkTheme = useDarkTheme) {
-                WildWatchNavHost()
+                WildWatchNavHost(pendingRoute = pendingRoute)
             }
         }
     }

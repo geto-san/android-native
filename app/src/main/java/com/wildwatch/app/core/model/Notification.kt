@@ -10,6 +10,7 @@ data class Notification(
     val message: String,
     val isRead: Boolean,
     val createdAt: Long,
+    val targetId: String? = null,
 ) {
     companion object {
         fun fromEntity(entity: NotificationEntity): Notification = Notification(
@@ -19,6 +20,7 @@ data class Notification(
             message = entity.message,
             isRead = entity.isRead,
             createdAt = entity.createdAt,
+            targetId = entity.targetId,
         )
     }
 }

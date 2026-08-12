@@ -1,16 +1,19 @@
 package com.wildwatch.app.core.tracking
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import androidx.core.content.ContextCompat
 import com.wildwatch.app.MainActivity
 import com.wildwatch.app.R
 import com.wildwatch.app.core.data.auth.AuthRepository
@@ -22,6 +25,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -65,6 +69,19 @@ class PatrolTrackingService : Service() {
     private fun startTracking(parkId: String?) {
         if (trackingJob != null) return // already tracking - ignore a duplicate start
 
+        // LocationRepository's contract (see its KDoc) is that the caller
+        // confirms permission before calling observeLocationUpdates() - normally
+        // true because RangerTrackingScreen gates the start button on it, but
+        // this is the last line of defense against a caller that skips that (or
+        // permission getting revoked between the UI check and this running).
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            Timber.w("PatrolTrackingService started without location permission - stopping")
+            stopSelf()
+            return
+        }
+
         startForegroundWithNotification()
         trackingJob = serviceScope.launch {
             val rangerUid = authRepository.currentUser.first()?.uid ?: run {
@@ -72,10 +89,19 @@ class PatrolTrackingService : Service() {
                 stopSelf()
                 return@launch
             }
-            val patrol = patrolRepository.startPatrol(rangerUid, parkId)
+            // Resumes an already-ACTIVE patrol if the service process died mid-patrol
+            // and got restarted, instead of forking a second, never-completed row.
+            val patrol = patrolRepository.resumeOrStartPatrol(rangerUid, parkId)
             activePatrolId = patrol.id
 
             locationRepository.observeLocationUpdates(LOCATION_UPDATE_INTERVAL_MS)
+                .catch { e ->
+                    // Most likely cause: location permission was revoked mid-patrol via
+                    // system settings. Stop cleanly (patrol gets marked COMPLETED and
+                    // queued for sync) rather than let this crash the service.
+                    Timber.e(e, "Location updates failed mid-patrol - stopping tracking")
+                    stopTracking()
+                }
                 .onEach { location ->
                     patrolRepository.appendPoint(
                         patrol.id,
@@ -89,14 +115,19 @@ class PatrolTrackingService : Service() {
     private fun stopTracking() {
         trackingJob?.cancel()
         trackingJob = null
-        val patrolId = activePatrolId
-        if (patrolId != null) {
-            serviceScope.launch {
+        serviceScope.launch {
+            // activePatrolId is only set within this service instance's lifetime -
+            // if the process died mid-patrol and this stop request is the first
+            // thing to run in a fresh instance, fall back to asking Room which
+            // patrol is still ACTIVE for the signed-in ranger.
+            val patrolId = activePatrolId
+                ?: authRepository.currentUser.first()?.uid
+                    ?.let { patrolRepository.observeActivePatrol(it).first()?.id }
+
+            if (patrolId != null) {
                 patrolRepository.stopPatrol(patrolId)
                 syncScheduler.triggerImmediatePatrolSync()
-                stopSelf()
             }
-        } else {
             stopSelf()
         }
     }

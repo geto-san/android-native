@@ -18,6 +18,7 @@ interface ParkRepository {
     fun getParks(): Flow<List<NationalPark>>
     fun getAttractions(parkId: String): Flow<List<ParkAttraction>>
     suspend fun findNearestPark(latitude: Double, longitude: Double): NationalPark?
+    suspend fun getPark(parkId: String): NationalPark?
     suspend fun createAttraction(attraction: ParkAttraction): Result<Unit>
 }
 
@@ -53,6 +54,14 @@ class ParkRepositoryImpl @Inject constructor(
             val distLng = park.center.longitude() - longitude
             distLat * distLat + distLng * distLng
         }
+    }
+
+    override suspend fun getPark(parkId: String): NationalPark? {
+        val snapshot = firestore.collection("parks")
+            .document(parkId)
+            .get(Source.DEFAULT)
+            .await()
+        return snapshot.toObject(NationalPark::class.java)
     }
 
     override suspend fun createAttraction(attraction: ParkAttraction): Result<Unit> = runCatching {

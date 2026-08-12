@@ -9,6 +9,7 @@ import com.wildwatch.app.core.model.PatrolLog
 import com.wildwatch.app.core.model.toEntity
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.Instant
@@ -39,6 +40,13 @@ class PatrolRepositoryImpl @Inject constructor(
         )
         patrolLogDao.insert(patrol.toEntity())
         patrol
+    }
+
+    override suspend fun resumeOrStartPatrol(rangerUid: String, parkId: String?): PatrolLog {
+        val existing = withContext(ioDispatcher) {
+            patrolLogDao.observeActiveForRanger(rangerUid).first()
+        }
+        return existing?.let(PatrolLog::fromEntity) ?: startPatrol(rangerUid, parkId)
     }
 
     override suspend fun appendPoint(patrolId: String, point: RoutePoint) = withContext(ioDispatcher) {

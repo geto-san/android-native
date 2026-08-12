@@ -6,7 +6,11 @@ enum class QuestionType {
     SELECT_ONE,
     SELECT_MULTIPLE,
     SEVERITY,
-    PHOTOS
+    PHOTOS,
+    DATE,
+    TIME,
+    GPS,
+    HEADER
 }
 
 data class Choice(

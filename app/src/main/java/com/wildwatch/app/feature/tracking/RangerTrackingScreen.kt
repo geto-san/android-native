@@ -1,5 +1,9 @@
 package com.wildwatch.app.feature.tracking
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mapbox.geojson.Point
@@ -31,6 +36,7 @@ import com.mapbox.maps.plugin.gestures.OnMapClickListener
 import com.wildwatch.app.R
 import com.wildwatch.app.core.model.AttractionType
 import com.wildwatch.app.core.tracking.PatrolTrackingService
+import com.wildwatch.app.core.ui.component.PermissionDialog
 import com.wildwatch.app.core.ui.theme.White
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,6 +52,49 @@ fun RangerTrackingScreen(
             zoom(12.0)
             center(Point.fromLngLat(29.66, -1.03))
         }
+    }
+
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED,
+        )
+    }
+    var showPatrolPermissionDialog by remember { mutableStateOf(false) }
+
+    val patrolPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        hasLocationPermission = granted
+        if (granted) {
+            context.startForegroundService(
+                PatrolTrackingService.startIntent(context, uiState.activePark?.id),
+            )
+        }
+    }
+
+    fun startPatrolTracking() {
+        if (hasLocationPermission) {
+            context.startForegroundService(
+                PatrolTrackingService.startIntent(context, uiState.activePark?.id),
+            )
+        } else {
+            showPatrolPermissionDialog = true
+        }
+    }
+
+    if (showPatrolPermissionDialog) {
+        PermissionDialog(
+            icon = Icons.Default.LocationOn,
+            title = "Allow WildWatch to track your patrol route?",
+            description = "While a patrol is active, we record your route in the background so " +
+                "your park has an accurate record of ground covered, even if you switch apps.",
+            onAllow = {
+                showPatrolPermissionDialog = false
+                patrolPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            },
+            onDismiss = { showPatrolPermissionDialog = false },
+        )
     }
 
     LaunchedEffect(uiState.activePark) {
@@ -126,9 +175,7 @@ fun RangerTrackingScreen(
                 if (uiState.activePatrol != null) {
                     context.startService(PatrolTrackingService.stopIntent(context))
                 } else {
-                    context.startForegroundService(
-                        PatrolTrackingService.startIntent(context, uiState.activePark?.id),
-                    )
+                    startPatrolTracking()
                 }
             },
             modifier = Modifier.align(Alignment.CenterEnd).padding(end = 16.dp),

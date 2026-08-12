@@ -14,6 +14,8 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.wildwatch.app.MainActivity
 import com.wildwatch.app.R
+import com.wildwatch.app.core.data.notification.NotificationRepository
+import com.wildwatch.app.core.database.NotificationType
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,14 +31,28 @@ class WildWatchMessagingService : FirebaseMessagingService() {
     @Inject
     lateinit var fcmTokenRepository: FcmTokenRepository
 
+    @Inject
+    lateinit var notificationRepository: NotificationRepository
+
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
         Timber.d("From: ${message.from}")
 
+        val type = NotificationPayload.parseType(message.data["type"])
+        val targetId = NotificationPayload.targetId(type, message.data)
+
         message.notification?.let {
-            showNotification(it.title ?: "WildWatch", it.body ?: "")
+            val title = it.title ?: "WildWatch"
+            val body = it.body ?: ""
+            showNotification(title, body, type, targetId)
+
+            if (type != null) {
+                serviceScope.launch {
+                    notificationRepository.recordIncoming(type, title, body, targetId)
+                }
+            }
         }
 
         if (message.data.isNotEmpty()) {
@@ -44,9 +60,16 @@ class WildWatchMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun showNotification(title: String, body: String) {
+    private fun showNotification(
+        title: String,
+        body: String,
+        type: NotificationType?,
+        targetId: String?,
+    ) {
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            putExtra(EXTRA_NOTIFICATION_TYPE, type?.name)
+            putExtra(EXTRA_NOTIFICATION_TARGET_ID, targetId)
         }
         val pendingIntent = PendingIntent.getActivity(
             this, 0, intent,
@@ -88,5 +111,10 @@ class WildWatchMessagingService : FirebaseMessagingService() {
         serviceScope.launch {
             fcmTokenRepository.syncToken(token)
         }
+    }
+
+    companion object {
+        const val EXTRA_NOTIFICATION_TYPE = "com.wildwatch.app.extra.NOTIFICATION_TYPE"
+        const val EXTRA_NOTIFICATION_TARGET_ID = "com.wildwatch.app.extra.NOTIFICATION_TARGET_ID"
     }
 }

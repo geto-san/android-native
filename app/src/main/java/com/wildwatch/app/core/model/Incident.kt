@@ -194,6 +194,7 @@ data class Incident(
             when ((data["rangerProgress"] as? String)?.lowercase()) {
                 "en_route" -> RangerProgress.EN_ROUTE
                 "on_site" -> RangerProgress.ON_SITE
+                "completed" -> RangerProgress.COMPLETED
                 else -> null
             }
 

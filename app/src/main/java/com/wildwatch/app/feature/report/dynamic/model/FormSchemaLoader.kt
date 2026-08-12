@@ -37,10 +37,15 @@ object FormSchemaLoader {
         return Question(
             id = id,
             label = label,
-            type = when (type) {
-                "select_one" -> QuestionType.SELECT_ONE
-                "select_multiple" -> QuestionType.SELECT_MULTIPLE
-                "photos" -> QuestionType.PHOTOS
+            type = when {
+                id.equals("Date", ignoreCase = true) -> QuestionType.DATE
+                id.equals("Time", ignoreCase = true) -> QuestionType.TIME
+                id.contains("GPS", ignoreCase = true) -> QuestionType.GPS
+                label.startsWith("Hello", ignoreCase = true) || label.startsWith("Welcome", ignoreCase = true) -> QuestionType.HEADER
+                type == "select_one" -> QuestionType.SELECT_ONE
+                type == "select_multiple" -> QuestionType.SELECT_MULTIPLE
+                type == "photos" -> QuestionType.PHOTOS
+                type == "header" -> QuestionType.HEADER
                 else -> QuestionType.TEXT
             },
             choices = choices.map { Choice(it.id, it.label) },

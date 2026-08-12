@@ -5,4 +5,5 @@ package com.wildwatch.app.core.database
 enum class RangerProgress {
     EN_ROUTE,
     ON_SITE,
+    COMPLETED,
 }

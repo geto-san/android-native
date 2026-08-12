@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -39,6 +40,26 @@ class NotificationRepositoryImpl @Inject constructor(
                     title = "Report pending upload",
                     message = "Your report is queued and will sync when connectivity allows.",
                     createdAt = System.currentTimeMillis(),
+                ),
+            ),
+        )
+    }
+
+    override suspend fun recordIncoming(
+        type: NotificationType,
+        title: String,
+        message: String,
+        targetId: String?,
+    ) = withContext(ioDispatcher) {
+        notificationDao.insertAll(
+            listOf(
+                NotificationEntity(
+                    id = UUID.randomUUID().toString(),
+                    type = type,
+                    title = title,
+                    message = message,
+                    createdAt = System.currentTimeMillis(),
+                    targetId = targetId,
                 ),
             ),
         )

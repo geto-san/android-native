@@ -12,6 +12,7 @@ data class ArticleEntity(
     val theme: ArticleTheme,
     val title: String,
     val excerpt: String,
+    val body: String,
     val readTime: String,
     val source: String,
     val likes: Int,

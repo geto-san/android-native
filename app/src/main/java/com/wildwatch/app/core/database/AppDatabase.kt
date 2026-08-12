@@ -12,7 +12,7 @@ import androidx.room.TypeConverters
         NotificationEntity::class,
         PatrolLogEntity::class,
     ],
-    version = 6,
+    version = 8,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)

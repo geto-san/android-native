@@ -28,6 +28,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wildwatch.app.core.model.Article
 import com.wildwatch.app.core.model.Incident
+import com.wildwatch.app.core.ui.component.CountBadge
 import com.wildwatch.app.core.ui.component.IncidentListItem
 import com.wildwatch.app.core.ui.component.QuickReportCard
 import com.wildwatch.app.core.ui.theme.*
@@ -64,7 +65,13 @@ fun HomeScreen(
                     },
                     actions = {
                         IconButton(onClick = onNotificationsClick) {
-                            Icon(Icons.Outlined.Notifications, contentDescription = "Notifications")
+                            if (uiState.unreadNotificationCount > 0) {
+                                BadgedBox(badge = { CountBadge(uiState.unreadNotificationCount) }) {
+                                    Icon(Icons.Outlined.Notifications, contentDescription = "Notifications")
+                                }
+                            } else {
+                                Icon(Icons.Outlined.Notifications, contentDescription = "Notifications")
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(

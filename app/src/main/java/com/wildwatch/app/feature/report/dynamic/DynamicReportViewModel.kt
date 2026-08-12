@@ -126,7 +126,7 @@ class DynamicReportViewModel @Inject constructor(
         _uiState.update { it.copy(currentPageIndex = index) }
     }
 
-    private fun loadCurrentLocation() {
+    fun loadCurrentLocation() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLocationLoading = true) }
             locationRepository.getCurrentLocation()
@@ -139,6 +139,10 @@ class DynamicReportViewModel @Inject constructor(
                             locationName = name,
                             isLocationLoading = false,
                         )
+                    }
+                    // Auto-fill GPS_Coordinates if it exists in visible questions
+                    if (_uiState.value.visibleQuestions.any { it.id == "GPS_Coordinates" }) {
+                        updateAnswer("GPS_Coordinates", "${location.latitude}, ${location.longitude}")
                     }
                 }
                 .onFailure { error ->
@@ -157,11 +161,10 @@ class DynamicReportViewModel @Inject constructor(
             else -> true
         }
 
-        val canSubmit = isTypeSpecificValid && 
-                answers.containsKey("District") && 
-                answers.containsKey("Sub_county")
+        val hasDistrict = answers.containsKey("District")
+        val hasSubCounty = answers.containsKey("Sub_county") || answers.containsKey("Sub_county_001")
         
-        _uiState.update { it.copy(canSubmit = canSubmit) }
+        _uiState.update { it.copy(canSubmit = isTypeSpecificValid && hasDistrict && hasSubCounty) }
     }
 
     fun save(asDraft: Boolean = false) {
@@ -178,10 +181,45 @@ class DynamicReportViewModel @Inject constructor(
                     else -> null
                 }
 
+                // Robust extraction of Village from all variants
                 val village = firstNonBlank(
+                    answers["_1_5_Villlage"]?.toString(),
                     answers["_1_5_Village"]?.toString(),
                     answers["_1_5_Village_001"]?.toString(),
+                    answers["_1_5_Village_002"]?.toString(),
+                    answers["_1_5_Village_003"]?.toString(),
+                    answers["_1_5_Village_004"]?.toString(),
+                    answers["_1_5_Village_005"]?.toString(),
+                    answers["_1_5_Village_006"]?.toString(),
+                    answers["_1_5_Village_007"]?.toString(),
+                    answers["_1_5_Village_008"]?.toString(),
+                    answers["_1_5_Village_009"]?.toString(),
+                    answers["_1_5_Village_010"]?.toString(),
+                    answers["_1_5_village_011"]?.toString(),
+                    answers["_1_5_Village_012"]?.toString(),
+                    answers["_1_5_Village_013"]?.toString(),
+                    answers["_1_5_Village_014"]?.toString(),
                     state.locationName,
+                ) ?: "Unknown"
+
+                // Robust extraction of Parish from all variants
+                val parish = firstNonBlank(
+                    answers["_1_4_Parish"]?.toString(),
+                    answers["_1_4_Parish_001"]?.toString(),
+                    answers["_1_4_Parish_002"]?.toString(),
+                    answers["_1_4_Parish_003"]?.toString(),
+                    answers["_1_4_Parish_004"]?.toString(),
+                    answers["Parish"]?.toString(),
+                    answers["Parish_001"]?.toString(),
+                    answers["Parish_002"]?.toString(),
+                )
+
+                // Robust species extraction
+                val species = firstNonBlank(
+                    (answers["_2_2_Which_wild_animal_have_yo"] as? List<*>)?.firstOrNull()?.toString(),
+                    (answers["_2_0_Animal_involved_001"] as? List<*>)?.firstOrNull()?.toString(),
+                    answers["If_Others_specify"]?.toString(),
+                    answers["If_Others_specify_001"]?.toString(),
                 ) ?: "Unknown"
 
                 val details = NewIncidentDetails(
@@ -189,9 +227,9 @@ class DynamicReportViewModel @Inject constructor(
                     park = Park.BWINDI_IMPENETRABLE,
                     district = answers["District"]?.toString(),
                     subCounty = answers["Sub_county"]?.toString() ?: answers["Sub_county_001"]?.toString(),
-                    parish = answers["_1_4_Parish"]?.toString() ?: answers["Parish"]?.toString(),
+                    parish = parish,
                     community = village,
-                    species = (answers["_2_2_Which_wild_animal_have_yo"] as? List<*>)?.firstOrNull()?.toString() ?: "Unknown",
+                    species = species,
                     severity = (answers["severity"] as? IncidentSeverity) ?: IncidentSeverity.MEDIUM,
                     category = answers["What_effect_conflict_has_the_"]?.toString(),
                     summary = answers["description"]?.toString() ?: "",

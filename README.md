@@ -1,106 +1,46 @@
 <div align="center">
   <img src="./art/icons/ic_launcher_foreground_exact.png" width="120" height="120" alt="WildWatch Logo" />
   <h1>WildWatch</h1>
-  <p><b>Beautiful and Professional Wildlife Conservation Platform for Uganda</b></p>
-
-  [![Kotlin](https://img.shields.io/badge/Kotlin-2.0-purple.svg?style=flat-square&logo=kotlin)](https://kotlinlang.org/)
-  [![Compose](https://img.shields.io/badge/Compose-Material3-green.svg?style=flat-square&logo=jetpack-compose)](https://developer.android.com/jetpack/compose)
-  [![Firebase](https://img.shields.io/badge/Firebase-Auth%20|%20Firestore-orange.svg?style=flat-square&logo=firebase)](https://firebase.google.com/)
-  [![Platform](https://img.shields.io/badge/Platform-Android-blue.svg?style=flat-square&logo=android)](https://www.android.com/)
+  <p>A native Android app for wildlife conservation reporting and ranger operations in Uganda.</p>
 </div>
 
----
+## What this is
 
-## 🌟 What is WildWatch?
+WildWatch is an offline-first Android app serving two audiences: rangers, who use it for incident response, patrol tracking, and evidence collection, and the public, who use it to report wildlife sightings and human-wildlife conflict incidents. It is built with Kotlin and Jetpack Compose, backed by Firebase (Authentication, Firestore, Storage, Cloud Messaging), with Room providing local persistence and an offline outbox so reports and patrol data can be captured with no signal and synced automatically once connectivity returns.
 
-WildWatch is a modern, high-fidelity mobile and backend platform designed to empower both **Rangers** and the **Public Community** in protecting Uganda's wildlife. From the dense forests of Bwindi to the savannas of Queen Elizabeth Park, WildWatch provides the tools needed for real-time monitoring, incident reporting, and professional patrol management.
+This app's data reaches a separate Laravel-based web portal (`../web-portal/`) for wardens and UWA officials through a Firebase-to-Laravel bridge; the full contract for what data crosses that bridge and how is documented in `../BRIDGE-CONTRACT.md`. Which features and screens a signed-in account can reach depends on its role — ranger, warden, UWA official, or public — documented in `../REPOS.md`'s role-model write-up alongside the equivalent portal-side roles.
 
-Built with an **Instagram-inspired aesthetic**, it bridges the gap between complex professional monitoring software and intuitive, community-driven conservation apps.
+## Capabilities
 
----
+Incident and wildlife-sighting reporting with camera capture and GPS tagging, submitted through an offline-first outbox that queues locally and syncs when connectivity allows. A ranger tracking screen showing live location, incident pins, and park points of interest, including an in-app flow for flagging new points of interest such as danger zones. Background patrol tracking that persists a ranger's route locally, syncs it periodically, and correctly resumes rather than duplicating a patrol if the app process is killed mid-patrol. Push notifications with tap-to-deep-link behavior into the relevant screen, and an unread-count badge on the home and dashboard bells. Offline map regions: the base map for a ranger's assigned park downloads automatically in the background over an unmetered connection, so the map keeps working without signal in the field. Community news feed sourced from the portal. Guest mode for reporting without creating an account, with light and dark themes including a true-black dark mode.
 
-## 🚀 Key Features
+## Tech stack
 
-### 📡 Monitoring & Reporting
-*   **Wildlife Sightings:** Easily report animal sightings with high-quality photo evidence and precise GPS tagging.
-*   **Conflict Reporting:** Document human-wildlife impact (crop damage, property loss) to facilitate community support and compensation.
-*   **Offline-First:** Submit reports anywhere, even with zero signal. WildWatch queues your data and syncs automatically when you return to base.
+Jetpack Compose with Material 3 for UI, an MVVM architecture, Hilt for dependency injection, Room for local persistence, Firebase (Authentication, Firestore, Storage, Cloud Messaging, Functions) for the backend, the Mapbox Maps SDK for mapping and offline tile regions, Kotlin Coroutines and Flow for asynchronous and reactive code, WorkManager for background sync and downloads, and Timber for logging.
 
-### 🛡️ Professional Ranger Tools
-*   **Ranger Dashboard:** A dedicated command center for field officers to track active incidents and alerts.
-*   **Patrol Tracking:** (Soon) Background GPS breadcrumbs to map patrol effectiveness and coverage.
-*   **Role-Based Security:** Granular permissions ensure sensitive data remains protected and only accessible to authorized personnel.
+## Running against a real Firebase project
 
-### 🎨 Look & Feel
-*   **Dynamic Theming:** High-fidelity Support for **Light** and **Dark Mode (True Black)** for nighttime field operations.
-*   **Modern UI:** Built entirely with Jetpack Compose using Material 3 and a clean, card-based design language.
-*   **Instagram-Style Permissions:** Beautiful, non-intrusive dialogs for requesting system resources like Camera and Location.
+This is now the intended default. Add a real `google-services.json` for the target Firebase project to the `app/` directory, and leave `USE_LOCAL_BACKEND` unset or set to false in `local.properties` so the app connects to real Firebase services rather than emulator hosts. A Mapbox access token is required regardless of backend target and is set in `local.properties` as well. The Firebase project itself needs the rules and Cloud Functions from `../android-native-backend-branch/` deployed to it; see that repository's README and `../HOSTED-CUTOVER-PLAN.md` for the full procedure, including the still-open decisions that need a choice before this is complete (a production mail provider for the portal side, and verifying the relational database migrates cleanly to Postgres).
 
-### 👤 User Experience
-*   **Guest Mode:** Start contributing immediately without an account. Your privacy is respected while you stay informed.
-*   **Unified Profile:** A one-stop shop for your activity history, achievements, and app-wide settings.
-*   **Real-time Alerts:** Stay updated with community alerts directly from park authorities.
+## Running against the local Docker stack
 
----
+A full local development stack — Firebase emulators, the Laravel API, and the portal frontend all wired together — lives at `../wildwatch-local-development-env-setup/`, documented in that directory's own setup runbook. To use it: start that stack, then in this repository's `local.properties` set `USE_LOCAL_BACKEND=true` and `LOCAL_BACKEND_HOST` to the address the emulators are reachable at. For the Android Emulator, `10.0.2.2` reaches the host machine; for a physical device on the same Wi-Fi, the recommendation is to use the host machine's actual LAN IP instead, since it works for both the emulator and any physical device without needing to be swapped per test target — it does need updating whenever that IP changes. For a physical device with no shared Wi-Fi, forward the emulator's Auth, Firestore, Cloud Functions, and Storage ports from the host over USB instead, then point `LOCAL_BACKEND_HOST` at the loopback address. Rebuild after changing `local.properties`. The Docker backend serves plain HTTP, and physical devices block cleartext connections by default; the debug build's network security configuration permits cleartext for debug builds only, merged automatically over a strict configuration that release builds always use, so nothing needs editing there when a LAN IP changes. This local stack has not been retired, but the hosted-Firebase path above is now the primary documented workflow.
 
-## 🛠️ Tech Stack
+## Getting started
 
-WildWatch is built using the latest industry-standard technologies for a robust, scalable, and maintainable codebase.
+Open this repository in Android Studio, sync Gradle, and run on a physical device or emulator. Java 17 or newer and a recent Android Studio release are required; the Firebase CLI and Node.js are additionally needed only if working on the backend rules or Cloud Functions in the sibling `android-native-backend-branch/` repository.
 
-*   **UI Framework:** [Jetpack Compose](https://developer.android.com/jetpack/compose)
-*   **Architecture:** [MVVM (Model-View-ViewModel)](https://developer.android.com/topic/architecture)
-*   **Dependency Injection:** [Hilt](https://dagger.dev/hilt/)
-*   **Local Database:** [Room](https://developer.android.com/training/data-storage/room)
-*   **Backend:** [Firebase (Auth, Firestore, Functions)](https://firebase.google.com/)
-*   **Maps:** [Mapbox SDK](https://www.mapbox.com/)
-*   **Networking:** [Kotlin Coroutines & Flow](https://kotlinlang.org/docs/coroutines-overview.html)
-*   **Logging:** [Timber](https://github.com/JakeWharton/timber)
+## Testing
 
----
+Unit tests run through Gradle's standard test task and use mocked repositories rather than a real device or emulator. An instrumented test suite also exists but currently requires an Android emulator or device to run and has known gaps in what it covers versus what actually gets exercised in day-to-day development — treat its coverage as unverified until it's confirmed to run cleanly in whatever environment is being used.
 
-## 📸 Previews
+## Screenshots
 
 | Home Dashboard | Community News | Profile & Settings |
 |:---:|:---:|:---:|
 | <img src="./art/screenshots/home_light.png" width="200" /> | <img src="./art/screenshots/feed_light.png" width="200" /> | <img src="./art/screenshots/profile_light.png" width="200" /> |
 | <img src="./art/screenshots/home_dark.png" width="200" /> | <img src="./art/screenshots/feed_dark.png" width="200" /> | <img src="./art/screenshots/profile_dark.png" width="200" /> |
 
----
+## Further reading
 
-## 🏃 Getting Started
-
-### Prerequisites
-- Android Studio Ladybug (or newer)
-- Java 17+
-- Node.js & Firebase CLI (for backend features)
-
-### Running the App
-1.  Clone the repository.
-2.  Open the project in Android Studio.
-3.  Add your `google-services.json` to the `app/` directory.
-4.  Sync Gradle and run on a physical device or emulator.
-
-### Local Backend (Docker)
-For a full-fidelity development experience with Auth, Firestore, and the Warden Portal, use the [WildWatch Local Stack](https://github.com/geto-san/wildwatch-local):
-
-1.  Clone and start the local stack repo (see its README for `make up` instructions).
-2.  Configure your `local.properties`:
-    ```properties
-    USE_LOCAL_BACKEND=true
-    LOCAL_BACKEND_HOST=10.0.2.2  # 127.0.0.1 for physical devices + adb reverse
-    ```
-3.  Seed test data using `make seed` in the local stack directory.
-
----
-
-## 🗺️ Roadmap
-
-Check out [AGENTS.md](AGENTS.md) for the full development lifecycle and upcoming phases.
-
----
-
-## 🤝 Support
-
-If you find a bug or have a feature request, please open an issue or reach out to the conservation team.
-
-*Protecting the Pearl*
+`AGENTS.md` in this repository has the fuller development lifecycle and conventions. `../REPOS.md` has the full cross-repository map and role model. `../BRIDGE-CONTRACT.md` has the field-level Firebase-to-Laravel bridge contract. `../HOSTED-CUTOVER-PLAN.md` has the hosted-services cutover procedure.

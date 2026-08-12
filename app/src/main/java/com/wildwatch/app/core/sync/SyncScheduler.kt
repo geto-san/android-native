@@ -20,6 +20,8 @@ private const val PATROL_PERIODIC_SYNC_WORK_NAME = "patrol_periodic_sync"
 private const val PATROL_IMMEDIATE_SYNC_WORK_NAME = "patrol_immediate_sync"
 private const val PATROL_PERIODIC_SYNC_INTERVAL_MINUTES = 15L
 
+private const val OFFLINE_MAP_DOWNLOAD_WORK_NAME_PREFIX = "offline_map_download_"
+
 @Singleton
 class SyncScheduler @Inject constructor(private val workManager: WorkManager) {
 
@@ -92,6 +94,30 @@ class SyncScheduler @Inject constructor(private val workManager: WorkManager) {
         )
     }
 
+    // Triggered automatically (no per-download user consent prompt) once a ranger's assigned
+    // park is confirmed - see OfflineMapCoordinator. KEEP + a per-park unique work name means
+    // re-triggering on every login/app-restart is a no-op while the job is still
+    // pending/running; if WorkManager has already pruned a finished record and this runs
+    // again later, TileStore.loadTileRegion treats an already-cached region as a cheap
+    // verification rather than a full re-download (see MapOfflineRepositoryImpl).
+    fun scheduleOfflineMapDownload(parkId: String) {
+        val request = OneTimeWorkRequestBuilder<MapOfflineDownloadWorker>()
+            .setInputData(MapOfflineDownloadWorker.inputData(parkId))
+            .setConstraints(unmeteredNetworkConstraint())
+            .build()
+
+        workManager.enqueueUniqueWork(
+            OFFLINE_MAP_DOWNLOAD_WORK_NAME_PREFIX + parkId,
+            ExistingWorkPolicy.KEEP,
+            request,
+        )
+    }
+
     private fun networkConnectedConstraint(): Constraints =
         Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+
+    // Unmetered (Wi-Fi) only - this download is silent/automatic, so it must never burn a
+    // ranger's cellular data without them asking for it.
+    private fun unmeteredNetworkConstraint(): Constraints =
+        Constraints.Builder().setRequiredNetworkType(NetworkType.UNMETERED).build()
 }

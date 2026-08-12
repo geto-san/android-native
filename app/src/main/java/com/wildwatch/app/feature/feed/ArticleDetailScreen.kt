@@ -109,9 +109,8 @@ fun ArticleDetailScreen(
                     )
                 }
 
-                // In a real app, we'd have article.content. Using excerpt for now.
                 Text(
-                    text = article.excerpt.repeat(10), // Mocking long content
+                    text = article.body.ifBlank { article.excerpt },
                     style = MaterialTheme.typography.bodyLarge,
                     lineHeight = 28.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant

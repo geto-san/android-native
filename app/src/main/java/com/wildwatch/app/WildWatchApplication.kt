@@ -3,6 +3,7 @@ package com.wildwatch.app
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.wildwatch.app.core.sync.OfflineMapCoordinator
 import com.wildwatch.app.core.sync.SyncScheduler
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
@@ -16,6 +17,9 @@ class WildWatchApplication : Application(), Configuration.Provider {
 
     @Inject
     lateinit var syncScheduler: SyncScheduler
+
+    @Inject
+    lateinit var offlineMapCoordinator: OfflineMapCoordinator
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -32,5 +36,6 @@ class WildWatchApplication : Application(), Configuration.Provider {
         // Initialize background sync cycles
         syncScheduler.schedulePeriodicSync()
         syncScheduler.schedulePeriodicPatrolSync()
+        offlineMapCoordinator.start()
     }
 }

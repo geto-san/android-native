@@ -116,6 +116,7 @@ fun DynamicReportScreen(
                         uiState = uiState,
                         onAnswerChanged = { id, ans -> viewModel.updateAnswer(id, ans) },
                         onAddPhoto = { onNavigateToCamera(null) },
+                        onCaptureLocation = { viewModel.loadCurrentLocation() },
                         onSubmit = { viewModel.save() }
                     )
                 } else {
@@ -123,6 +124,7 @@ fun DynamicReportScreen(
                         uiState = uiState,
                         onAnswerChanged = { id, ans -> viewModel.updateAnswer(id, ans) },
                         onAddPhoto = { onNavigateToCamera(null) },
+                        onCaptureLocation = { viewModel.loadCurrentLocation() },
                         onSubmit = { viewModel.save() }
                     )
                 }
@@ -136,6 +138,7 @@ fun FlowFormRenderer(
     uiState: DynamicReportUiState,
     onAnswerChanged: (String, Any?) -> Unit,
     onAddPhoto: () -> Unit,
+    onCaptureLocation: () -> Unit,
     onSubmit: () -> Unit
 ) {
     LazyColumn(
@@ -148,7 +151,9 @@ fun FlowFormRenderer(
                 question = question,
                 answer = uiState.answers[question.id],
                 onAnswerChanged = { onAnswerChanged(question.id, it) },
-                onAddPhoto = onAddPhoto
+                onAddPhoto = onAddPhoto,
+                onCaptureLocation = onCaptureLocation,
+                isCapturingLocation = uiState.isLocationLoading
             )
         }
 
@@ -170,6 +175,7 @@ fun PagingFormRenderer(
     uiState: DynamicReportUiState,
     onAnswerChanged: (String, Any?) -> Unit,
     onAddPhoto: () -> Unit,
+    onCaptureLocation: () -> Unit,
     onSubmit: () -> Unit
 ) {
     val pagerState = rememberPagerState(pageCount = { uiState.visibleQuestions.size + 1 })
@@ -195,7 +201,9 @@ fun PagingFormRenderer(
                         question = question,
                         answer = uiState.answers[question.id],
                         onAnswerChanged = { onAnswerChanged(question.id, it) },
-                        onAddPhoto = onAddPhoto
+                        onAddPhoto = onAddPhoto,
+                        onCaptureLocation = onCaptureLocation,
+                        isCapturingLocation = uiState.isLocationLoading
                     )
                 }
             } else {

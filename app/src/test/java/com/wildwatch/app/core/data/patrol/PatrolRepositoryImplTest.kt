@@ -7,8 +7,10 @@ import com.wildwatch.app.core.database.RoutePoint
 import com.wildwatch.app.core.database.SyncStatus
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -59,6 +61,29 @@ class PatrolRepositoryImplTest {
         assertNotNull(result.startTime)
         coVerify { dao.insert(match { it.id == result.id && it.status == PatrolStatus.ACTIVE }) }
     }
+
+    @Test
+    fun `resumeOrStartPatrol starts a new patrol when none is active`() = runTest(testDispatcher) {
+        every { dao.observeActiveForRanger("ranger-1") } returns flowOf(null)
+
+        val result = repository.resumeOrStartPatrol(rangerUid = "ranger-1", parkId = "park-1")
+
+        assertEquals(PatrolStatus.ACTIVE, result.status)
+        coVerify { dao.insert(match { it.id == result.id && it.rangerUid == "ranger-1" }) }
+    }
+
+    @Test
+    fun `resumeOrStartPatrol resumes an existing active patrol instead of forking a new one`() =
+        runTest(testDispatcher) {
+            val existing = entity(id = "patrol-orphaned", routePoints = listOf(RoutePoint(-1.0, 30.0, "t1")))
+            every { dao.observeActiveForRanger("ranger-1") } returns flowOf(existing)
+
+            val result = repository.resumeOrStartPatrol(rangerUid = "ranger-1", parkId = "park-1")
+
+            assertEquals("patrol-orphaned", result.id)
+            assertEquals(1, result.routePoints.size)
+            coVerify(exactly = 0) { dao.insert(any()) }
+        }
 
     @Test
     fun `appendPoint adds to the existing route without dropping prior points`() = runTest(testDispatcher) {
