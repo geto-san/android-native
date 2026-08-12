@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.wildwatch.app",
+      "sha256_cert_fingerprints": [
+        "99:3F:F2:8A:9C:7D:6D:E9:9B:77:F5:F6:BC:D3:2F:34:00:7D:C0:41:2A:DA:B6:04:D1:90:E3:FF:95:82:23:DD"
+      ]
+    }
+  }
+]

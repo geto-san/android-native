@@ -2,6 +2,7 @@ node_modules
 firestore-debug.log
 firebase-debug.log
 firebase-export-*/
+.firebase/
 
 # compiled Cloud Functions output
 functions/lib/
