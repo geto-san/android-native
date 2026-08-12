@@ -2,4 +2,8 @@
     <!-- Pre-Compose window chrome color only (launch background / status bar before
          Compose content is set). All in-app theming lives in ui/theme/Theme.kt. -->
     <color name="background">#FCFAF4</color>
+    <!-- Splash Screen API background only - must be dark since the new launcher icon
+         (ic_launcher_foreground.xml) is a white mark with no fill of its own; against
+         the cream @color/background above it would be nearly invisible. -->
+    <color name="splash_background">#000000</color>
 </resources>

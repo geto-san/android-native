@@ -1,19 +1,27 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="128"
+    android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Geometric "W" Logo (Nature/Watch) -->
+    <!-- New brand mark: a white ring with an interlocking double-V "W" inside, on the
+         black background layer (ic_launcher_background.xml) - matches
+         art/icons/Use this as the new icon for the app.webp. Kept within the adaptive
+         icon safe zone (centered 66dp circle) so no launcher mask shape clips it. -->
     <path
-        android:strokeColor="#EE921A"
-        android:strokeWidth="16"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:pathData="M54,27 A27,27 0,1 1,53.9 27 Z"
+        android:fillColor="#00000000" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="6"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M22,76 L48,32 L74,76" />
+        android:pathData="M36,66 L50,39 L64,66" />
     <path
-        android:strokeColor="#EE921A"
-        android:strokeWidth="12"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="6"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M58,76 L80,48 L102,76" />
+        android:pathData="M47,66 L61,39 L75,66" />
 </vector>
