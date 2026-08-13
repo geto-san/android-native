@@ -1,0 +1,78 @@
+name: Build APK and release
+
+# Runs the JVM unit test suite, then builds a debug APK and attaches it to a
+# new GitHub release, on every push to master - see the project's standing
+# APK-release preference. A release-signed build isn't set up (needs its own
+# keystore/SHA-1, distinct from the debug key - see AGENTS.md/REPOS.md), so
+# this is the debug build, same as every APK released by hand so far.
+#
+# Required repo secrets (Settings -> Secrets and variables -> Actions):
+#   MAPBOX_DOWNLOADS_TOKEN - a Mapbox *secret* token (scope: DOWNLOADS:READ),
+#     used only to authenticate the Maven repo that resolves the Mapbox SDK
+#     itself. Different from the token below. https://account.mapbox.com/
+#   MAPBOX_PUBLIC_TOKEN - a Mapbox *public* token, baked into the APK at
+#     build time as PUBLIC_MAPBOX_ACCESS_TOKEN (BuildConfig.MAPBOX_ACCESS_TOKEN).
+#     Without this the app degrades to the "Map unavailable" fallback instead
+#     of crashing (see core/data/map/MapboxToken.kt) - it just won't have a
+#     working map.
+#   LARAVEL_API_BASE_URL - the hosted Render API URL, e.g.
+#     https://wildwatch-api.onrender.com/api/
+#
+# Known gap: CI's auto-generated debug keystore has a different SHA-1 than
+# the one already registered with the Firebase project for Google Sign-In
+# (see REPOS.md item 18), so Google Sign-In won't work on these CI-built
+# APKs specifically until that keystore is also supplied here as a secret -
+# every other sign-in method, and the app generally, is unaffected.
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Write local.properties
+        run: |
+          cat <<EOF > local.properties
+          sdk.dir=$ANDROID_SDK_ROOT
+          PUBLIC_MAPBOX_ACCESS_TOKEN=${{ secrets.MAPBOX_PUBLIC_TOKEN }}
+          USE_LOCAL_BACKEND=false
+          LARAVEL_API_BASE_URL=${{ secrets.LARAVEL_API_BASE_URL }}
+          EOF
+
+      - name: Run unit tests
+        env:
+          ORG_GRADLE_PROJECT_MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_DOWNLOADS_TOKEN }}
+        run: ./gradlew testDebugUnitTest --console=plain
+
+      - name: Build debug APK
+        env:
+          ORG_GRADLE_PROJECT_MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_DOWNLOADS_TOKEN }}
+        run: ./gradlew assembleDebug --console=plain
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: "Build ${{ github.run_number }}"
+          body: |
+            Automated debug build of `${{ github.sha }}`.
+          files: app/build/outputs/apk/debug/app-arm64-v8a-debug.apk
