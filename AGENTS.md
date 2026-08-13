@@ -75,13 +75,15 @@ The app follows an **Offline-First Outbox Pattern**:
 
 ## 6. Track A — Backend & Shared Services
 
+**These checklists were left stale for a long time — A3/A4/A5 (and B4/B5/B7 below) were already done well before this update, and this file just never got synced forward. Fixed 2026-08-13; treat the top-level `AGENTS.md`/`REPOS.md`/`BRIDGE-CONTRACT.md` as the source of truth for current status over this file going forward.**
+
 | Phase | Work | Status |
 |---|---|---|
 | **A1** | Project initialization & Firestore collection skeleton | [x] |
-| **A2** | **RBAC**: `onUserCreated` trigger & `setUserRole` callable | [x] |
-| **A3** | Storage rules & bucket configuration for incident media | [ ] |
-| **A4** | Map tile hosting & offline region distribution | [ ] |
-| **A5** | FCM Topics: Park-based and role-based notification channels | [ ] |
+| **A2** | **RBAC**: `onUserCreated` trigger & `setUserRole` callable | [x] (Spark plan can't run this today — see `../HOSTED-CUTOVER-PLAN.md` §"Still genuinely open") |
+| **A3** | Storage rules & bucket configuration for incident media | [x] — `android-native-backend-branch/storage.rules`, includes a `feed/` rule added 2026-08-13 for feed-article images |
+| **A4** | Map tile hosting & offline region distribution | [x] — Mapbox `TileStore`/`OfflineManager`, see `../BRIDGE-CONTRACT.md`'s "Offline map tiles" section |
+| **A5** | FCM Topics: Park-based and role-based notification channels | [x] — `FcmTopicManager`, see §11 below |
 
 ## 7. Track B — Mobile App (Android)
 
@@ -89,18 +91,18 @@ The app follows an **Offline-First Outbox Pattern**:
 |---|---|---|
 | **B1** | Navigation scaffolding & Instagram-style UI implementation | [x] |
 | **B2** | **Offline-First**: Room implementation with `SyncStatus` tracking | [x] |
-| **B3** | **Auth Integration**: Support for Ranger/Public/Guest with persistent settings | [x] |
-| **B4** | **Incident Reporting**: Sighting/Conflict forms with Camera/GPS integration | [/] |
-| **B5** | **Ranger Tracking**: Background location breadcrumbs for patrols | [ ] |
+| **B3** | **Auth Integration**: Support for Ranger/Public/Guest with persistent settings | [x] — Guest ("Continue without account") no longer blocks on connectivity as of 2026-08-13, see `README.md`'s Capabilities section |
+| **B4** | **Incident Reporting**: Sighting/Conflict forms with Camera/GPS integration | [x] |
+| **B5** | **Ranger Tracking**: Background location breadcrumbs for patrols | [x] — a real crash on this exact screen (Mapbox plugin-registry timing race in the scale-bar/logo/attribution setup, not the map itself) was found and fixed 2026-08-13, confirmed live via a real device's crash log |
 | **B6** | **Permissions**: Custom `PermissionDialog` (Instagram-style) integration | [x] |
-| **B7** | **Push Notifications**: Topic-based messaging for all user types (e.g., `park_alerts_all` for Guests) | [ ] |
+| **B7** | **Push Notifications**: Topic-based messaging for all user types (e.g., `park_alerts_all` for Guests) | [x] |
 
 ---
 
 ## 8. Track C — Web App (Laravel & TanStack)
 
-- **Warden Dashboard**: Located at `/home/geto/Projects/Github/android-native-webaportal`. Built with Laravel (backend) and TanStack Start (frontend).
-- **Current Status**: UI foundation established. Needs Firestore integration based on `docs/schema-v1.md`.
+- **Warden Dashboard**: lives at the sibling `../web-portal/` repo (`backend/` = Laravel, `frontend/` = TanStack Start) — the path this section originally pointed at (`android-native-webaportal`) no longer exists, corrected 2026-08-13.
+- **Current Status**: live and deployed (Render + Cloudflare, see `../HOSTED-CUTOVER-PLAN.md`), well past "UI foundation" — includes incident/claims/personnel management and, as of 2026-08-13, a `/portal/feed` screen for composing the mobile app's community feed.
 - **Warden Dashboard**: Roster management, incident triage, and task assignment.
 - **UWA Official**: Cross-park analytics, map data management, and Warden account oversight.
 
@@ -117,7 +119,7 @@ The app follows an **Offline-First Outbox Pattern**:
 ## 10. Practical Notes
 
 - **Guest Notifications**: Topic-based messaging (e.g., `park_alerts_all`) will allow Guests to receive info without being logged in.
-- **Media Optimization**: Cloudinary or R2 will be used for large media files to stay within Firebase Storage free-tier limits.
+- **Media Optimization**: a CDN (Cloudinary/R2) was considered but explicitly deferred (decision made 2026-08-12, see `../BRIDGE-CONTRACT.md`'s "Storage (incident media)" section) — current volume is a small fraction of Firebase Storage's free tier and no CDN credentials exist yet. Revisit once real usage data shows the free tier is actually being approached, not preemptively.
 - **Ranger Login**: Use `ranger@wildwatch.app` (pw: `password123`) in development to access professional features (see `android-native-backend-branch/scripts/seed.ts`).
 
 ## 11. Local-first Docker development
@@ -128,5 +130,6 @@ The local Docker stack this section used to point at has been retired (2026-08-1
 - Never hardcode emulator hosts/ports outside that gated path.
 - Repository-interface + Hilt-binding pattern; no Firebase SDK calls from ViewModels/Composables.
 - **FCM topics** (via `FcmTopicManager`): after login/token refresh, subscribe `park_alerts_{parkId}` + role topic (`park_alerts_all`, `ranger_{parkId}`, `warden_{parkId}`, `uwa_official`); unsubscribe previous topics first.
-- **Community feed:** portal writes Firestore `feed/{id}`; mobile reads via `ArticleRepositoryImpl` (Room cache + Firestore listener) → `FeedScreen`.
-- **Bridge:** mobile data authoritative in Firestore; portal relational data in Laravel/MySQL; `source_system` prevents echo loops.
+- **Community feed:** portal's `/portal/feed` screen writes Firestore `feed/{id}` (including an optional header image as of 2026-08-13); mobile reads via `ArticleRepositoryImpl` (Room cache + Firestore listener) → `FeedScreen`'s staggered image grid. Full field mapping: `../BRIDGE-CONTRACT.md`.
+- **Bridge:** mobile data authoritative in Firestore; portal relational data in Laravel/Postgres; `source_system` prevents echo loops.
+- **CI/CD:** `.github/workflows/release.yml` builds and releases a debug APK on every push to `master` — see `README.md`'s CI/CD section for the required secrets and the Google Sign-In caveat.

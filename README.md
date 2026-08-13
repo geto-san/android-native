@@ -1,8 +1,15 @@
 <div align="center">
-  <img src="./art/icons/ic_launcher_foreground_exact.png" width="120" height="120" alt="WildWatch Logo" />
+  <img src="./art/icons/Use this as the new icon for the app.webp" width="120" height="120" alt="WildWatch Logo" />
   <h1>WildWatch</h1>
   <p>A native Android app for wildlife conservation reporting and ranger operations in Uganda.</p>
 </div>
+
+<!-- Note: art/icons/ic_launcher_foreground_exact.png (previously referenced here) predates the
+     2026-08-13 icon fix and shows the old mountain-chevron mark, not the ring+"W" mark the app
+     actually ships now (app/src/main/res/drawable/ic_launcher_foreground.xml) - swapped to the
+     reference webp above rather than a stale export. Worth generating a fresh PNG export from
+     the corrected vector drawable at some point rather than relying on the design-reference file. -->
+
 
 ## What this is
 
@@ -14,11 +21,15 @@ The Firebase project runs on the Spark (free) plan, which cannot run Cloud Funct
 
 ## Capabilities
 
-Incident and wildlife-sighting reporting with camera capture and GPS tagging, submitted through an offline-first outbox that queues locally and syncs when connectivity allows. A ranger tracking screen showing live location, incident pins, and park points of interest, including an in-app flow for flagging new points of interest such as danger zones. Background patrol tracking that persists a ranger's route locally, syncs it periodically, and correctly resumes rather than duplicating a patrol if the app process is killed mid-patrol. Push notifications with tap-to-deep-link behavior into the relevant screen, and an unread-count badge on the home and dashboard bells. Offline map regions: the base map for a ranger's assigned park downloads automatically in the background over an unmetered connection, so the map keeps working without signal in the field. Community news feed sourced from the portal. Guest mode for reporting without creating an account, with light and dark themes including a true-black dark mode.
+Incident and wildlife-sighting reporting with camera capture and GPS tagging, submitted through an offline-first outbox that queues locally and syncs when connectivity allows. A ranger tracking screen showing live location, incident pins, and park points of interest, including an in-app flow for flagging new points of interest such as danger zones. Background patrol tracking that persists a ranger's route locally, syncs it periodically, and correctly resumes rather than duplicating a patrol if the app process is killed mid-patrol. Push notifications with tap-to-deep-link behavior into the relevant screen, and a fully-opaque unread-count badge on the home and dashboard bells (fixed 2026-08-13 — it used to render at 15% opacity, functionally invisible against most backgrounds). Offline map regions: the base map for a ranger's assigned park downloads automatically in the background over an unmetered connection, so the map keeps working without signal in the field. Community news feed with a staggered image grid (redesigned 2026-08-13 in the spirit of Now in Android's "For You" screen), authored from the web portal including optional header images. Guest mode ("Continue without account") for reporting without creating an account — as of 2026-08-13 this no longer blocks on connectivity: it enters local guest mode immediately if the anonymous sign-in network call fails, and retries it automatically once back online, instead of leaving the user stuck on the Auth screen. Light and dark themes including a true-black dark mode, with status bar icon contrast that reactively follows the actual resolved in-app theme (fixed 2026-08-13 — it used to only reflect system config at launch, which could disagree with an in-app theme override).
 
 ## Tech stack
 
 Jetpack Compose with Material 3 for UI, an MVVM architecture, Hilt for dependency injection, Room for local persistence, Firebase (Authentication, Firestore, Storage, Cloud Messaging, Functions) for the backend, the Mapbox Maps SDK for mapping and offline tile regions, Kotlin Coroutines and Flow for asynchronous and reactive code, WorkManager for background sync and downloads, and Timber for logging.
+
+## CI/CD
+
+Every push to `master` runs the JVM unit test suite, builds a debug APK, and attaches it to a new GitHub release (`.github/workflows/release.yml`, added 2026-08-13) — the automated version of this project's standing manual "attach a release APK to every major commit" rule; the manual rule still applies to anything this workflow doesn't cover (e.g. a real release build once release signing is set up). Needs three repo secrets to actually build (`MAPBOX_DOWNLOADS_TOKEN`, `MAPBOX_PUBLIC_TOKEN`, `LARAVEL_API_BASE_URL` — see the workflow file's own header comment for exactly what each is and where to get it). One known gap: the CI runner's auto-generated debug keystore has a different SHA-1 than the one already registered with the Firebase project for Google Sign-In, so that one sign-in method doesn't work on CI-built APKs specifically — every other sign-in method, and the app generally, is unaffected.
 
 ## Running against a real Firebase project
 
@@ -42,6 +53,8 @@ Unit tests run through Gradle's standard test task and use mocked repositories r
 |:---:|:---:|:---:|
 | <img src="./art/screenshots/home_light.png" width="200" /> | <img src="./art/screenshots/feed_light.png" width="200" /> | <img src="./art/screenshots/profile_light.png" width="200" /> |
 | <img src="./art/screenshots/home_dark.png" width="200" /> | <img src="./art/screenshots/feed_dark.png" width="200" /> | <img src="./art/screenshots/profile_dark.png" width="200" /> |
+
+*These predate the 2026-08-13 fixes (feed's staggered image grid, the corrected launcher icon, the now-visible unread badge, the reactive status bar) — worth recapturing, not done as part of this pass.*
 
 ## Further reading
 
