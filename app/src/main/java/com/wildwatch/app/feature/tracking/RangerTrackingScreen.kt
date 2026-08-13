@@ -24,6 +24,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
+import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.MapboxMapComposable
 import com.mapbox.maps.extension.compose.MapboxMapScope
@@ -32,7 +33,10 @@ import com.mapbox.maps.extension.compose.annotation.IconImage
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
 import com.mapbox.maps.extension.compose.annotation.rememberIconImage
+import com.mapbox.maps.plugin.attribution.attribution
 import com.mapbox.maps.plugin.gestures.OnMapClickListener
+import com.mapbox.maps.plugin.logo.logo
+import com.mapbox.maps.plugin.scalebar.scalebar
 import com.wildwatch.app.R
 import com.wildwatch.app.core.model.AttractionType
 import com.wildwatch.app.core.tracking.PatrolTrackingService
@@ -122,41 +126,23 @@ fun RangerTrackingScreen(
             },
             style = { com.mapbox.maps.extension.compose.style.MapStyle(uiState.mapStyleUri) },
         ) {
+            // Mapbox's own scale bar/logo/attribution ornaments, disabled outright rather
+            // than repositioned - a ranger operating this screen in the field doesn't need
+            // them, and they compete for space with the map controls.
+            MapEffect(Unit) { mapView ->
+                mapView.scalebar.enabled = false
+                mapView.logo.enabled = false
+                mapView.attribution.enabled = false
+            }
             TrackingMapAnnotations(uiState = uiState, onIncidentClick = onIncidentClick)
         }
 
-        SearchBar(
-            query = uiState.searchQuery,
-            onQueryChange = viewModel::updateSearchQuery,
-            onSearch = { viewModel.updateSearchQuery(it) },
-            active = uiState.isSearching,
-            onActiveChange = { if (!it) viewModel.clearSearch() },
-            placeholder = { Text("Search park locations...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-            trailingIcon = { 
-                if (uiState.isSearching) {
-                    IconButton(onClick = viewModel::clearSearch) {
-                        Icon(Icons.Default.Close, contentDescription = null)
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .statusBarsPadding()
-        ) {
-            // Suggestion list
-        }
-
-        // Drawn after SearchBar (later Box children paint on top) and offset
-        // well below it - an earlier version sat behind the search bar and
-        // was almost entirely hidden.
         if (uiState.isPlacingPoi) {
             PlacingPoiHint(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .statusBarsPadding()
-                    .padding(top = 76.dp),
+                    .padding(top = 16.dp),
             )
         }
 
@@ -165,6 +151,7 @@ fun RangerTrackingScreen(
             onToggleMapStyle = viewModel::toggleMapStyle,
             onToggle3DMode = viewModel::toggle3DMode,
             onToggleAttractionsVisibility = viewModel::toggleAttractionsVisibility,
+            onToggleIncidentsVisibility = viewModel::toggleIncidentsVisibility,
             onRecenterOnUser = {
                 uiState.userLocation?.let { location ->
                     viewportState.flyTo(CameraOptions.Builder().center(location).zoom(14.0).build())
@@ -258,6 +245,7 @@ private fun MapControlsColumn(
     onToggleMapStyle: () -> Unit,
     onToggle3DMode: () -> Unit,
     onToggleAttractionsVisibility: () -> Unit,
+    onToggleIncidentsVisibility: () -> Unit,
     onRecenterOnUser: () -> Unit,
     onToggleAddPoiMode: () -> Unit,
     onTogglePatrol: () -> Unit,
@@ -275,6 +263,12 @@ private fun MapControlsColumn(
         MapControlButton(
             icon = if (uiState.showAttractions) Icons.Default.Visibility else Icons.Default.VisibilityOff,
             onClick = onToggleAttractionsVisibility
+        )
+        // toggleIncidentsVisibility() already existed on the ViewModel and worked - it just
+        // had no button anywhere to reach it, so incidents could never actually be hidden.
+        MapControlButton(
+            icon = if (uiState.showIncidents) Icons.Default.ReportProblem else Icons.Default.ReportOff,
+            onClick = onToggleIncidentsVisibility
         )
         MapControlButton(icon = Icons.Default.MyLocation, onClick = onRecenterOnUser)
         if (uiState.activePark != null) {

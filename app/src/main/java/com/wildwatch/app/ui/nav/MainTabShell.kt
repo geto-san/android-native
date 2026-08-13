@@ -59,7 +59,10 @@ fun MainTabShell(
     val tabs = if (userRole == UserRole.RANGER) {
         listOf(MainTab.Home, MainTab.Professional, MainTab.Tracking, MainTab.Profile)
     } else {
-        listOf(MainTab.Home, MainTab.Feed, MainTab.Map, MainTab.Profile)
+        // Map access removed from the public/tourist/anonymous side - see
+        // PublicMapScreen/PublicMapViewModel, left in place (unreferenced) rather than
+        // deleted in case this comes back as a real product decision later.
+        listOf(MainTab.Home, MainTab.Feed, MainTab.Profile)
     }
 
     var selectedTab by rememberSaveable {

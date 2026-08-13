@@ -1,23 +1,37 @@
 package com.wildwatch.app.feature.dashboard
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.NotificationsNone
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Dangerous
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.ReportProblem
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
@@ -37,19 +51,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wildwatch.app.R
+import com.wildwatch.app.core.database.IncidentSeverity
+import com.wildwatch.app.core.database.IncidentType
 import com.wildwatch.app.core.model.Incident
 import com.wildwatch.app.core.ui.component.CountBadge
+import com.wildwatch.app.core.ui.theme.Destructive
 import com.wildwatch.app.core.ui.theme.Grey200
 import com.wildwatch.app.core.ui.theme.Grey500
 import com.wildwatch.app.core.ui.theme.MagilioFontFamily
+import com.wildwatch.app.core.ui.theme.SunsetAmber
+import com.wildwatch.app.core.util.relativeDay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,9 +145,9 @@ fun DashboardScreen(
                     DashboardIncidentItem(
                         incident = incident,
                         actionLabel = stringResource(R.string.dash_attend_to),
-                        onAction = { onIncidentClick(incident.id) }
+                        onAction = { onIncidentClick(incident.id) },
+                        onAssign = null
                     )
-                    HorizontalDivider(thickness = 0.5.dp, color = Grey200, modifier = Modifier.padding(start = 16.dp))
                 }
             }
 
@@ -144,9 +164,12 @@ fun DashboardScreen(
                     DashboardIncidentItem(
                         incident = incident,
                         actionLabel = stringResource(R.string.dash_attend_to),
-                        onAction = { onIncidentClick(incident.id) }
+                        onAction = { onIncidentClick(incident.id) },
+                        // Alerts are unassigned by definition (DashboardViewModel filters on
+                        // assignedTo == null) - assignToSelf() already existed on the
+                        // ViewModel but had no button anywhere to reach it from here.
+                        onAssign = { viewModel.assignToSelf(incident.id) }
                     )
-                    HorizontalDivider(thickness = 0.5.dp, color = Grey200, modifier = Modifier.padding(start = 16.dp))
                 }
             }
         }
@@ -170,18 +193,51 @@ private fun StatsSection(uiState: DashboardUiState) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            StatItem("Resolved", uiState.resolvedCount.toString())
-            StatItem("Pending", uiState.pendingCount.toString())
-            StatItem("Zones", uiState.activeZoneCount.toString())
+            StatItem(
+                label = "Resolved",
+                value = uiState.resolvedCount.toString(),
+                icon = Icons.Filled.CheckCircle,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.weight(1f)
+            )
+            StatItem(
+                label = "Pending",
+                value = uiState.pendingCount.toString(),
+                icon = Icons.Filled.Schedule,
+                tint = SunsetAmber,
+                modifier = Modifier.weight(1f)
+            )
+            StatItem(
+                label = "Zones",
+                value = uiState.activeZoneCount.toString(),
+                icon = Icons.Filled.Map,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
 
 @Composable
-private fun StatItem(label: String, value: String) {
-    Column {
+private fun StatItem(label: String, value: String, icon: ImageVector, tint: Color, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(tint.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(16.dp))
+        }
+        Spacer(modifier = Modifier.height(8.dp))
         Text(text = value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Text(text = label, style = MaterialTheme.typography.labelSmall, color = Grey500)
     }
@@ -197,38 +253,127 @@ private fun SectionHeader(title: String) {
     )
 }
 
+private fun typeIcon(type: IncidentType): ImageVector = when (type) {
+    IncidentType.SIGHTING -> Icons.Filled.Visibility
+    IncidentType.CONFLICT -> Icons.Filled.Groups
+    IncidentType.EMERGENCY -> Icons.Filled.ReportProblem
+    IncidentType.POACHING -> Icons.Filled.Dangerous
+    IncidentType.SNARE -> Icons.Filled.Warning
+}
+
+// Matches the severity/color convention already established by SeverityChip
+// in CommonReportComponents.kt - same three brand colors, no new ones.
+@Composable
+private fun severityColor(severity: IncidentSeverity): Color = when (severity) {
+    IncidentSeverity.MEDIUM -> SunsetAmber
+    IncidentSeverity.HIGH -> Destructive
+    else -> MaterialTheme.colorScheme.primary
+}
+
 @Composable
 private fun DashboardIncidentItem(
     incident: Incident,
     actionLabel: String,
-    onAction: () -> Unit
+    onAction: () -> Unit,
+    onAssign: (() -> Unit)?
 ) {
-    Row(
+    val accent = severityColor(incident.severity)
+    Column(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable(onClick = onAction)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(12.dp)
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = incident.species, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-            Text(
-                text = incident.locationName ?: incident.community,
-                style = MaterialTheme.typography.bodySmall,
-                color = Grey500
-            )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(accent.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(typeIcon(incident.type), contentDescription = null, tint = accent, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = incident.species,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    if (incident.isEscalated) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            Icons.Filled.LocalFireDepartment,
+                            contentDescription = "Escalated",
+                            tint = Destructive,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
+                Text(
+                    text = "${incident.locationName ?: incident.community} · ${relativeDay(incident.reportedAt)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Grey500
+                )
+            }
+            SeverityLabel(severity = incident.severity, color = accent)
         }
-        Button(
-            onClick = onAction,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            ),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-            shape = MaterialTheme.shapes.extraSmall,
-            modifier = Modifier.size(height = 32.dp, width = 100.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp),
+            horizontalArrangement = Arrangement.End
         ) {
-            Text(actionLabel, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            if (onAssign != null) {
+                Button(
+                    onClick = onAssign,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                    shape = MaterialTheme.shapes.extraSmall,
+                    modifier = Modifier.size(height = 32.dp, width = 100.dp)
+                ) {
+                    Icon(Icons.Filled.PersonAdd, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Assign me", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Button(
+                onClick = onAction,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                shape = MaterialTheme.shapes.extraSmall,
+                modifier = Modifier.size(height = 32.dp, width = 100.dp)
+            ) {
+                Text(actionLabel, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            }
         }
+    }
+}
+
+@Composable
+private fun SeverityLabel(severity: IncidentSeverity, color: Color) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(100.dp))
+            .background(color.copy(alpha = 0.12f))
+            .padding(horizontal = 10.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = severity.name.lowercase().replaceFirstChar { it.uppercase() },
+            style = MaterialTheme.typography.labelSmall,
+            color = color,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 

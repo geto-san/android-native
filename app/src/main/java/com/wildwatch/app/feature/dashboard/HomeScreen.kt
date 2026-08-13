@@ -23,7 +23,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wildwatch.app.core.model.Article
@@ -32,9 +31,7 @@ import com.wildwatch.app.core.ui.component.CountBadge
 import com.wildwatch.app.core.ui.component.IncidentListItem
 import com.wildwatch.app.core.ui.component.QuickReportCard
 import com.wildwatch.app.core.ui.theme.*
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import com.wildwatch.app.core.util.relativeDay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -539,19 +536,7 @@ private fun EmptyFeedState() {
             text = "When you report sightings or conflicts, they'll appear here to help the community stay informed.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            lineHeight = 20.sp
+            textAlign = TextAlign.Center
         )
-    }
-}
-
-private fun relativeDay(reportedAt: String): String {
-    val instant = runCatching { Instant.parse(reportedAt) }.getOrNull() ?: return reportedAt
-    val date = instant.atZone(ZoneId.systemDefault()).toLocalDate()
-    val today = java.time.LocalDate.now()
-    return when {
-        date == today -> "Today"
-        date == today.minusDays(1) -> "Yesterday"
-        else -> date.format(DateTimeFormatter.ofPattern("MMMM d"))
     }
 }

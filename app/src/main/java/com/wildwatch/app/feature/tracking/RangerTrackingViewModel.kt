@@ -31,8 +31,6 @@ data class RangerTrackingUiState(
     val is3DMode: Boolean = false,
     val showAttractions: Boolean = true,
     val showIncidents: Boolean = true,
-    val searchQuery: String = "",
-    val isSearching: Boolean = false,
     val userLocation: Point? = null,
     val error: String? = null,
     // Add-POI / danger-zone flow: armed = next map tap drops a pending pin;
@@ -84,19 +82,26 @@ class RangerTrackingViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    // The map centers on (and, via GetIncidentsUseCase, the incident list is scoped to) the
+    // ranger's server-assigned park (User.parkId), not GPS-nearest - the same "server-
+    // assigned, not GPS" call already made for offline map prefetch (see
+    // OfflineMapCoordinator). GPS-nearest is now only a fallback for the rare case a ranger
+    // has no park assigned yet, so the map isn't just blank.
     private fun detectActivePark() {
         viewModelScope.launch {
             try {
-                locationRepository.getCurrentLocation().onSuccess { location ->
-                    val userPoint = Point.fromLngLat(location.longitude, location.latitude)
-                    _uiState.update { it.copy(userLocation = userPoint) }
+                val location = locationRepository.getCurrentLocation()
+                    .onFailure { e -> Timber.e(e, "Failed to get current location") }
+                    .getOrNull()
+                location?.let {
+                    _uiState.update { state -> state.copy(userLocation = Point.fromLngLat(it.longitude, it.latitude)) }
+                }
 
-                    val park = parkRepository.findNearestPark(location.latitude, location.longitude)
-                    if (park != null) {
-                        setActivePark(park)
-                    }
-                }.onFailure { e ->
-                    Timber.e(e, "Failed to get current location")
+                val assignedParkId = observeUserUseCase().value?.parkId
+                val park = assignedParkId?.takeIf { it.isNotBlank() }?.let { parkRepository.getPark(it) }
+                    ?: location?.let { parkRepository.findNearestPark(it.latitude, it.longitude) }
+                if (park != null) {
+                    setActivePark(park)
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Unexpected error in detectActivePark")
@@ -136,14 +141,6 @@ class RangerTrackingViewModel @Inject constructor(
 
     fun toggleIncidentsVisibility() {
         _uiState.update { it.copy(showIncidents = !it.showIncidents) }
-    }
-
-    fun updateSearchQuery(query: String) {
-        _uiState.update { it.copy(searchQuery = query, isSearching = query.isNotBlank()) }
-    }
-
-    fun clearSearch() {
-        _uiState.update { it.copy(searchQuery = "", isSearching = false) }
     }
 
     fun toggleAddPoiMode() {

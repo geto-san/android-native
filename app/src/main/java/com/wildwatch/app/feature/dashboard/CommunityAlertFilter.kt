@@ -4,6 +4,7 @@ import com.wildwatch.app.core.database.IncidentStatus
 import com.wildwatch.app.core.database.IncidentType
 import com.wildwatch.app.core.database.SyncStatus
 import com.wildwatch.app.core.model.Incident
+import com.wildwatch.app.core.model.ParkIdMatcher
 import com.wildwatch.app.core.model.UserRole
 import java.time.Instant
 
@@ -35,19 +36,8 @@ internal object CommunityAlertFilter {
         // topic FcmTopicManager subscribes non-ranger/warden users to.
         val isInScope = currentUserRole == UserRole.UWA_OFFICIAL ||
             currentUserParkId.isNullOrBlank() ||
-            parkMatches(incident.park.name, currentUserParkId)
+            ParkIdMatcher.matches(incident.park, currentUserParkId)
         return isAlertableType && isRecent && isUnresolved && isSynced && isNotReporter &&
             animalEligible && notDismissed && !seenExpired && isInScope
     }
-
-    // Incident.park is the Park enum (e.g. BWINDI_IMPENETRABLE); User.parkId
-    // comes from the Firebase "park_id" custom claim in Firestore-seed format
-    // (e.g. "bwindi-impenetrable") - normalize both to compare (see
-    // BRIDGE-CONTRACT.md's documented park-id-format gap; same normalization
-    // FcmTopicManager.normalizeTopicSegment uses for FCM topic names).
-    private fun parkMatches(incidentParkName: String, userParkId: String): Boolean =
-        normalizeParkId(incidentParkName) == normalizeParkId(userParkId)
-
-    private fun normalizeParkId(value: String): String =
-        value.trim().lowercase().replace(Regex("[\\s-]+"), "_")
 }
