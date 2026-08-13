@@ -80,15 +80,15 @@ service firebase.storage {
       allow update, delete: if isIncidentReporter(incidentId) || isUwaOfficial();
     }
 
-    // Community news feed header images. Path matches NewsArticleController's upload
-    // endpoint: "feed/{articleId}/{fileName}". Uploads go through Laravel's Admin SDK only
-    // (see FirebaseService::storage() / NewsArticleController::uploadImage()), which
-    // authenticates as a service account and bypasses these rules entirely - the "allow
-    // write: if false" below is accurate documentation of that (no client SDK ever writes
-    // here directly), not a gap. Read is public, mirroring firestore.rules' /feed rule.
+    // Community news feed header images used to live here ("feed/{articleId}/{fileName}"),
+    // uploaded via Laravel's Admin SDK (NewsArticleController::uploadImage). Moved to
+    // Cloudinary (CloudinaryService) because Cloud Storage for Firebase requires the Blaze
+    // plan and this project (wildwatch-82abc) is on Spark - no bucket was ever provisioned,
+    // confirmed live (both possible default bucket names 404 from Firebase's own Storage
+    // REST API). Left denying all access below rather than removed outright, in case Storage
+    // is ever provisioned later and something still probes this path.
     match /feed/{articleId}/{fileName} {
-      allow read: if true;
-      allow write: if false;
+      allow read, write: if false;
     }
 
     // Deny everything else - no implicit access to any other path.
