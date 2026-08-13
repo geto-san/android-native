@@ -2,6 +2,7 @@ package com.wildwatch.app.feature.feed
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -13,12 +14,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.wildwatch.app.core.model.Article
 import com.wildwatch.app.core.ui.theme.Grey500
 
@@ -73,6 +77,19 @@ fun ArticleDetailScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(24.dp)
             ) {
+                article.imageUrl?.let { imageUrl ->
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .clip(RoundedCornerShape(20.dp)),
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
+
                 Text(
                     text = article.category.uppercase(),
                     style = MaterialTheme.typography.labelLarge,

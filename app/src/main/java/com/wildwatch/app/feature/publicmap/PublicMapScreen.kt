@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -24,6 +25,8 @@ import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
 import com.mapbox.maps.extension.compose.style.MapStyle
+import com.wildwatch.app.core.data.map.isMapboxTokenConfigured
+import com.wildwatch.app.core.ui.component.MapUnavailableState
 import com.wildwatch.app.feature.tracking.ATTRACTION_MARKER_ICON_SIZE
 import com.wildwatch.app.feature.tracking.MapControlButton
 import com.wildwatch.app.feature.tracking.rememberAttractionMarkerIcon
@@ -51,6 +54,11 @@ fun PublicMapScreen(viewModel: PublicMapViewModel = hiltViewModel()) {
                     .build(),
             )
         }
+    }
+
+    if (!remember { isMapboxTokenConfigured() }) {
+        MapUnavailableState(modifier = Modifier.fillMaxSize())
+        return
     }
 
     Box(modifier = Modifier.fillMaxSize()) {

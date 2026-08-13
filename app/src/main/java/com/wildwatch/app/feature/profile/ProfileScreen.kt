@@ -57,6 +57,12 @@ private fun ProfileContent(
     // while the app is visibly dark because it's following the system.
     val resolvedDarkTheme = uiState.isDarkTheme ?: isSystemInDarkTheme()
 
+    // Local, not ViewModel state: signOut() itself is fire-and-forget (see
+    // AuthRepositoryImpl.signOut()), so the only thing worth tracking here is "the tap
+    // registered" - gives instant visual feedback instead of the row looking unresponsive
+    // while the auth-state listener/nav effect catches up.
+    var isSigningOut by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -93,12 +99,7 @@ private fun ProfileContent(
                     title = "ACCOUNT",
                     items = listOf(
                         SettingsItemData(
-                            title = "Notifications",
-                            icon = Icons.Default.NotificationsNone, 
-                            showSwitch = true
-                        ),
-                        SettingsItemData(
-                            title = "Dark mode", 
+                            title = "Dark mode",
                             icon = Icons.Default.DarkMode,
                             showSwitch = true,
                             switchChecked = resolvedDarkTheme,
@@ -126,10 +127,16 @@ private fun ProfileContent(
                             )
                         } else {
                             SettingsItemData(
-                                title = "Sign out", 
-                                icon = Icons.AutoMirrored.Filled.Logout, 
-                                tint = MaterialTheme.colorScheme.error, 
-                                onClick = onSignOut
+                                title = "Sign out",
+                                icon = Icons.AutoMirrored.Filled.Logout,
+                                tint = MaterialTheme.colorScheme.error,
+                                isLoading = isSigningOut,
+                                onClick = {
+                                    if (!isSigningOut) {
+                                        isSigningOut = true
+                                        onSignOut()
+                                    }
+                                },
                             )
                         }
                     )
@@ -244,6 +251,7 @@ data class SettingsItemData(
     val switchChecked: Boolean = false,
     val onSwitchChange: (Boolean) -> Unit = {},
     val tint: Color? = null,
+    val isLoading: Boolean = false,
     val onClick: () -> Unit = {}
 )
 
@@ -288,7 +296,7 @@ private fun SettingsRow(item: SettingsItemData) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = item.onClick)
+            .clickable(enabled = !item.isLoading, onClick = item.onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -317,7 +325,13 @@ private fun SettingsRow(item: SettingsItemData) {
             color = item.tint ?: MaterialTheme.colorScheme.onSurface
         )
 
-        if (item.showSwitch) {
+        if (item.isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                strokeWidth = 2.dp,
+                color = item.tint ?: MaterialTheme.colorScheme.onSurface,
+            )
+        } else if (item.showSwitch) {
             Switch(
                 checked = item.switchChecked,
                 onCheckedChange = item.onSwitchChange,

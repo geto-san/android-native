@@ -3,6 +3,14 @@ package com.wildwatch.app.core.data.auth
 import com.google.firebase.auth.FirebaseAuthException
 
 object AuthErrorMapper {
+    /**
+     * True for the specific "no network reached Firebase" failure - used to decide whether a
+     * failed signInAnonymously() call should degrade to local offline-guest mode instead of
+     * surfacing a blocking error (see AuthViewModel.signInAnonymously()).
+     */
+    fun isNetworkError(error: Throwable?): Boolean =
+        error is FirebaseAuthException && error.errorCode == "ERROR_NETWORK_REQUEST_FAILED"
+
     fun messageForSendEmailLink(error: Throwable): String = when (error) {
         is FirebaseAuthException -> when (error.errorCode) {
             "ERROR_INVALID_EMAIL" -> "Enter a valid email address."

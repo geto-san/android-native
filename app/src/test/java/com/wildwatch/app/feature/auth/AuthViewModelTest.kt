@@ -1,6 +1,7 @@
 package com.wildwatch.app.feature.auth
 
 import app.cash.turbine.test
+import com.google.firebase.auth.FirebaseAuthException
 import com.wildwatch.app.core.data.auth.AuthRepository
 import com.wildwatch.app.core.data.user.UserDataRepository
 import com.wildwatch.app.core.domain.usecase.ObserveUserUseCase
@@ -161,6 +162,38 @@ class AuthViewModelTest {
         deferred.complete(Result.success(Unit))
         advanceUntilIdle()
         assertNull(vm.uiState.value.loadingAction)
+    }
+
+    @Test
+    fun `signInAnonymously offline enters guest mode instead of showing an error`() = runTest(testDispatcher) {
+        // See AuthErrorMapperTest for why this is mocked rather than really constructed.
+        val networkError = mockk<FirebaseAuthException> {
+            every { errorCode } returns "ERROR_NETWORK_REQUEST_FAILED"
+        }
+        coEvery { authRepository.signInAnonymously() } returns Result.failure(networkError)
+        val vm = viewModel()
+
+        vm.continueAsGuestEvent.test {
+            vm.signInAnonymously()
+            advanceUntilIdle()
+
+            awaitItem()
+            assertNull(vm.uiState.value.errorMessage)
+            assertFalse(vm.uiState.value.isLoading)
+            coVerify { userDataRepository.setPendingAnonymousAuth(true) }
+        }
+    }
+
+    @Test
+    fun `signInAnonymously with a non-network failure surfaces the error and stays on Auth`() = runTest(testDispatcher) {
+        coEvery { authRepository.signInAnonymously() } returns Result.failure(Exception("something else"))
+        val vm = viewModel()
+
+        vm.signInAnonymously()
+        advanceUntilIdle()
+
+        assertEquals("something else", vm.uiState.value.errorMessage)
+        coVerify(exactly = 0) { userDataRepository.setPendingAnonymousAuth(any()) }
     }
 
     @Test

@@ -14,8 +14,11 @@ import com.wildwatch.app.core.data.user.UserDataRepository
 import com.wildwatch.app.core.domain.usecase.ObserveUserUseCase
 import com.wildwatch.app.core.model.User
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -57,6 +60,13 @@ class AuthViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+
+    // One-shot signal WildWatchNavHost collects to leave the Auth screen the same way it does
+    // for a real sign-in - fired when signInAnonymously() degrades to local offline-guest mode
+    // instead of completing a real Firebase sign-in (so currentUser never changes, which is
+    // what the nav host normally keys off of).
+    private val _continueAsGuestEvent = MutableSharedFlow<Unit>()
+    val continueAsGuestEvent: SharedFlow<Unit> = _continueAsGuestEvent.asSharedFlow()
 
     fun sendEmailSignInLink(email: String) {
         if (email.isBlank()) {
@@ -125,8 +135,18 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(loadingAction = AuthLoadingAction.ANONYMOUS, errorMessage = null) }
             val result = authRepository.signInAnonymously()
-            _uiState.update {
-                it.copy(loadingAction = null, errorMessage = result.exceptionOrNull()?.friendlyMessage())
+            val error = result.exceptionOrNull()
+            if (result.isSuccess) {
+                _uiState.update { it.copy(loadingAction = null) }
+            } else if (AuthErrorMapper.isNetworkError(error)) {
+                // Never block "Continue without account" on connectivity - let the user in as
+                // a guest right away and let AuthRepositoryImpl retry the real anonymous
+                // sign-in in the background once the device is back online.
+                userDataRepository.setPendingAnonymousAuth(true)
+                _uiState.update { it.copy(loadingAction = null) }
+                _continueAsGuestEvent.emit(Unit)
+            } else {
+                _uiState.update { it.copy(loadingAction = null, errorMessage = error?.friendlyMessage()) }
             }
         }
     }

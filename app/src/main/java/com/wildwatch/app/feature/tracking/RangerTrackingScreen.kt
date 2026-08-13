@@ -38,8 +38,10 @@ import com.mapbox.maps.plugin.gestures.OnMapClickListener
 import com.mapbox.maps.plugin.logo.logo
 import com.mapbox.maps.plugin.scalebar.scalebar
 import com.wildwatch.app.R
+import com.wildwatch.app.core.data.map.isMapboxTokenConfigured
 import com.wildwatch.app.core.model.AttractionType
 import com.wildwatch.app.core.tracking.PatrolTrackingService
+import com.wildwatch.app.core.ui.component.MapUnavailableState
 import com.wildwatch.app.core.ui.component.PermissionDialog
 import com.wildwatch.app.core.ui.theme.White
 
@@ -112,6 +114,11 @@ fun RangerTrackingScreen(
         }
     }
 
+    if (!remember { isMapboxTokenConfigured() }) {
+        MapUnavailableState(modifier = Modifier.fillMaxSize())
+        return
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         MapboxMap(
             modifier = Modifier.fillMaxSize(),
@@ -129,10 +136,18 @@ fun RangerTrackingScreen(
             // Mapbox's own scale bar/logo/attribution ornaments, disabled outright rather
             // than repositioned - a ranger operating this screen in the field doesn't need
             // them, and they compete for space with the map controls.
+            //
+            // runCatching, not a bare call: confirmed live on a real device (logcat) that
+            // mapView.scalebar's underlying ScaleBarUtils.getScaleBar() can NPE here - the
+            // plugin registry isn't guaranteed populated the instant MapEffect(Unit) first
+            // fires, a real Mapbox Compose extension timing race, not a WildWatch bug to
+            // "solve" by waiting differently. These three lines are a cosmetic nicety (the
+            // map itself works fine either way); crashing the whole screen over them isn't
+            // an acceptable trade, so a failure here is swallowed rather than propagated.
             MapEffect(Unit) { mapView ->
-                mapView.scalebar.enabled = false
-                mapView.logo.enabled = false
-                mapView.attribution.enabled = false
+                runCatching { mapView.scalebar.enabled = false }
+                runCatching { mapView.logo.enabled = false }
+                runCatching { mapView.attribution.enabled = false }
             }
             TrackingMapAnnotations(uiState = uiState, onIncidentClick = onIncidentClick)
         }

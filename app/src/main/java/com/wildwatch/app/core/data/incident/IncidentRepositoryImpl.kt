@@ -13,8 +13,10 @@ import com.wildwatch.app.core.data.location.LocationRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -40,9 +42,15 @@ class IncidentRepositoryImpl @Inject constructor(
 
     private val syncMutex = Mutex()
 
+    // Shared rather than a fresh cold Flow per collector: HomeViewModel, DashboardViewModel,
+    // ProfileViewModel, and RangerTrackingViewModel all observe this independently, and without
+    // sharing, every incident write re-triggers Room's invalidation tracker once per subscriber
+    // instead of once total - a real source of app-wide jank on top of whatever screen actually
+    // wrote the change.
     override fun observeAll(): Flow<List<Incident>> =
         incidentDao.observeAll()
             .map { entities -> entities.map(Incident::fromEntity) }
+            .shareIn(applicationScope, SharingStarted.WhileSubscribed(5000), replay = 1)
 
     override suspend fun getById(id: String): Incident? = withContext(ioDispatcher) {
         incidentDao.getById(id)?.let(Incident::fromEntity)

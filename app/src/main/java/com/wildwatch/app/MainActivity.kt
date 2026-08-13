@@ -7,10 +7,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -74,6 +77,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             val darkThemeConfig by userDataRepository.darkThemeConfig.collectAsStateWithLifecycle(initialValue = null)
             val useDarkTheme = darkThemeConfig ?: isSystemInDarkTheme()
+
+            // enableEdgeToEdge() above only picks status-bar-icon contrast from system config
+            // at launch, which can disagree with the app's actual resolved theme (an in-app
+            // override beats system dark mode). Keep icon contrast reactive to the real theme
+            // instead, while leaving the bar itself transparent/edge-to-edge as already set.
+            val view = LocalView.current
+            SideEffect {
+                WindowInsetsControllerCompat(window, view).isAppearanceLightStatusBars = !useDarkTheme
+            }
 
             WildWatchTheme(darkTheme = useDarkTheme) {
                 WildWatchNavHost(pendingRoute = pendingRoute)

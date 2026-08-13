@@ -86,6 +86,17 @@ fun WildWatchNavHost(
         }
     }
 
+    // "Continue without account" while offline never completes a real Firebase sign-in (so
+    // currentUser above never changes), but the user still shouldn't be stuck on the Auth
+    // screen - see AuthViewModel.signInAnonymously()'s offline branch.
+    LaunchedEffect(Unit) {
+        authViewModel.continueAsGuestEvent.collect {
+            navController.navigate(Route.Main) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
     NavHost(
         navController = navController, 
         startDestination = startDestination,

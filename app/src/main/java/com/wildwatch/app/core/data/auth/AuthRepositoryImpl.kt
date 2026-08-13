@@ -6,7 +6,9 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
+import com.wildwatch.app.core.data.connectivity.ConnectivityObserver
 import com.wildwatch.app.core.data.notification.NotificationRepository
+import com.wildwatch.app.core.data.user.UserDataRepository
 import com.wildwatch.app.core.di.ApplicationScope
 import com.wildwatch.app.core.model.User
 import com.wildwatch.app.core.model.UserRole
@@ -17,6 +19,8 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -61,8 +65,34 @@ class AuthRepositoryImpl @Inject constructor(
     private val deviceSessionRepository: DeviceSessionRepository,
     private val deviceSessionStore: DeviceSessionStore,
     private val notificationRepository: NotificationRepository,
+    private val userDataRepository: UserDataRepository,
+    private val connectivityObserver: ConnectivityObserver,
     @ApplicationScope private val applicationScope: CoroutineScope,
 ) : AuthRepository {
+
+    init {
+        retryPendingAnonymousAuthWhenOnline()
+    }
+
+    // Backs AuthViewModel's offline-guest path: "Continue without account" tapped while
+    // offline lets the user in locally right away (see AuthViewModel.signInAnonymously())
+    // rather than blocking, and sets pendingAnonymousAuth so the real Firebase anonymous
+    // identity still gets established transparently the next time the device is online -
+    // without this, a guest who stays offline for their whole first session would never
+    // actually get a real (syncable) anonymous account.
+    private fun retryPendingAnonymousAuthWhenOnline() {
+        applicationScope.launch {
+            connectivityObserver.isOnline
+                .filter { it }
+                .collect {
+                    if (firebaseAuth.currentUser == null && userDataRepository.pendingAnonymousAuth.first()) {
+                        signInAnonymously().onSuccess {
+                            userDataRepository.setPendingAnonymousAuth(false)
+                        }
+                    }
+                }
+        }
+    }
 
     private val firebaseAuthFlow = callbackFlow {
         val listener = FirebaseAuth.IdTokenListener { auth ->

@@ -55,18 +55,29 @@ fun StatusPill(
     }
 }
 
-// Small circular numeric badge (e.g. the "3" unread-alerts count).
+// Small circular numeric badge (e.g. the "3" unread-alerts count). Solid, fully-opaque fill
+// per standard Material3 badge convention - a translucent fill here reads as barely-visible
+// against most surfaces, which defeats the point of an unread-count indicator.
 @Composable
 fun CountBadge(
     count: Int,
     modifier: Modifier = Modifier,
-    background: Color = MaterialTheme.colorScheme.error.copy(alpha = 0.15f),
-    contentColor: Color = MaterialTheme.colorScheme.error,
+    background: Color = MaterialTheme.colorScheme.error,
+    contentColor: Color = MaterialTheme.colorScheme.onError,
+    borderColor: Color = MaterialTheme.colorScheme.background,
 ) {
     Box(
-        modifier = modifier.size(28.dp).background(background, CircleShape),
+        modifier = modifier
+            .size(20.dp)
+            .background(borderColor, CircleShape)
+            .padding(1.5.dp)
+            .background(background, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Text(count.toString(), style = MaterialTheme.typography.labelMedium, color = contentColor)
+        Text(
+            text = if (count > 99) "99+" else count.toString(),
+            style = MaterialTheme.typography.labelSmall,
+            color = contentColor,
+        )
     }
 }
