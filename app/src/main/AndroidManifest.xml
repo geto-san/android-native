@@ -33,10 +33,28 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:theme="@style/Theme.App.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- App Link for Firebase's passwordless email sign-in (see
+                 AuthRepository.sendSignInLinkToEmail / MainActivity.onNewIntent). The host is
+                 Firebase Hosting on this exact project (android-native-backend-branch/hosting/),
+                 verified via that host's /.well-known/assetlinks.json - autoVerify lets a
+                 verified device open the app directly instead of a browser when the emailed
+                 link is tapped. launchMode="singleTask" above means a tap while the app is
+                 already running is delivered to the existing instance via onNewIntent()
+                 instead of stacking a duplicate MainActivity. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="wildwatch-82abc.web.app" />
             </intent-filter>
         </activity>
 

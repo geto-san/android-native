@@ -13,17 +13,25 @@ interface AuthRepository {
     // AuthContext.jsx, just via a StateFlow instead of a React state hook).
     val currentUser: StateFlow<User?>
 
-    suspend fun signIn(email: String, password: String): Result<Unit>
-
     /** Firebase anonymous auth — use for guest browse, reporting, and notifications. */
     suspend fun signInAnonymously(): Result<Unit>
 
     suspend fun signInWithGoogle(idToken: String): Result<Unit>
 
-    suspend fun signUp(email: String, password: String, displayName: String): Result<Unit>
+    /**
+     * Sends a Firebase email sign-in link to [email]. Passwordless by design (see
+     * AuthViewModel/AuthScreen KDoc): a link only a real inbox owner can click is what makes
+     * this a genuine email-ownership check, unlike a self-reported password - and it doubles
+     * as sign-up, since Firebase creates the account automatically on first successful link
+     * click. There is deliberately no separate password-based sign-in/sign-up path anymore.
+     */
+    suspend fun sendSignInLinkToEmail(email: String): Result<Unit>
 
-    /** Sends Firebase's password-reset email. Used by AuthScreen's "Forgot password?" link. */
-    suspend fun sendPasswordResetEmail(email: String): Result<Unit>
+    /** Local, synchronous check - true if [link] is a Firebase email sign-in link. */
+    fun isSignInWithEmailLink(link: String): Boolean
+
+    /** Completes the passwordless flow once the user has actually clicked the emailed link. */
+    suspend fun signInWithEmailLink(email: String, link: String): Result<Unit>
 
     fun signOut()
 

@@ -1,5 +1,6 @@
 package com.wildwatch.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,6 +19,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.wildwatch.app.core.data.user.UserDataRepository
 import com.wildwatch.app.core.notifications.NotificationPayload
 import com.wildwatch.app.core.notifications.WildWatchMessagingService
+import com.wildwatch.app.ui.nav.Route
 import com.wildwatch.app.ui.nav.WildWatchNavHost
 import com.wildwatch.app.ui.nav.routeForNotification
 import com.wildwatch.app.core.ui.theme.WildWatchTheme
@@ -36,6 +38,12 @@ class MainActivity : ComponentActivity() {
 
     private val authViewModel: AuthViewModel by viewModels()
 
+    // Mutable (not just computed once in onCreate) because launchMode="singleTask" means a
+    // second notification tap or emailed sign-in link tap while the app is already running
+    // arrives via onNewIntent(), not a fresh onCreate() - see AndroidManifest's App Link
+    // intent-filter comment for why MainActivity needs singleTask at all.
+    private var pendingRoute by mutableStateOf<Route?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -47,8 +55,8 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 authViewModel.currentUser
-                    .onEach { 
-                        uiState = false 
+                    .onEach {
+                        uiState = false
                     }
                     .collect()
             }
@@ -61,11 +69,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        val notificationType = NotificationPayload.parseType(
-            intent.getStringExtra(WildWatchMessagingService.EXTRA_NOTIFICATION_TYPE),
-        )
-        val notificationTargetId = intent.getStringExtra(WildWatchMessagingService.EXTRA_NOTIFICATION_TARGET_ID)
-        val pendingRoute = routeForNotification(notificationType, notificationTargetId)
+        handleIntent(intent)
 
         setContent {
             val darkThemeConfig by userDataRepository.darkThemeConfig.collectAsStateWithLifecycle(initialValue = null)
@@ -75,5 +79,30 @@ class MainActivity : ComponentActivity() {
                 WildWatchNavHost(pendingRoute = pendingRoute)
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    // Two things can arrive here: a tapped push notification (extras-based, handled via
+    // pendingRoute -> WildWatchNavHost) or a tapped Firebase email sign-in link (a plain
+    // https URL in intent.data - handled directly against AuthViewModel, since completing
+    // sign-in doesn't need a route, just needs currentUser to update; WildWatchNavHost's own
+    // auth-state effect takes care of navigating away from the Auth screen once it does).
+    private fun handleIntent(intent: Intent) {
+        val link = intent.dataString
+        if (link != null && authViewModel.isEmailSignInLink(link)) {
+            authViewModel.completeEmailLinkSignIn(link)
+            return
+        }
+
+        val notificationType = NotificationPayload.parseType(
+            intent.getStringExtra(WildWatchMessagingService.EXTRA_NOTIFICATION_TYPE),
+        )
+        val notificationTargetId = intent.getStringExtra(WildWatchMessagingService.EXTRA_NOTIFICATION_TARGET_ID)
+        pendingRoute = routeForNotification(notificationType, notificationTargetId)
     }
 }

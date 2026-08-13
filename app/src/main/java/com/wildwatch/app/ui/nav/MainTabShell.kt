@@ -54,7 +54,6 @@ fun MainTabShell(
     onEditDraft: (String, com.wildwatch.app.core.database.IncidentType) -> Unit,
     onNotificationsClick: () -> Unit,
     onArticleClick: (String) -> Unit,
-    onAccountManagementClick: () -> Unit,
     onSeeAllReportsClick: () -> Unit,
 ) {
     val tabs = if (userRole == UserRole.RANGER) {
@@ -165,7 +164,6 @@ fun MainTabShell(
                 MainTab.Map -> PublicMapScreen()
                 MainTab.Profile -> ProfileScreen(
                     onSignInClick = onSignInClick,
-                    onAccountManagementClick = onAccountManagementClick
                 )
             }
         }

@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1015092528863-3p6sple4aj59hsc9usk125oj9l1v6d92.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wildwatch.app",
+            "certificate_hash": "c483c22d191bc7718f9eb64de0b6d5376baee0f8"
+          }
+        },
+        {
           "client_id": "1015092528863-6uktqq9lfru6blvk4pdomrhbofhdrk1a.apps.googleusercontent.com",
           "client_type": 3
         }

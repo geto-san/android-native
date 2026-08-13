@@ -32,7 +32,6 @@ import com.wildwatch.app.core.ui.theme.WildWatchTheme
 fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
     onSignInClick: () -> Unit = {},
-    onAccountManagementClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -41,7 +40,6 @@ fun ProfileScreen(
         onSignOut = viewModel::signOut,
         onSignIn = onSignInClick,
         onThemeToggle = viewModel::setDarkTheme,
-        onAccountManagementClick = onAccountManagementClick
     )
 }
 
@@ -52,7 +50,6 @@ private fun ProfileContent(
     onSignOut: () -> Unit,
     onSignIn: () -> Unit,
     onThemeToggle: (Boolean) -> Unit,
-    onAccountManagementClick: () -> Unit
 ) {
     // uiState.isDarkTheme is null until the user picks an explicit preference - resolve
     // against the system default here so this switch always matches what's actually on
@@ -96,12 +93,7 @@ private fun ProfileContent(
                     title = "ACCOUNT",
                     items = listOf(
                         SettingsItemData(
-                            title = "Account management", 
-                            icon = Icons.Default.AccountCircle, 
-                            onClick = onAccountManagementClick
-                        ),
-                        SettingsItemData(
-                            title = "Notifications", 
+                            title = "Notifications",
                             icon = Icons.Default.NotificationsNone, 
                             showSwitch = true
                         ),
@@ -374,7 +366,6 @@ fun RegisteredProfilePreview() {
             onSignOut = {},
             onSignIn = {},
             onThemeToggle = {},
-            onAccountManagementClick = {}
         )
     }
 }
@@ -390,7 +381,6 @@ fun GuestProfilePreview() {
             onSignOut = {},
             onSignIn = {},
             onThemeToggle = {},
-            onAccountManagementClick = {}
         )
     }
 }
@@ -411,7 +401,6 @@ fun DarkRegisteredProfilePreview() {
             onSignOut = {},
             onSignIn = {},
             onThemeToggle = {},
-            onAccountManagementClick = {}
         )
     }
 }

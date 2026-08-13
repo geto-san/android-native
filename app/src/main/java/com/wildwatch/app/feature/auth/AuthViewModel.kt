@@ -17,22 +17,39 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+// Which of the three Auth screen buttons (if any) is currently in flight - lets the UI show
+// a spinner on only the button that was actually tapped instead of all three at once.
+enum class AuthLoadingAction { EMAIL, GOOGLE, ANONYMOUS }
+
 data class AuthUiState(
-    val isLoading: Boolean = false,
+    val loadingAction: AuthLoadingAction? = null,
     val errorMessage: String? = null,
     val infoMessage: String? = null,
-)
+    // True once sendEmailSignInLink() succeeds - AuthScreen swaps to a "check your email"
+    // view instead of the email field, since there's nothing left to fill in.
+    val emailLinkSent: Boolean = false,
+    // Set when completeEmailLinkSignIn() is called but no address was saved locally to pair
+    // with the link (opened on a different device, or storage was cleared) - AuthScreen
+    // renders a one-field "confirm your email" prompt instead of silently failing.
+    val pendingConfirmationLink: String? = null,
+) {
+    val isLoading: Boolean get() = loadingAction != null
+}
 
-// Per guardrail G7, LoginScreen/SignUpScreen only ever call this ViewModel - never
-// AuthRepository or FirebaseAuth directly.
+// Per guardrail G7, AuthScreen only ever calls this ViewModel - never AuthRepository or
+// FirebaseAuth directly. Email sign-in is passwordless (Firebase email-link) by design: see
+// AuthRepository's KDoc for why, and MainActivity for how a clicked link reaches
+// completeEmailLinkSignIn().
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val userDataRepository: UserDataRepository,
     observeUserUseCase: ObserveUserUseCase,
 ) : ViewModel() {
 
@@ -41,33 +58,75 @@ class AuthViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
-    fun signIn(email: String, password: String) {
-        if (email.isBlank() || password.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "Enter your email and password") }
+    fun sendEmailSignInLink(email: String) {
+        if (email.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "Enter your email address") }
             return
         }
+        val trimmedEmail = email.trim()
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val result = authRepository.signIn(email.trim(), password)
-            val exception = result.exceptionOrNull()
-            if (exception != null) {
-                Timber.e(exception, "Sign-in failed")
+            _uiState.update { it.copy(loadingAction = AuthLoadingAction.EMAIL, errorMessage = null, infoMessage = null) }
+            val result = authRepository.sendSignInLinkToEmail(trimmedEmail)
+            if (result.isSuccess) {
+                userDataRepository.setPendingEmailLinkAddress(trimmedEmail)
             }
             _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    errorMessage = exception?.let { e -> AuthErrorMapper.messageForSignIn(e, email) },
-                )
+                if (result.isSuccess) {
+                    it.copy(loadingAction = null, emailLinkSent = true)
+                } else {
+                    it.copy(loadingAction = null, errorMessage = result.exceptionOrNull()?.let(AuthErrorMapper::messageForSendEmailLink))
+                }
             }
+        }
+    }
+
+    fun isEmailSignInLink(link: String): Boolean = authRepository.isSignInWithEmailLink(link)
+
+    /** Called (from MainActivity) once the user has actually tapped the emailed link. */
+    fun completeEmailLinkSignIn(link: String) {
+        if (!authRepository.isSignInWithEmailLink(link)) return
+        viewModelScope.launch {
+            val savedEmail = userDataRepository.pendingEmailLinkAddress.first()
+            if (savedEmail == null) {
+                _uiState.update { it.copy(pendingConfirmationLink = link, emailLinkSent = false) }
+                return@launch
+            }
+            finishEmailLinkSignIn(savedEmail, link)
+        }
+    }
+
+    /** The fallback path: no saved address matched this link, so the user typed one in. */
+    fun confirmEmailForPendingLink(email: String) {
+        val link = _uiState.value.pendingConfirmationLink ?: return
+        if (email.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "Enter the email address this link was sent to") }
+            return
+        }
+        viewModelScope.launch { finishEmailLinkSignIn(email.trim(), link) }
+    }
+
+    private suspend fun finishEmailLinkSignIn(email: String, link: String) {
+        _uiState.update { it.copy(loadingAction = AuthLoadingAction.EMAIL, errorMessage = null) }
+        val result = authRepository.signInWithEmailLink(email, link)
+        if (result.isSuccess) {
+            userDataRepository.setPendingEmailLinkAddress(null)
+        }
+        _uiState.update {
+            it.copy(
+                loadingAction = null,
+                pendingConfirmationLink = if (result.isSuccess) null else it.pendingConfirmationLink,
+                emailLinkSent = false,
+                errorMessage = result.exceptionOrNull()?.let(AuthErrorMapper::messageForCompleteEmailLink),
+            )
         }
     }
 
     fun signInAnonymously() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(loadingAction = AuthLoadingAction.ANONYMOUS, errorMessage = null) }
             val result = authRepository.signInAnonymously()
             _uiState.update {
-                it.copy(isLoading = false, errorMessage = result.exceptionOrNull()?.friendlyMessage())
+                it.copy(loadingAction = null, errorMessage = result.exceptionOrNull()?.friendlyMessage())
             }
         }
     }
@@ -85,7 +144,7 @@ class AuthViewModel @Inject constructor(
             .build()
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(loadingAction = AuthLoadingAction.GOOGLE, errorMessage = null) }
             try {
                 val result = credentialManager.getCredential(context, request)
                 val credential = result.credential
@@ -93,54 +152,20 @@ class AuthViewModel @Inject constructor(
                     val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
                     val signInResult = authRepository.signInWithGoogle(googleIdTokenCredential.idToken)
                     _uiState.update {
-                        it.copy(isLoading = false, errorMessage = signInResult.exceptionOrNull()?.friendlyMessage())
+                        it.copy(loadingAction = null, errorMessage = signInResult.exceptionOrNull()?.friendlyMessage())
                     }
                 } else {
-                    _uiState.update { it.copy(isLoading = false, errorMessage = "Unexpected credential type") }
+                    _uiState.update { it.copy(loadingAction = null, errorMessage = "Unexpected credential type") }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, errorMessage = e.friendlyMessage()) }
+                _uiState.update { it.copy(loadingAction = null, errorMessage = e.friendlyMessage()) }
             }
         }
     }
 
-    fun signUp(displayName: String, email: String, password: String) {
-        if (displayName.isBlank() || email.isBlank() || password.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "Fill in all fields") }
-            return
-        }
-        if (password.length < 8) {
-            _uiState.update { it.copy(errorMessage = "Password must be at least 8 characters.") }
-            return
-        }
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val result = authRepository.signUp(email.trim(), password, displayName.trim())
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    errorMessage = result.exceptionOrNull()?.let(AuthErrorMapper::messageForSignUp),
-                )
-            }
-        }
-    }
-
-    fun sendPasswordReset(email: String) {
-        if (email.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "Enter your email address first") }
-            return
-        }
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
-            val result = authRepository.sendPasswordResetEmail(email.trim())
-            _uiState.update {
-                if (result.isSuccess) {
-                    it.copy(isLoading = false, infoMessage = "Password reset email sent to $email")
-                } else {
-                    it.copy(isLoading = false, errorMessage = result.exceptionOrNull()?.friendlyMessage())
-                }
-            }
-        }
+    /** Backs out of either the "check your email" or "confirm your email" view. */
+    fun resetEmailFlow() {
+        _uiState.update { it.copy(emailLinkSent = false, pendingConfirmationLink = null, errorMessage = null) }
     }
 
     fun signOut() {

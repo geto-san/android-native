@@ -27,7 +27,6 @@ import com.wildwatch.app.feature.report.CameraCaptureScreen
 import com.wildwatch.app.feature.report.ReportIncidentScreen
 import com.wildwatch.app.feature.report.ReportIncidentViewModel
 import com.wildwatch.app.feature.report.ReportSubmittedScreen
-import com.wildwatch.app.feature.settings.AccountManagementScreen
 import com.wildwatch.app.ui.nav.MainTabShell
 import com.wildwatch.app.ui.nav.NavMotion
 import com.wildwatch.app.ui.nav.Route
@@ -61,17 +60,27 @@ fun WildWatchNavHost(
 
     // Guest browsing is supported (README "Capabilities"), so Main is always the start
     // destination regardless of auth state - unauthenticated users are never forced onto
-    // the Auth screen. This effect only ever pushes the OTHER direction: once a sign-in/
-    // sign-up/anonymous/Google flow actually succeeds while the Auth screen is showing,
-    // leave it and land on Main. (A previous version of this effect also force-navigated
-    // to Auth whenever currentUser was null, which broke guest browsing on cold start -
-    // removed, not restored.)
+    // the Auth screen on cold start. This effect handles both reactive transitions: once a
+    // sign-in/anonymous/Google/email-link flow succeeds while the Auth screen is showing,
+    // leave it and land on Main; once a signed-in user becomes signed-out again (an explicit
+    // signOut(), or Firebase invalidating the session - e.g. the 3-device cap - out from
+    // under them), send them back to Auth. everAuthenticated is what distinguishes "just
+    // signed out" from "never signed in / browsing as a guest since cold start" - without
+    // it, a plain guest would get bounced to Auth the moment currentUser first resolves to
+    // null, which is the normal (not an error) state for guest browsing.
     val startDestination = Route.Main
+    var everAuthenticated by remember { mutableStateOf(false) }
     LaunchedEffect(currentUser) {
-        if (currentUser != null &&
-            navController.currentBackStackEntry?.destination?.route?.contains("Auth") == true
-        ) {
-            navController.navigate(Route.Main) {
+        if (currentUser != null) {
+            everAuthenticated = true
+            if (navController.currentBackStackEntry?.destination?.route?.contains("Auth") == true) {
+                navController.navigate(Route.Main) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        } else if (everAuthenticated) {
+            everAuthenticated = false
+            navController.navigate(Route.Auth) {
                 popUpTo(0) { inclusive = true }
             }
         }
@@ -101,21 +110,19 @@ fun WildWatchNavHost(
         popEnterTransition = { NavMotion.backwardEnter() },
         popExitTransition = { NavMotion.backwardExit() },
     ) {
-        composable<Route.Auth> { backStackEntry ->
-            val args = backStackEntry.toRoute<Route.Auth>()
-            AuthScreen(startOnSignIn = args.startOnSignIn)
+        composable<Route.Auth> {
+            AuthScreen()
         }
 
         composable<Route.Main> {
             MainTabShell(
                 userRole = currentUser?.role ?: UserRole.PUBLIC,
                 onIncidentClick = { id -> navController.navigate(Route.IncidentDetail(id)) },
-                onSignInClick = { navController.navigate(Route.Auth(startOnSignIn = true)) },
+                onSignInClick = { navController.navigate(Route.Auth) },
                 onReportIncident = { navController.navigate(Route.ReportIncident()) },
                 onEditDraft = { id, _ -> navController.navigate(Route.ReportIncident(draftId = id)) },
                 onNotificationsClick = { navController.navigate(Route.Notifications) },
                 onArticleClick = { id -> navController.navigate(Route.ArticleDetail(id)) },
-                onAccountManagementClick = { navController.navigate(Route.AccountManagement) },
                 onSeeAllReportsClick = { navController.navigate(Route.IncidentHistory) }
             )
         }
@@ -179,10 +186,6 @@ fun WildWatchNavHost(
                 onNavigateToArticle = { id -> navController.navigate(Route.ArticleDetail(id)) },
                 onNavigateToAlerts = { navController.navigate(Route.CommunityAlerts) }
             )
-        }
-
-        composable<Route.AccountManagement> {
-            AccountManagementScreen(onBack = { navController.popBackStack() })
         }
 
         composable<Route.IncidentHistory> {

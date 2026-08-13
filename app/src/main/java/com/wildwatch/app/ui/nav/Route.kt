@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
 // from within whichever tab is showing.
 sealed interface Route {
     @Serializable
-    data class Auth(val startOnSignIn: Boolean) : Route
+    data object Auth : Route
 
     @Serializable
     data object Main : Route
@@ -39,9 +39,6 @@ sealed interface Route {
 
     @Serializable
     data object Notifications : Route
-
-    @Serializable
-    data object AccountManagement : Route
 
     @Serializable
     data object IncidentHistory : Route

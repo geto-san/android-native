@@ -2,17 +2,18 @@ package com.wildwatch.app.feature.auth
 
 import app.cash.turbine.test
 import com.wildwatch.app.core.data.auth.AuthRepository
+import com.wildwatch.app.core.data.user.UserDataRepository
 import com.wildwatch.app.core.domain.usecase.ObserveUserUseCase
-import com.wildwatch.app.feature.auth.AuthUiState
-import com.wildwatch.app.feature.auth.AuthViewModel
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -30,15 +31,18 @@ class AuthViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var authRepository: AuthRepository
+    private lateinit var userDataRepository: UserDataRepository
     private lateinit var observeUserUseCase: ObserveUserUseCase
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         authRepository = mockk()
+        userDataRepository = mockk(relaxUnitFun = true)
         observeUserUseCase = mockk()
         every { authRepository.currentUser } returns MutableStateFlow(null)
         every { observeUserUseCase() } returns MutableStateFlow(null)
+        every { userDataRepository.pendingEmailLinkAddress } returns flowOf(null)
     }
 
     @After
@@ -46,119 +50,140 @@ class AuthViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private fun viewModel() = AuthViewModel(authRepository, userDataRepository, observeUserUseCase)
+
     @Test
-    fun `signIn with blank email sets an error without calling the repository`() {
-        val viewModel = AuthViewModel(authRepository, observeUserUseCase)
+    fun `sendEmailSignInLink with a blank email sets an error without calling the repository`() {
+        val vm = viewModel()
 
-        viewModel.signIn(email = "", password = "password")
+        vm.sendEmailSignInLink("")
 
-        assertEquals("Enter your email and password", viewModel.uiState.value.errorMessage)
-        coVerify(exactly = 0) { authRepository.signIn(any(), any()) }
+        assertEquals("Enter your email address", vm.uiState.value.errorMessage)
+        coVerify(exactly = 0) { authRepository.sendSignInLinkToEmail(any()) }
     }
 
     @Test
-    fun `signIn success clears loading and error`() = runTest(testDispatcher) {
-        coEvery { authRepository.signIn("a@b.com", "pw") } returns Result.success(Unit)
-        val viewModel = AuthViewModel(authRepository, observeUserUseCase)
+    fun `sendEmailSignInLink success saves the address and shows the check-your-email view`() = runTest(testDispatcher) {
+        coEvery { authRepository.sendSignInLinkToEmail("a@b.com") } returns Result.success(Unit)
+        val vm = viewModel()
 
-        viewModel.signIn("a@b.com", "pw")
+        vm.sendEmailSignInLink("a@b.com")
         advanceUntilIdle()
 
-        assertEquals(AuthUiState(isLoading = false, errorMessage = null), viewModel.uiState.value)
-        coVerify { authRepository.signIn("a@b.com", "pw") }
+        assertEquals(true, vm.uiState.value.emailLinkSent)
+        assertNull(vm.uiState.value.errorMessage)
+        assertFalse(vm.uiState.value.isLoading)
+        coVerify { userDataRepository.setPendingEmailLinkAddress("a@b.com") }
     }
 
     @Test
-    fun `signIn failure surfaces the exception message and clears loading`() = runTest(testDispatcher) {
-        coEvery { authRepository.signIn(any(), any()) } returns Result.failure(Exception("bad credentials"))
-        val viewModel = AuthViewModel(authRepository, observeUserUseCase)
+    fun `sendEmailSignInLink failure surfaces an error and does not save the address`() = runTest(testDispatcher) {
+        coEvery { authRepository.sendSignInLinkToEmail(any()) } returns Result.failure(Exception("network down"))
+        val vm = viewModel()
 
-        viewModel.uiState.test {
-            awaitItem() // initial state
-            viewModel.signIn("a@b.com", "pw")
-            val result = awaitItem()
-            assertFalse(result.isLoading)
-            assertEquals("bad credentials", result.errorMessage)
-        }
-    }
-
-    @Test
-    fun `signUp with a blank field sets an error without calling the repository`() {
-        val viewModel = AuthViewModel(authRepository, observeUserUseCase)
-
-        viewModel.signUp(displayName = "", email = "a@b.com", password = "password1")
-
-        assertEquals("Fill in all fields", viewModel.uiState.value.errorMessage)
-        coVerify(exactly = 0) { authRepository.signUp(any(), any(), any()) }
-    }
-
-    @Test
-    fun `signUp success clears loading and error`() = runTest(testDispatcher) {
-        coEvery { authRepository.signUp("a@b.com", "password1", "Jane") } returns Result.success(Unit)
-        val viewModel = AuthViewModel(authRepository, observeUserUseCase)
-
-        viewModel.signUp(displayName = "Jane", email = "a@b.com", password = "password1")
+        vm.sendEmailSignInLink("a@b.com")
         advanceUntilIdle()
 
-        assertEquals(AuthUiState(isLoading = false, errorMessage = null), viewModel.uiState.value)
-        coVerify { authRepository.signUp("a@b.com", "password1", "Jane") }
+        assertFalse(vm.uiState.value.emailLinkSent)
+        assertEquals("network down", vm.uiState.value.errorMessage)
+        coVerify(exactly = 0) { userDataRepository.setPendingEmailLinkAddress(any()) }
+    }
+
+    @Test
+    fun `completeEmailLinkSignIn with a saved address signs in directly`() = runTest(testDispatcher) {
+        every { authRepository.isSignInWithEmailLink(any()) } returns true
+        every { userDataRepository.pendingEmailLinkAddress } returns flowOf("a@b.com")
+        coEvery { authRepository.signInWithEmailLink("a@b.com", "https://wildwatch-82abc.web.app/?oobCode=x") } returns Result.success(Unit)
+        val vm = viewModel()
+
+        vm.completeEmailLinkSignIn("https://wildwatch-82abc.web.app/?oobCode=x")
+        advanceUntilIdle()
+
+        assertNull(vm.uiState.value.errorMessage)
+        assertNull(vm.uiState.value.pendingConfirmationLink)
+        coVerify { userDataRepository.setPendingEmailLinkAddress(null) }
+    }
+
+    @Test
+    fun `completeEmailLinkSignIn with no saved address asks the user to confirm`() = runTest(testDispatcher) {
+        every { authRepository.isSignInWithEmailLink(any()) } returns true
+        every { userDataRepository.pendingEmailLinkAddress } returns flowOf(null)
+        val vm = viewModel()
+
+        vm.completeEmailLinkSignIn("https://wildwatch-82abc.web.app/?oobCode=x")
+        advanceUntilIdle()
+
+        assertEquals("https://wildwatch-82abc.web.app/?oobCode=x", vm.uiState.value.pendingConfirmationLink)
+        coVerify(exactly = 0) { authRepository.signInWithEmailLink(any(), any()) }
+    }
+
+    @Test
+    fun `completeEmailLinkSignIn ignores a link that isn't a real sign-in link`() = runTest(testDispatcher) {
+        every { authRepository.isSignInWithEmailLink(any()) } returns false
+        val vm = viewModel()
+
+        vm.completeEmailLinkSignIn("https://wildwatch-82abc.web.app/some-other-page")
+        advanceUntilIdle()
+
+        assertNull(vm.uiState.value.pendingConfirmationLink)
+        coVerify(exactly = 0) { authRepository.signInWithEmailLink(any(), any()) }
+    }
+
+    @Test
+    fun `confirmEmailForPendingLink completes sign-in with the typed-in address`() = runTest(testDispatcher) {
+        every { authRepository.isSignInWithEmailLink(any()) } returns true
+        every { userDataRepository.pendingEmailLinkAddress } returns flowOf(null)
+        coEvery { authRepository.signInWithEmailLink("typed@b.com", any()) } returns Result.success(Unit)
+        val vm = viewModel()
+        vm.completeEmailLinkSignIn("https://wildwatch-82abc.web.app/?oobCode=x")
+        advanceUntilIdle()
+
+        vm.confirmEmailForPendingLink("typed@b.com")
+        advanceUntilIdle()
+
+        assertNull(vm.uiState.value.pendingConfirmationLink)
+        coVerify { authRepository.signInWithEmailLink("typed@b.com", "https://wildwatch-82abc.web.app/?oobCode=x") }
+    }
+
+    @Test
+    fun `only the tapped button's loadingAction is set while a sign-in is in flight`() = runTest(testDispatcher) {
+        // A mock that resolves immediately would race StateFlow's own conflation (only the
+        // latest value survives) against UnconfinedTestDispatcher's eager execution, making
+        // the transient ANONYMOUS state unobservable by accident of timing rather than by
+        // anything wrong with the ViewModel. Pausing on a real suspension point sidesteps that.
+        val deferred = CompletableDeferred<Result<Unit>>()
+        coEvery { authRepository.signInAnonymously() } coAnswers { deferred.await() }
+        val vm = viewModel()
+
+        vm.signInAnonymously()
+        assertEquals(AuthLoadingAction.ANONYMOUS, vm.uiState.value.loadingAction)
+
+        deferred.complete(Result.success(Unit))
+        advanceUntilIdle()
+        assertNull(vm.uiState.value.loadingAction)
     }
 
     @Test
     fun `signOut delegates to the repository`() {
         every { authRepository.signOut() } returns Unit
-        val viewModel = AuthViewModel(authRepository, observeUserUseCase)
+        val vm = viewModel()
 
-        viewModel.signOut()
+        vm.signOut()
 
         verify { authRepository.signOut() }
     }
 
     @Test
-    fun `sendPasswordReset with blank email sets an error without calling the repository`() {
-        val viewModel = AuthViewModel(authRepository, observeUserUseCase)
-
-        viewModel.sendPasswordReset("")
-
-        assertEquals("Enter your email address first", viewModel.uiState.value.errorMessage)
-        coVerify(exactly = 0) { authRepository.sendPasswordResetEmail(any()) }
-    }
-
-    @Test
-    fun `sendPasswordReset success sets an info message`() = runTest(testDispatcher) {
-        coEvery { authRepository.sendPasswordResetEmail("a@b.com") } returns Result.success(Unit)
-        val viewModel = AuthViewModel(authRepository, observeUserUseCase)
-
-        viewModel.sendPasswordReset("a@b.com")
+    fun `resetEmailFlow clears both the sent and confirmation states`() = runTest(testDispatcher) {
+        coEvery { authRepository.sendSignInLinkToEmail(any()) } returns Result.success(Unit)
+        val vm = viewModel()
+        vm.sendEmailSignInLink("a@b.com")
         advanceUntilIdle()
+        assertEquals(true, vm.uiState.value.emailLinkSent)
 
-        assertFalse(viewModel.uiState.value.isLoading)
-        assertEquals("Password reset email sent to a@b.com", viewModel.uiState.value.infoMessage)
-        assertNull(viewModel.uiState.value.errorMessage)
-    }
+        vm.resetEmailFlow()
 
-    @Test
-    fun `sendPasswordReset failure surfaces the exception message`() = runTest(testDispatcher) {
-        coEvery { authRepository.sendPasswordResetEmail(any()) } returns Result.failure(Exception("no such user"))
-        val viewModel = AuthViewModel(authRepository, observeUserUseCase)
-
-        viewModel.sendPasswordReset("a@b.com")
-        advanceUntilIdle()
-
-        assertEquals("no such user", viewModel.uiState.value.errorMessage)
-        assertNull(viewModel.uiState.value.infoMessage)
-    }
-
-    @Test
-    fun `clearError resets the error message`() = runTest(testDispatcher) {
-        coEvery { authRepository.signIn(any(), any()) } returns Result.failure(Exception("oops"))
-        val viewModel = AuthViewModel(authRepository, observeUserUseCase)
-
-        viewModel.signIn("a@b.com", "pw")
-        assertEquals("oops", viewModel.uiState.value.errorMessage)
-
-        viewModel.clearError()
-
-        assertNull(viewModel.uiState.value.errorMessage)
+        assertFalse(vm.uiState.value.emailLinkSent)
+        assertNull(vm.uiState.value.pendingConfirmationLink)
     }
 }
