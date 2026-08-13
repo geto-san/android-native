@@ -17,6 +17,7 @@ import com.wildwatch.app.core.model.User
 import com.wildwatch.app.core.model.UserRole
 import com.wildwatch.app.feature.incidentdetail.IncidentDetailViewModel
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +32,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -58,10 +60,14 @@ class IncidentDetailViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun incident(id: String) = Incident(
+    private fun incident(
+        id: String,
+        status: IncidentStatus = IncidentStatus.OPEN,
+        assignedTo: String? = null,
+    ) = Incident(
         id = id,
         type = IncidentType.SIGHTING,
-        status = IncidentStatus.OPEN,
+        status = status,
         park = Park.BWINDI_IMPENETRABLE,
         community = "Buhoma",
         species = "Elephant",
@@ -70,9 +76,12 @@ class IncidentDetailViewModelTest {
         lat = -1.0,
         lng = 29.0,
         reportedAt = "2026-07-22T00:00:00Z",
+        assignedTo = assignedTo,
         syncStatus = SyncStatus.SYNCED,
         lastModified = 1000L,
     )
+
+    private fun ranger() = User(uid = "r1", email = "r@x.com", displayName = "R", role = UserRole.RANGER, parkId = "p1")
 
     private fun viewModelFor(id: String): IncidentDetailViewModel =
         IncidentDetailViewModel(
@@ -97,17 +106,74 @@ class IncidentDetailViewModelTest {
     }
 
     @Test
-    fun `rangers cannot self-assign`() = runTest(testDispatcher) {
+    fun `a ranger can respond to an unassigned open incident`() = runTest(testDispatcher) {
         every { getIncidentByIdUseCase("a") } returns flowOf(incident("a"))
-        every { observeUserUseCase() } returns MutableStateFlow(
-            User(uid = "r1", email = "r@x.com", displayName = "R", role = UserRole.RANGER, parkId = "p1"),
-        )
+        every { observeUserUseCase() } returns MutableStateFlow(ranger())
 
         val viewModel = viewModelFor("a")
 
         viewModel.uiState.test {
-            assertFalse(awaitItem().canAssignToSelf)
+            assertTrue(awaitItem().canRespond)
         }
+    }
+
+    @Test
+    fun `a ranger cannot respond to an incident already assigned to someone else`() = runTest(testDispatcher) {
+        every { getIncidentByIdUseCase("a") } returns
+            flowOf(incident("a", status = IncidentStatus.IN_PROGRESS, assignedTo = "someone-else"))
+        every { observeUserUseCase() } returns MutableStateFlow(ranger())
+
+        val viewModel = viewModelFor("a")
+
+        viewModel.uiState.test {
+            val state = awaitItem()
+            assertTrue(state.isAssignedToSomeoneElse)
+            assertFalse(state.canRespond)
+        }
+    }
+
+    @Test
+    fun `a ranger cannot respond to a resolved incident`() = runTest(testDispatcher) {
+        every { getIncidentByIdUseCase("a") } returns flowOf(incident("a", status = IncidentStatus.RESOLVED))
+        every { observeUserUseCase() } returns MutableStateFlow(ranger())
+
+        val viewModel = viewModelFor("a")
+
+        viewModel.uiState.test {
+            assertFalse(awaitItem().canRespond)
+        }
+    }
+
+    @Test
+    fun `respondToIncident claims the incident when not already assigned to the current ranger`() = runTest(testDispatcher) {
+        every { getIncidentByIdUseCase("a") } returns flowOf(incident("a"))
+        every { observeUserUseCase() } returns MutableStateFlow(ranger())
+        coEvery { incidentRepository.assignToSelf("a") } returns Unit
+
+        val viewModel = viewModelFor("a")
+        // respondToIncident() reads uiState.value, which (like collectAsStateWithLifecycle
+        // in the real screen) only reflects live data once something has subscribed.
+        viewModel.uiState.test {
+            awaitItem()
+            viewModel.respondToIncident()
+        }
+
+        coVerify { incidentRepository.assignToSelf("a") }
+    }
+
+    @Test
+    fun `respondToIncident does not re-assign when already assigned to the current ranger`() = runTest(testDispatcher) {
+        every { getIncidentByIdUseCase("a") } returns
+            flowOf(incident("a", status = IncidentStatus.IN_PROGRESS, assignedTo = "r1"))
+        every { observeUserUseCase() } returns MutableStateFlow(ranger())
+
+        val viewModel = viewModelFor("a")
+        viewModel.uiState.test {
+            awaitItem()
+            viewModel.respondToIncident()
+        }
+
+        coVerify(exactly = 0) { incidentRepository.assignToSelf(any()) }
     }
 
     @Test

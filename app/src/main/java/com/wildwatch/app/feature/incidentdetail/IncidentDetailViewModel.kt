@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.wildwatch.app.core.data.incident.IncidentRepository
 import com.wildwatch.app.core.data.location.LocationRepository
 import com.wildwatch.app.core.data.location.haversineKm
+import com.wildwatch.app.core.database.IncidentStatus
 import com.wildwatch.app.core.domain.usecase.GetIncidentByIdUseCase
 import com.wildwatch.app.core.domain.usecase.ObserveUserUseCase
 import com.wildwatch.app.core.model.Incident
@@ -28,12 +29,18 @@ data class IncidentDetailUiState(
     val distanceKm: Double? = null,
     val currentUser: User? = null,
 ) {
-    // wireframe ranger.incident has Call/Message/Start GPS actions; the
-    // community-side conflict/sighting wireframes have no equivalent detail
-    // view with actions at all, so Community stays strictly read-only here.
+    // Community-side conflict/sighting wireframes have no equivalent detail view with
+    // actions at all, so Community stays strictly read-only here.
     val isRanger: Boolean get() = currentUser?.role == UserRole.RANGER
     val isAssignedToMe: Boolean get() = incident?.assignedTo != null && incident.assignedTo == currentUser?.uid
-    val canAssignToSelf: Boolean get() = false
+    val isAssignedToSomeoneElse: Boolean get() = incident?.assignedTo != null && !isAssignedToMe
+
+    // A ranger can respond (claim + start tracking) to anything not already claimed by
+    // someone else and not already resolved - this replaces the old dead-end "Assign to
+    // me"/"Start GPS Tracking" two-step: responding now claims the incident as its first
+    // effect (see IncidentDetailViewModel.respondToIncident()), so there's only one action.
+    val canRespond: Boolean
+        get() = isRanger && incident?.status != IncidentStatus.RESOLVED && !isAssignedToSomeoneElse
 }
 
 @HiltViewModel
@@ -76,7 +83,11 @@ class IncidentDetailViewModel @Inject constructor(
         }
     }
 
-    fun assignToSelf() {
+    // Claims the incident on the ranger's behalf the moment they choose to respond, if it
+    // isn't already theirs - the UI calls this right before it starts GPS tracking, so
+    // "respond" reads as one action instead of a separate assign-then-track sequence.
+    fun respondToIncident() {
+        if (uiState.value.isAssignedToMe) return
         viewModelScope.launch {
             incidentRepository.assignToSelf(incidentId)
         }

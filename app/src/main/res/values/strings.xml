@@ -37,11 +37,8 @@
     <!-- Dashboard/Tracking -->
     <string name="dash_online">Online</string>
     <string name="dash_offline">Offline</string>
-    <string name="dash_resolved">Resolved</string>
-    <string name="dash_pending">Pending</string>
-    <string name="dash_active_zones">Active zones</string>
-    <string name="dash_active_incidents">Active incidents</string>
-    <string name="dash_active_alerts">Active alerts</string>
+    <string name="dash_title">Response Center</string>
+    <string name="dash_all_zones">All zones</string>
     <string name="dash_attend_to">Attend To</string>
     <string name="dash_assign_to_me">Assign to me</string>
     <string name="track_no_incidents">No assigned incidents match this filter</string>

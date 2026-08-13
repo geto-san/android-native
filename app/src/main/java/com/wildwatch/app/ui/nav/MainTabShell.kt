@@ -8,18 +8,18 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Article
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.outlined.Article
+import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Newspaper
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Work
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Map
-import androidx.compose.material.icons.outlined.Newspaper
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Work
+import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -98,13 +98,22 @@ fun MainTabShell(
                                 label = "TabScale"
                             )
 
+                            // Professional/Tracking/Profile changed from the generic
+                            // briefcase/pin/silhouette set to icons that read as what the
+                            // tab actually does: DirectionsRun for "go respond" (same icon
+                            // family as the Response Center's own CTA button), MyLocation
+                            // for live GPS patrol tracking (a pin reads as "a place", not
+                            // "your live position"), AccountCircle for a more recognizable
+                            // profile affordance. Feed moved from Newspaper to Article to
+                            // match the icon NotificationsScreen already uses for
+                            // NEW_FEED_ARTICLE, instead of two icons for one concept.
                             val icon = when (tab) {
                                 MainTab.Home -> if (isSelected) Icons.Filled.Home else Icons.Outlined.Home
-                                MainTab.Professional -> if (isSelected) Icons.Filled.Work else Icons.Outlined.Work
-                                MainTab.Feed -> if (isSelected) Icons.Filled.Newspaper else Icons.Outlined.Newspaper
-                                MainTab.Tracking -> if (isSelected) Icons.Filled.LocationOn else Icons.Outlined.LocationOn
+                                MainTab.Professional -> if (isSelected) Icons.AutoMirrored.Filled.DirectionsRun else Icons.AutoMirrored.Outlined.DirectionsRun
+                                MainTab.Feed -> if (isSelected) Icons.AutoMirrored.Filled.Article else Icons.AutoMirrored.Outlined.Article
+                                MainTab.Tracking -> if (isSelected) Icons.Filled.MyLocation else Icons.Outlined.MyLocation
                                 MainTab.Map -> if (isSelected) Icons.Filled.Map else Icons.Outlined.Map
-                                MainTab.Profile -> if (isSelected) Icons.Filled.Person else Icons.Outlined.Person
+                                MainTab.Profile -> if (isSelected) Icons.Filled.AccountCircle else Icons.Outlined.AccountCircle
                             }
 
                             Box(

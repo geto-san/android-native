@@ -3,9 +3,9 @@ package com.wildwatch.app.feature.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wildwatch.app.core.data.connectivity.ConnectivityObserver
-import com.wildwatch.app.core.data.incident.IncidentRepository
 import com.wildwatch.app.core.data.notification.NotificationRepository
 import com.wildwatch.app.core.database.IncidentStatus
+import com.wildwatch.app.core.database.IncidentSeverity
 import com.wildwatch.app.core.domain.usecase.GetIncidentsUseCase
 import com.wildwatch.app.core.model.Incident
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,13 +14,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
+import java.time.Instant
 import javax.inject.Inject
 
 data class DashboardUiState(
-    val resolvedCount: Int = 0,
-    val pendingCount: Int = 0,
-    val activeZoneCount: Int = 0,
     val zones: List<String> = emptyList(),
     val selectedZone: String? = null,
     val activeIncidents: List<Incident> = emptyList(),
@@ -32,7 +29,6 @@ data class DashboardUiState(
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val getIncidentsUseCase: GetIncidentsUseCase,
-    private val incidentRepository: IncidentRepository,
     connectivityObserver: ConnectivityObserver,
     notificationRepository: NotificationRepository,
 ) : ViewModel() {
@@ -47,17 +43,18 @@ class DashboardViewModel @Inject constructor(
     ) { incidents, zone, online, unreadNotifications ->
         val scoped = if (zone == null) incidents else incidents.filter { it.community == zone }
         DashboardUiState(
-            resolvedCount = incidents.count { it.status == IncidentStatus.RESOLVED },
-            pendingCount = incidents.count { it.status == IncidentStatus.OPEN },
-            activeZoneCount = incidents
-                .filter { it.status != IncidentStatus.RESOLVED }
-                .map { it.community }
-                .distinct()
-                .size,
             zones = incidents.map { it.community }.distinct().sorted(),
             selectedZone = zone,
             activeIncidents = scoped.filter { it.status == IncidentStatus.IN_PROGRESS },
-            activeAlerts = scoped.filter { it.status == IncidentStatus.OPEN && it.assignedTo == null },
+            // Most urgent first (severity), then most recently reported first within a
+            // severity tier - previously unsorted (raw query order), which is what users
+            // were reacting to when they said the alerts order didn't make sense.
+            activeAlerts = scoped
+                .filter { it.status == IncidentStatus.OPEN && it.assignedTo == null }
+                .sortedWith(
+                    compareByDescending<Incident> { it.severity.priority }
+                        .thenByDescending { runCatching { Instant.parse(it.reportedAt) }.getOrNull() }
+                ),
             isOnline = online,
             unreadNotificationCount = unreadNotifications,
         )
@@ -66,10 +63,15 @@ class DashboardViewModel @Inject constructor(
     fun selectZone(zone: String?) {
         selectedZone.value = zone
     }
-
-    fun assignToSelf(id: String) {
-        viewModelScope.launch {
-            incidentRepository.assignToSelf(id)
-        }
-    }
 }
+
+// Higher value = more urgent. Declared here (not IncidentSeverity's declaration order, which
+// is HIGH/LOW/LIGHT/MEDIUM and unusable for priority sorting) since this dashboard's alert
+// ordering is the only place severity needs to rank as a priority rather than just a label.
+private val IncidentSeverity.priority: Int
+    get() = when (this) {
+        IncidentSeverity.HIGH -> 3
+        IncidentSeverity.MEDIUM -> 2
+        IncidentSeverity.LIGHT -> 1
+        IncidentSeverity.LOW -> 0
+    }
