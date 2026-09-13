@@ -15,7 +15,7 @@ import androidx.compose.ui.window.Dialog
 import com.wildwatch.app.core.ui.theme.InstaBlue
 
 /**
- * A custom dialog styled like Instagram's permission requests.
+ * A custom dialog explaining a runtime permission request.
  */
 @Composable
 fun PermissionDialog(

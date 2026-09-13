@@ -193,11 +193,6 @@ class AuthRepositoryImpl @Inject constructor(
         Unit
     }
 
-    override suspend fun refreshRoleClaims(): Result<Unit> = runCatching {
-        refreshClaimsAndTopics(forceRefresh = true)
-        Unit
-    }
-
     override suspend fun getIdToken(forceRefresh: Boolean): String? =
         firebaseAuth.currentUser?.getIdToken(forceRefresh)?.await()?.token
 

@@ -14,11 +14,9 @@ import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,7 +31,6 @@ import com.wildwatch.app.feature.dashboard.DashboardScreen
 import com.wildwatch.app.feature.dashboard.HomeScreen
 import com.wildwatch.app.feature.feed.FeedScreen
 import com.wildwatch.app.feature.profile.ProfileScreen
-import com.wildwatch.app.feature.publicmap.PublicMapScreen
 import com.wildwatch.app.feature.tracking.RangerTrackingScreen
 
 private enum class MainTab {
@@ -41,7 +38,6 @@ private enum class MainTab {
     Professional,
     Feed,
     Tracking,
-    Map,
     Profile
 }
 
@@ -59,9 +55,6 @@ fun MainTabShell(
     val tabs = if (userRole == UserRole.RANGER) {
         listOf(MainTab.Home, MainTab.Professional, MainTab.Tracking, MainTab.Profile)
     } else {
-        // Map access removed from the public/tourist/anonymous side - see
-        // PublicMapScreen/PublicMapViewModel, left in place (unreferenced) rather than
-        // deleted in case this comes back as a real product decision later.
         listOf(MainTab.Home, MainTab.Feed, MainTab.Profile)
     }
 
@@ -112,7 +105,6 @@ fun MainTabShell(
                                 MainTab.Professional -> if (isSelected) Icons.AutoMirrored.Filled.DirectionsRun else Icons.AutoMirrored.Outlined.DirectionsRun
                                 MainTab.Feed -> if (isSelected) Icons.AutoMirrored.Filled.Article else Icons.AutoMirrored.Outlined.Article
                                 MainTab.Tracking -> if (isSelected) Icons.Filled.MyLocation else Icons.Outlined.MyLocation
-                                MainTab.Map -> if (isSelected) Icons.Filled.Map else Icons.Outlined.Map
                                 MainTab.Profile -> if (isSelected) Icons.Filled.AccountCircle else Icons.Outlined.AccountCircle
                             }
 
@@ -173,7 +165,6 @@ fun MainTabShell(
                     onArticleClick = onArticleClick
                 )
                 MainTab.Tracking -> RangerTrackingScreen(onIncidentClick = onIncidentClick)
-                MainTab.Map -> PublicMapScreen()
                 MainTab.Profile -> ProfileScreen(
                     onSignInClick = onSignInClick,
                 )

@@ -116,10 +116,6 @@ class IncidentRepositoryImpl @Inject constructor(
         incidentDao.update(updated)
     }
 
-    override suspend fun finalizeDraft(id: String) = withContext(ioDispatcher) {
-        incidentDao.updateSyncStatus(id, SyncStatus.PENDING)
-    }
-
     override suspend fun assignToSelf(id: String) = withContext(ioDispatcher) {
         val user = authRepository.currentUser.first() ?: return@withContext
         val entity = incidentDao.getById(id) ?: return@withContext

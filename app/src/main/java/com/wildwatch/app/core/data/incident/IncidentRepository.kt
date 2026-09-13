@@ -33,7 +33,6 @@ interface IncidentRepository {
     suspend fun getById(id: String): Incident?
     suspend fun create(details: NewIncidentDetails, asDraft: Boolean = false): Incident
     suspend fun update(id: String, details: NewIncidentDetails, asDraft: Boolean = false)
-    suspend fun finalizeDraft(id: String)
     suspend fun assignToSelf(id: String)
     suspend fun syncPending(): SyncResult
     fun startObservingRemoteChanges()

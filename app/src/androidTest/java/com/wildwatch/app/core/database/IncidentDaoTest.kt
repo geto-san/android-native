@@ -1,4 +1,4 @@
-package com.wildwatch.app.data.local.db
+package com.wildwatch.app.core.database
 
 import android.database.sqlite.SQLiteConstraintException
 import androidx.room.Room

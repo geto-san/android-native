@@ -54,7 +54,7 @@ private val DarkColors = darkColorScheme(
     outline = DarkGrey300,
 )
 
-// Instagram-inspired shapes: cleaner, less aggressive rounding.
+// Minimal rounding: cleaner, less aggressive corners.
 private val WildWatchShapes = Shapes(
     extraSmall = RoundedCornerShape(4.dp),
     small = RoundedCornerShape(8.dp),

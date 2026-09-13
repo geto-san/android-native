@@ -11,8 +11,3 @@ local.properties
 .cxx/
 *.apk
 *.aab
-.artifacts
-wireframes
-
-# Generated graph/static-analysis output (graphify)
-graphify-out/

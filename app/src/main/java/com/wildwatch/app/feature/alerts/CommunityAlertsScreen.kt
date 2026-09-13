@@ -55,10 +55,7 @@ import com.wildwatch.app.core.ui.component.BackHeader
 import com.wildwatch.app.core.ui.theme.Destructive
 import com.wildwatch.app.core.ui.theme.Info
 import com.wildwatch.app.core.ui.theme.SunsetAmber
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
+import com.wildwatch.app.core.util.relativeTime
 
 private data class CategoryFilter(val label: String, val category: AlertCategory?)
 
@@ -230,19 +227,5 @@ private fun EmptyAlertsState() {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
-    }
-}
-
-private fun relativeTime(createdAt: Long): String {
-    val now = System.currentTimeMillis()
-    val diffMs = now - createdAt
-    return when {
-        diffMs < TimeUnit.MINUTES.toMillis(60) -> "${TimeUnit.MILLISECONDS.toMinutes(diffMs)} min"
-        diffMs < TimeUnit.HOURS.toMillis(24) -> "${TimeUnit.MILLISECONDS.toHours(diffMs)} hr"
-        diffMs < TimeUnit.DAYS.toMillis(2) -> "Yesterday"
-        else -> {
-            val date = Instant.ofEpochMilli(createdAt).atZone(ZoneId.systemDefault()).toLocalDate()
-            date.format(DateTimeFormatter.ofPattern("d MMM"))
-        }
     }
 }

@@ -35,9 +35,6 @@ interface AuthRepository {
 
     fun signOut()
 
-    /** Force-refresh Firebase custom claims and re-sync FCM topic subscriptions. */
-    suspend fun refreshRoleClaims(): Result<Unit>
-
     /**
      * The current user's Firebase ID token, for authenticating calls the app makes directly to
      * the Laravel API (see LaravelBridgeDataSource) - null if signed out. Firebase caches the

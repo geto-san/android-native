@@ -93,7 +93,6 @@ fun CameraCaptureScreen(
                 },
             )
 
-            // Instagram-style capture button
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)

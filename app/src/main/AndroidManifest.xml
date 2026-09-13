@@ -58,14 +58,6 @@
             </intent-filter>
         </activity>
 
-        <!-- PLACEHOLDER - the map will render a blank/grey view until this is
-             replaced with a real key from Google Cloud Console (Maps SDK for
-             Android, restricted to this app's package name + signing
-             certificate SHA-1). See android-native/README.md. -->
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="YOUR_GOOGLE_MAPS_API_KEY_HERE" />
-
         <service
             android:name=".core.notifications.WildWatchMessagingService"
             android:exported="false">

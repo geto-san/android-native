@@ -401,9 +401,8 @@ private fun AddPoiSheet(
     }
 }
 
-// internal (not private) so PublicMapScreen can reuse it too.
 @Composable
-internal fun MapControlButton(
+private fun MapControlButton(
     icon: ImageVector,
     onClick: () -> Unit
 ) {

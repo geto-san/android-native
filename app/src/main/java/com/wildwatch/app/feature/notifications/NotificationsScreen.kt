@@ -29,10 +29,7 @@ import com.wildwatch.app.core.model.Notification
 import com.wildwatch.app.core.ui.component.IconBadge
 import com.wildwatch.app.core.ui.theme.Grey500
 import com.wildwatch.app.core.ui.theme.WildWatchTheme
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
+import com.wildwatch.app.core.util.relativeTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -156,20 +153,6 @@ private fun NotificationItem(
                     .size(8.dp)
                     .background(MaterialTheme.colorScheme.primary, CircleShape)
             )
-        }
-    }
-}
-
-private fun relativeTime(createdAt: Long): String {
-    val now = System.currentTimeMillis()
-    val diffMs = now - createdAt
-    return when {
-        diffMs < TimeUnit.MINUTES.toMillis(60) -> "${TimeUnit.MILLISECONDS.toMinutes(diffMs)} min"
-        diffMs < TimeUnit.HOURS.toMillis(24) -> "${TimeUnit.MILLISECONDS.toHours(diffMs)} hr"
-        diffMs < TimeUnit.DAYS.toMillis(2) -> "Yesterday"
-        else -> {
-            val date = Instant.ofEpochMilli(createdAt).atZone(ZoneId.systemDefault()).toLocalDate()
-            date.format(DateTimeFormatter.ofPattern("d MMM"))
         }
     }
 }
