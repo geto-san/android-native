@@ -201,6 +201,8 @@ private fun MapboxMapScope.TrackingMapAnnotations(
     uiState: RangerTrackingUiState,
     onIncidentClick: (String) -> Unit,
 ) {
+    // Under everything else so attractions/incidents/patrol markers stay readable.
+    ParkBoundaryOverlay(uiState.parkBoundaryRings)
     if (uiState.showAttractions) {
         uiState.attractions.forEach { attraction ->
             val icon = rememberAttractionMarkerIcon(attraction.type)

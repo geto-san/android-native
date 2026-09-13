@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.GeoPoint
 import com.mapbox.geojson.Point
 import com.wildwatch.app.core.data.location.LocationRepository
+import com.wildwatch.app.core.data.map.BundledParkBoundaries
+import com.wildwatch.app.core.data.map.geometryToRings
+import com.wildwatch.app.core.data.map.parseBoundaryGeometry
 import com.wildwatch.app.core.data.patrol.PatrolRepository
 import com.wildwatch.app.core.data.repository.ParkRepository
 import com.wildwatch.app.core.database.SyncStatus
@@ -27,6 +30,10 @@ data class RangerTrackingUiState(
     val activePark: NationalPark? = null,
     val attractions: List<ParkAttraction> = emptyList(),
     val incidents: List<Incident> = emptyList(),
+    // Park outline drawn under every other annotation. Prefers the active park's
+    // Firestore boundary_geojson; falls back to the bundled parks.geojson copy
+    // (BundledParkBoundaries) so the outline renders even fully offline.
+    val parkBoundaryRings: List<List<Point>> = emptyList(),
     val isSatelliteView: Boolean = false,
     val is3DMode: Boolean = false,
     val showAttractions: Boolean = true,
@@ -58,6 +65,7 @@ class RangerTrackingViewModel @Inject constructor(
     getIncidentsUseCase: GetIncidentsUseCase,
     private val observeUserUseCase: ObserveUserUseCase,
     private val patrolRepository: PatrolRepository,
+    private val bundledBoundaries: BundledParkBoundaries,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RangerTrackingUiState())
@@ -111,8 +119,19 @@ class RangerTrackingViewModel @Inject constructor(
     }
 
     fun setActivePark(park: NationalPark) {
-        _uiState.update { it.copy(activePark = park) }
+        _uiState.update { it.copy(activePark = park, parkBoundaryRings = boundaryRingsFor(park)) }
         loadAttractions(park.id)
+    }
+
+    // Live Firestore boundary wins when the park doc carries one; bundled fallback covers
+    // the offline-first-frame case where Firestore hasn't populated its cache yet.
+    private fun boundaryRingsFor(park: NationalPark): List<List<Point>> {
+        val firestoreRings = park.boundaryGeoJson
+            .takeIf { it.isNotBlank() }
+            ?.let { parseBoundaryGeometry(it) }
+            ?.let { geometryToRings(it) }
+            ?.takeIf { it.isNotEmpty() }
+        return firestoreRings ?: bundledBoundaries.ringsFor(park.id)
     }
 
     private fun loadAttractions(parkId: String) {

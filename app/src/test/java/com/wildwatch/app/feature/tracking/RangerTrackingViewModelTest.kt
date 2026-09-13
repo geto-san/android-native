@@ -3,6 +3,7 @@ package com.wildwatch.app.feature.tracking
 import com.mapbox.geojson.Point
 import com.wildwatch.app.core.data.location.GeoLocation
 import com.wildwatch.app.core.data.location.LocationRepository
+import com.wildwatch.app.core.data.map.BundledParkBoundaries
 import com.wildwatch.app.core.data.patrol.PatrolRepository
 import com.wildwatch.app.core.data.repository.ParkRepository
 import com.wildwatch.app.core.database.PatrolStatus
@@ -43,6 +44,7 @@ class RangerTrackingViewModelTest {
     private val getIncidentsUseCase: GetIncidentsUseCase = mockk()
     private val observeUserUseCase: ObserveUserUseCase = mockk()
     private val patrolRepository: PatrolRepository = mockk()
+    private val bundledBoundaries: BundledParkBoundaries = mockk()
     private lateinit var viewModel: RangerTrackingViewModel
 
     @Before
@@ -58,6 +60,7 @@ class RangerTrackingViewModelTest {
             User(uid = "ranger-1", email = "r@x.com", displayName = "R", role = UserRole.RANGER, parkId = "park-1"),
         )
         every { patrolRepository.observeActivePatrol("ranger-1") } returns flowOf(null)
+        every { bundledBoundaries.ringsFor(any()) } returns emptyList()
     }
 
     private fun createViewModel() = RangerTrackingViewModel(
@@ -66,6 +69,7 @@ class RangerTrackingViewModelTest {
         getIncidentsUseCase,
         observeUserUseCase,
         patrolRepository,
+        bundledBoundaries,
     )
 
     @After
@@ -226,5 +230,66 @@ class RangerTrackingViewModelTest {
 
         assertNull(viewModel.uiState.value.activePatrol)
         assertTrue(viewModel.uiState.value.patrolRoutePoints.isEmpty())
+    }
+
+    @Test
+    fun `setActivePark prefers the Firestore boundary when the park carries one`() = runTest {
+        val park = NationalPark(
+            "park-1",
+            "Bwindi",
+            GeoPoint(0.0, 0.0),
+            emptyList(),
+            "desc",
+            boundaryGeoJson = """
+                {
+                  "type": "Feature",
+                  "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[[29.9, -0.9], [30.1, -0.9], [30.1, -0.8], [29.9, -0.8], [29.9, -0.9]]]
+                  }
+                }
+            """.trimIndent(),
+        )
+        every { parkRepository.getAttractions("park-1") } returns flowOf(emptyList())
+
+        viewModel = createViewModel()
+        viewModel.setActivePark(park)
+        advanceUntilIdle()
+
+        val rings = viewModel.uiState.value.parkBoundaryRings
+        assertEquals(1, rings.size)
+        assertEquals(5, rings[0].size)
+    }
+
+    @Test
+    fun `setActivePark falls back to bundled boundaries without a Firestore boundary`() = runTest {
+        val park = NationalPark("park-1", "Bwindi", GeoPoint(0.0, 0.0), emptyList(), "desc")
+        val bundledRing = listOf(
+            Point.fromLngLat(29.6, -1.1),
+            Point.fromLngLat(29.8, -1.1),
+            Point.fromLngLat(29.8, -1.0),
+            Point.fromLngLat(29.6, -1.0),
+            Point.fromLngLat(29.6, -1.1),
+        )
+        every { bundledBoundaries.ringsFor("park-1") } returns listOf(bundledRing)
+        every { parkRepository.getAttractions("park-1") } returns flowOf(emptyList())
+
+        viewModel = createViewModel()
+        viewModel.setActivePark(park)
+        advanceUntilIdle()
+
+        assertEquals(listOf(bundledRing), viewModel.uiState.value.parkBoundaryRings)
+    }
+
+    @Test
+    fun `setActivePark yields empty rings when nothing provides a boundary`() = runTest {
+        val park = NationalPark("park-1", "Bwindi", GeoPoint(0.0, 0.0), emptyList(), "desc")
+        every { parkRepository.getAttractions("park-1") } returns flowOf(emptyList())
+
+        viewModel = createViewModel()
+        viewModel.setActivePark(park)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.parkBoundaryRings.isEmpty())
     }
 }
