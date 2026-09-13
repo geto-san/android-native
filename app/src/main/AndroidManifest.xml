@@ -42,7 +42,7 @@
 
             <!-- App Link for Firebase's passwordless email sign-in (see
                  AuthRepository.sendSignInLinkToEmail / MainActivity.onNewIntent). The host is
-                 Firebase Hosting on this exact project (android-native-backend-branch/hosting/),
+                 Firebase Hosting on this exact project (hosting/),
                  verified via that host's /.well-known/assetlinks.json - autoVerify lets a
                  verified device open the app directly instead of a browser when the emailed
                  link is tapped. launchMode="singleTask" above means a tap while the app is

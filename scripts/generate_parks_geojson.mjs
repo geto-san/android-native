@@ -1,7 +1,7 @@
 // Generates app/src/main/assets/parks.geojson — the offline fallback park-boundary
 // overlay for the ranger tracking map.
 //
-// Mirrors android-native-backend-branch/scripts/seed.ts's seedParks() exactly: same
+// Mirrors scripts/seed.ts's seedParks() exactly: same
 // park firestore_ids, same PARK_COORDS centroids, and the same ±0.1°/±0.05° boundary
 // rectangle formula. Keeping this script in lockstep with seed.ts means the bundled
 // boundary renders offline identically to the Firestore boundary_geojson the app would
@@ -14,8 +14,8 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-// Duplicated from seed.ts on purpose: the generator must keep working even when the
-// sibling backend-branch's fixtures aren't checked out on this machine.
+// Duplicated from seed.ts on purpose: the generator must keep working even when
+// seed.ts's fixtures change shape — it's an independent offline fallback asset.
 const PARK_COORDS = {
   "bwindi-impenetrable": [-1.05, 29.7],
   "mgahinga-gorilla": [-1.37, 29.65],

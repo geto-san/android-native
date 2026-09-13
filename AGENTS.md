@@ -81,7 +81,7 @@ The app follows an **Offline-First Outbox Pattern**:
 |---|---|---|
 | **A1** | Project initialization & Firestore collection skeleton | [x] |
 | **A2** | **RBAC**: `onUserCreated` trigger & `setUserRole` callable | [x] (Spark plan can't run this today — see `/home/geto/Projects/Documentations/WildWatch/root-contracts/HOSTED-CUTOVER-PLAN.md` §"Still genuinely open") |
-| **A3** | Storage rules & bucket configuration for incident media | [x] — `android-native-backend-branch/storage.rules`, includes a `feed/` rule added 2026-08-13 for feed-article images |
+| **A3** | Storage rules & bucket configuration for incident media | [x] — `storage.rules` (in this repo, merged from the former `backend` branch), includes a `feed/` rule added 2026-08-13 for feed-article images |
 | **A4** | Map tile hosting & offline region distribution | [x] — Mapbox `TileStore`/`OfflineManager`, see `/home/geto/Projects/Documentations/WildWatch/root-contracts/BRIDGE-CONTRACT.md`'s "Offline map tiles" section |
 | **A5** | FCM Topics: Park-based and role-based notification channels | [x] — `FcmTopicManager`, see §11 below |
 
@@ -120,11 +120,11 @@ The app follows an **Offline-First Outbox Pattern**:
 
 - **Guest Notifications**: Topic-based messaging (e.g., `park_alerts_all`) will allow Guests to receive info without being logged in.
 - **Media Optimization**: a CDN (Cloudinary/R2) was considered but explicitly deferred (decision made 2026-08-12, see `/home/geto/Projects/Documentations/WildWatch/root-contracts/BRIDGE-CONTRACT.md`'s "Storage (incident media)" section) — current volume is a small fraction of Firebase Storage's free tier and no CDN credentials exist yet. Revisit once real usage data shows the free tier is actually being approached, not preemptively.
-- **Ranger Login**: Use `ranger@wildwatch.app` (pw: `password123`) in development to access professional features (see `android-native-backend-branch/scripts/seed.ts`).
+- **Ranger Login**: Use `ranger@wildwatch.app` (pw: `password123`) in development to access professional features (see `scripts/seed.ts`).
 
 ## 11. Local-first Docker development
 
-The local Docker stack this section used to point at has been retired (2026-08-12) — see `/home/geto/Projects/Documentations/WildWatch/root-contracts/HOSTED-CUTOVER-PLAN.md` for the hosted-services replacement and workspace `/home/geto/Projects/Documentations/WildWatch/root-contracts/REPOS.md` for the current repo map. Firebase's own emulator suite can still be run directly from `android-native-backend-branch/` if a local backend target is needed.
+The local Docker stack this section used to point at has been retired (2026-08-12) — see `/home/geto/Projects/Documentations/WildWatch/root-contracts/HOSTED-CUTOVER-PLAN.md` for the hosted-services replacement and workspace `/home/geto/Projects/Documentations/WildWatch/root-contracts/REPOS.md` for the current repo map. Firebase's own emulator suite can still be run directly from this repo's root (`firebase emulators:start`, config in `firebase.json`) if a local backend target is needed.
 
 - `USE_LOCAL_BACKEND` + `LOCAL_BACKEND_HOST` in `local.properties` → `BuildConfig` → `FirebaseModule.kt` emulator wiring.
 - Never hardcode emulator hosts/ports outside that gated path.

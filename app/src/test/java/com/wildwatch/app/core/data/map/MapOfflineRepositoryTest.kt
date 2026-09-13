@@ -8,7 +8,7 @@ import org.junit.Test
 
 class MapOfflineRepositoryTest {
 
-    // Mirrors android-native-backend-branch/scripts/seed.ts's seedParks() shape exactly:
+    // Mirrors scripts/seed.ts's seedParks() shape exactly:
     // a Feature wrapping a Polygon boundary.
     private val validBoundaryGeoJson = """
         {

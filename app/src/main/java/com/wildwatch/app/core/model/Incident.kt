@@ -130,7 +130,7 @@ data class Incident(
         // reporter PII is kept local to the reporter's device (Room) and never pushed
         // to a doc other clients can read. Firestore rules cannot mask fields inside
         // a document, so the second half of this fix is the read/update rules in
-        // android-native-backend-branch/firestore.rules. The bridge only needs userId
+        // firestore.rules. The bridge only needs userId
         // (the Firebase UID) to resolve reported_by server-side.
         "userId" to userId,
         "reportedAt" to reportedAt,

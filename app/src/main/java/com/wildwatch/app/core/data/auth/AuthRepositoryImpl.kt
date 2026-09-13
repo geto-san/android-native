@@ -168,7 +168,7 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     // The continue URL a clicked email link redirects through - see
-    // android-native-backend-branch/hosting/ (Firebase Hosting, deployed to this exact
+    // hosting/ (Firebase Hosting, deployed to this exact
     // project) and this app's AndroidManifest App Link intent-filter for the same host.
     // Dynamic Links (the old way to do this without your own hosted URL) is sunset, so a
     // real hosted domain is required now, not optional.
