@@ -193,6 +193,8 @@ data class Incident(
             "conflict" -> IncidentType.CONFLICT
             "emergency" -> IncidentType.EMERGENCY
             "poaching" -> IncidentType.POACHING
+            "snare" -> IncidentType.SNARE
+            "sos" -> IncidentType.SOS
             else -> IncidentType.SIGHTING
         }
 

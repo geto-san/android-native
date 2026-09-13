@@ -120,7 +120,7 @@ The app follows an **Offline-First Outbox Pattern**:
 
 - **Guest Notifications**: Topic-based messaging (e.g., `park_alerts_all`) will allow Guests to receive info without being logged in.
 - **Media Optimization**: a CDN (Cloudinary/R2) was considered but explicitly deferred (decision made 2026-08-12, see `/home/geto/Projects/Documentations/WildWatch/root-contracts/BRIDGE-CONTRACT.md`'s "Storage (incident media)" section) — current volume is a small fraction of Firebase Storage's free tier and no CDN credentials exist yet. Revisit once real usage data shows the free tier is actually being approached, not preemptively.
-- **Ranger Login**: Use `ranger@wildwatch.app` (pw: `password123`) in development to access professional features (see `scripts/seed.ts`).
+- **Ranger Login**: Ranger sign-in is enforced as Google + `@gmail.com` only (`violatesRangerSignInPolicy()` in `AuthRepositoryImpl.kt`), so there is no shared email/password account. To exercise ranger features in development, sign in with any Google/Gmail account whose custom `role: "ranger"` claim is set (Spark plan cannot auto-issue claims via `onUserCreated` — provision it manually in the console or via `scripts/setUserRole.ts`, see `/home/geto/Projects/Documentations/WildWatch/root-contracts/HOSTED-CUTOVER-PLAN.md` §"Still genuinely open"). Credentials in `scripts/seed.ts` are Firestore/Auth emulator fixtures only.
 
 ## 11. Local-first Docker development
 

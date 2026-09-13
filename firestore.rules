@@ -222,6 +222,12 @@ service cloud.firestore {
       allow write: if false; // Admin SDK only (Cloud Functions or Laravel FirebaseService)
     }
 
+    // Alerts (ranger/UWA-authored broadcasts, mobile read-only)
+    match /alerts/{alertId} {
+      allow read: if isSignedIn();
+      allow write: if false; // Admin SDK only (seed script / Cloud Functions / portal)
+    }
+
     // Community news feed (portal-authored, mobile read-only)
     match /feed/{articleId} {
       allow read: if true;

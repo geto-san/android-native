@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dangerous
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.ReportProblem
+import androidx.compose.material.icons.filled.Sos
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.MaterialTheme
@@ -45,6 +46,7 @@ fun typeIcon(type: IncidentType): ImageVector = when (type) {
     IncidentType.EMERGENCY -> Icons.Filled.ReportProblem
     IncidentType.POACHING -> Icons.Filled.Dangerous
     IncidentType.SNARE -> Icons.Filled.Warning
+    IncidentType.SOS -> Icons.Filled.Sos
 }
 
 fun typeLabel(type: IncidentType): String = when (type) {
@@ -53,4 +55,5 @@ fun typeLabel(type: IncidentType): String = when (type) {
     IncidentType.EMERGENCY -> "Emergency"
     IncidentType.POACHING -> "Poaching"
     IncidentType.SNARE -> "Snare"
+    IncidentType.SOS -> "SOS"
 }

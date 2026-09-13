@@ -1,17 +1,26 @@
 package com.wildwatch.app
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -88,6 +97,7 @@ class MainActivity : ComponentActivity() {
             }
 
             WildWatchTheme(darkTheme = useDarkTheme) {
+                RequestNotificationPermissionOnLaunch()
                 WildWatchNavHost(pendingRoute = pendingRoute)
             }
         }
@@ -116,5 +126,30 @@ class MainActivity : ComponentActivity() {
         )
         val notificationTargetId = intent.getStringExtra(WildWatchMessagingService.EXTRA_NOTIFICATION_TARGET_ID)
         pendingRoute = routeForNotification(notificationType, notificationTargetId)
+    }
+}
+
+// Android 13+ requires an explicit runtime grant before any notification can be
+// displayed - without this, a fresh install silently has notifications disabled
+// even though the manifest declares POST_NOTIFICATIONS. Request it once at first
+// launch (rememberSaveable survives recomposition; the system remembers a
+// permanent denial itself, so we just don't nag past the first ask).
+@androidx.compose.runtime.Composable
+private fun RequestNotificationPermissionOnLaunch() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+    val context = LocalContext.current
+    var requested by rememberSaveable { mutableStateOf(false) }
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { /* result handled implicitly by the OS; no follow-up needed */ }
+    LaunchedEffect(Unit) {
+        if (!requested && ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requested = true
+            launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
     }
 }

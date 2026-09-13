@@ -2,9 +2,13 @@ package com.wildwatch.app.core.data.notification
 
 import com.wildwatch.app.core.database.NotificationDao
 import com.wildwatch.app.core.database.NotificationType
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -23,7 +27,13 @@ class NotificationRepositoryImplTest {
     fun setUp() {
         dao = mockk(relaxUnitFun = true)
         every { dao.observeAll() } returns flowOf(emptyList())
-        repository = NotificationRepositoryImpl(dao, testDispatcher)
+        repository = NotificationRepositoryImpl(
+            dao,
+            mockk(relaxed = true),
+            mockk(relaxed = true),
+            testDispatcher,
+            CoroutineScope(Dispatchers.Unconfined),
+        )
     }
 
     @Test

@@ -1,29 +1,67 @@
 package com.wildwatch.app.core.data.alert
 
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FirebaseFirestore
 import com.wildwatch.app.core.database.AlertCategory
 import com.wildwatch.app.core.database.AlertDao
 import com.wildwatch.app.core.database.AlertEntity
 import com.wildwatch.app.core.database.AlertSeverity
+import com.wildwatch.app.core.di.ApplicationScope
 import com.wildwatch.app.core.di.IoDispatcher
 import com.wildwatch.app.core.model.Alert
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// No admin tool exists yet to author real alerts, so this repository seeds
-// the local table with representative starter content the first time it's
-// read (a real, one-time database write - not a hardcoded list re-rendered
-// every recomposition). Once seeded, every read is a genuine Room query.
+private const val ALERTS_COLLECTION = "alerts"
+
+// Graceful two-source pattern: the Firestore `alerts` collection (seeded/authorized
+// from the backend, mobile read-only) is the authoritative broadcast source and is
+// merged into Room via a background listener, while a one-time local seed keeps the
+// screen populated offline or before any real alerts have been published. Runtime
+// errors from the remote leg are caught and logged so the screen always renders.
 @Singleton
 class AlertRepositoryImpl @Inject constructor(
     private val alertDao: AlertDao,
+    private val firestore: FirebaseFirestore,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @ApplicationScope applicationScope: CoroutineScope,
 ) : AlertRepository {
+
+    init {
+        applicationScope.launch {
+            runCatching {
+                firestore.collection(ALERTS_COLLECTION)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            Timber.e(error, "Alerts snapshot listener error")
+                            return@addSnapshotListener
+                        }
+                        snapshot?.documentChanges?.forEach { change ->
+                            val alert = change.document.toAlertEntity()
+                            when (change.type) {
+                                com.google.firebase.firestore.DocumentChange.Type.REMOVED ->
+                                    applicationScope.launch {
+                                        alertDao.deleteById(alert.id)
+                                    }
+                                else ->
+                                    applicationScope.launch {
+                                        alertDao.upsert(alert)
+                                    }
+                            }
+                        }
+                    }
+            }.onFailure { Timber.e(it, "Alerts remote listener failed to attach") }
+        }
+    }
 
     override fun observeAll(): Flow<List<Alert>> =
         alertDao.observeAll()
@@ -74,4 +112,33 @@ class AlertRepositoryImpl @Inject constructor(
             ),
         )
     }
+}
+
+private fun com.google.firebase.firestore.QueryDocumentSnapshot.toAlertEntity(): AlertEntity {
+    val data = data
+    fun category(): AlertCategory = when (data["category"] as? String) {
+        "SAFETY" -> AlertCategory.SAFETY
+        "PATROLS" -> AlertCategory.PATROLS
+        "TRAPPING" -> AlertCategory.TRAPPING
+        else -> AlertCategory.WILDLIFE
+    }
+    fun severity(): AlertSeverity = when (data["severity"] as? String) {
+        "CAUTION" -> AlertSeverity.CAUTION
+        "INFO" -> AlertSeverity.INFO
+        else -> AlertSeverity.URGENT
+    }
+    fun createdAt(): Long = when (val raw = data["createdAt"]) {
+        is Timestamp -> raw.toDate().time
+        is Number -> raw.toLong()
+        else -> System.currentTimeMillis()
+    }
+    return AlertEntity(
+        id = id,
+        title = data["title"] as? String ?: "Alert",
+        description = data["description"] as? String ?: "",
+        location = data["location"] as? String ?: "",
+        category = category(),
+        severity = severity(),
+        createdAt = createdAt(),
+    )
 }

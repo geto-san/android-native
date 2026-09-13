@@ -38,6 +38,7 @@ import com.wildwatch.app.core.util.relativeDay
 fun HomeScreen(
     onIncidentClick: (String) -> Unit,
     onReportIncident: () -> Unit,
+    onSos: () -> Unit,
     onEditDraft: (String, com.wildwatch.app.core.database.IncidentType) -> Unit,
     onNotificationsClick: () -> Unit,
     onArticleClick: (String) -> Unit,
@@ -130,6 +131,13 @@ fun HomeScreen(
                 }
             }
 
+            // SOS Quick Action — the platform's top-priority channel. Composes a report
+            // pre-set to the SOS type (see ReportIncidentViewModel) so a responder can
+            // submit with a single follow-up tap.
+            item {
+                SosQuickActionCard(onClick = onSos)
+            }
+
             // Quick Report Section - Consolidated
             item {
                 Column {
@@ -212,6 +220,61 @@ fun HomeScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SosQuickActionCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(110.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick),
+        color = MaterialTheme.colorScheme.error,
+        contentColor = MaterialTheme.colorScheme.onError
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Filled.Sos,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = Color.White
+                )
+            }
+            Spacer(modifier = Modifier.width(20.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "SOS — Emergency",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Send an urgent alert to responders now",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.85f)
+                )
+            }
+            Icon(
+                Icons.Filled.Emergency,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = Color.White
+            )
         }
     }
 }

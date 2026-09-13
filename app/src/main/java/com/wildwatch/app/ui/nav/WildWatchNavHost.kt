@@ -131,6 +131,7 @@ fun WildWatchNavHost(
                 onIncidentClick = { id -> navController.navigate(Route.IncidentDetail(id)) },
                 onSignInClick = { navController.navigate(Route.Auth) },
                 onReportIncident = { navController.navigate(Route.ReportIncident()) },
+                onSos = { navController.navigate(Route.ReportIncident(presetType = com.wildwatch.app.core.database.IncidentType.SOS)) },
                 onEditDraft = { id, _ -> navController.navigate(Route.ReportIncident(draftId = id)) },
                 onNotificationsClick = { navController.navigate(Route.Notifications) },
                 onArticleClick = { id -> navController.navigate(Route.ArticleDetail(id)) },
@@ -153,6 +154,7 @@ fun WildWatchNavHost(
             val args = backStackEntry.toRoute<Route.ReportIncident>()
             ReportIncidentScreen(
                 draftId = args.draftId,
+                presetType = args.presetType,
                 onBack = { navController.popBackStack() },
                 onSubmitted = { incidentId ->
                     navController.navigate(Route.ReportSubmitted(incidentId)) {

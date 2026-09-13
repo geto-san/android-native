@@ -47,6 +47,7 @@ fun MainTabShell(
     onIncidentClick: (String) -> Unit,
     onSignInClick: () -> Unit,
     onReportIncident: () -> Unit,
+    onSos: () -> Unit,
     onEditDraft: (String, com.wildwatch.app.core.database.IncidentType) -> Unit,
     onNotificationsClick: () -> Unit,
     onArticleClick: (String) -> Unit,
@@ -152,6 +153,7 @@ fun MainTabShell(
                 MainTab.Home -> HomeScreen(
                     onIncidentClick = onIncidentClick,
                     onReportIncident = onReportIncident,
+                    onSos = onSos,
                     onEditDraft = onEditDraft,
                     onNotificationsClick = onNotificationsClick,
                     onArticleClick = onArticleClick,

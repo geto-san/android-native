@@ -12,6 +12,12 @@ interface AlertDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(alerts: List<AlertEntity>)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(alert: AlertEntity)
+
+    @Query("DELETE FROM alerts WHERE id = :id")
+    suspend fun deleteById(id: String)
+
     @Query("SELECT * FROM alerts ORDER BY createdAt DESC")
     fun observeAll(): Flow<List<AlertEntity>>
 

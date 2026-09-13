@@ -277,6 +277,88 @@ async function seedIncidents(parks: ParkFixture[], fixtures: SharedFixtures) {
   }
 }
 
+// Community-visible alerts shown on the app's Alerts screen. The Firestore rules
+// scope these to authenticated reads only; writes are Admin-SDK only.
+async function seedAlerts(parks: ParkFixture[]) {
+  const park = parks[0];
+  const alerts = [
+    {
+      title: 'Elephant herd movement',
+      description: 'Herd of ~12 elephants heading toward Kichwamba village. Keep distance.',
+      location: 'Kichwamba',
+      category: 'WILDLIFE',
+      severity: 'URGENT',
+      park_id: park.firestore_id,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      source_system: 'firestore',
+    },
+    {
+      title: 'Buffalo sighting',
+      description: 'Single buffalo seen near the river crossing.',
+      location: 'Buliisa',
+      category: 'WILDLIFE',
+      severity: 'CAUTION',
+      park_id: park.firestore_id,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      source_system: 'firestore',
+    },
+    {
+      title: 'Ranger patrol scheduled',
+      description: 'Patrol team in your area today from 14:00 to 18:00.',
+      location: 'Pakwach',
+      category: 'PATROLS',
+      severity: 'INFO',
+      park_id: park.firestore_id,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      source_system: 'firestore',
+    },
+    {
+      title: 'Snare trap warning',
+      description: 'Multiple snares discovered. Report any that you find.',
+      location: 'Wairingo',
+      category: 'TRAPPING',
+      severity: 'URGENT',
+      park_id: park.firestore_id,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      source_system: 'firestore',
+    },
+  ];
+  const refs = await Promise.all(
+    alerts.map((alert) => db.collection('alerts').add(alert)),
+  );
+  console.log(`Seeded ${refs.length} alerts`);
+}
+
+// Per-user, target_uid-scoped notifications (rules gate reads by target_uid).
+// Mirrors the incidences table that FirestoreSyncMapper reads from the portal.
+async function seedNotifications(fixtures: SharedFixtures) {
+  const target = fixtures.users.find((u) => u.firebase_role === 'public') ?? fixtures.users[0];
+  const notifications = [
+    {
+      target_uid: target.firebase_uid,
+      type: 'SECURITY_ALERT',
+      title: 'High-priority alert: park closure zone',
+      message: 'Kichwamba zone access restricted. Follow ranger guidance.',
+      isRead: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      source_system: 'firestore',
+    },
+    {
+      target_uid: target.firebase_uid,
+      type: 'SIGHTING_APPROVED',
+      title: 'Your sighting was approved',
+      message: 'Thanks for reporting. Your sighting is now visible to the community.',
+      isRead: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      source_system: 'firestore',
+    },
+  ];
+  const refs = await Promise.all(
+    notifications.map((notification) => db.collection('notifications').add(notification)),
+  );
+  console.log(`Seeded ${refs.length} notifications for ${target.email}`);
+}
+
 async function seed() {
   console.log('Starting seed process (shared fixtures)...');
   const fixtures = loadFixtures();
@@ -287,6 +369,8 @@ async function seed() {
   await seedUsers(fixtures);
   await seedPois(parks);
   await seedIncidents(parks, fixtures);
+  await seedAlerts(parks);
+  await seedNotifications(fixtures);
 
   console.log('Seed process completed successfully!');
 }

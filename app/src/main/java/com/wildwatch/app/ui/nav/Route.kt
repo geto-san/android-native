@@ -1,5 +1,6 @@
 package com.wildwatch.app.ui.nav
 
+import com.wildwatch.app.core.database.IncidentType
 import kotlinx.serialization.Serializable
 
 // Type-safe Navigation Compose routes (Nav Compose 2.8+ @Serializable route objects)
@@ -23,7 +24,7 @@ sealed interface Route {
     data object Profile : Route
 
     @Serializable
-    data class ReportIncident(val draftId: String? = null) : Route
+    data class ReportIncident(val draftId: String? = null, val presetType: IncidentType? = null) : Route
 
     @Serializable
     data class ReportSubmitted(val incidentId: String) : Route

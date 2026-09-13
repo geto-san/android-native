@@ -61,13 +61,25 @@ class ReportIncidentViewModel @Inject constructor(
 
     private var initializedFor: String? = "unset"
 
-    fun initialize(draftId: String?) {
+    fun initialize(draftId: String?, presetType: IncidentType? = null) {
         // NavHost recomposition can call this more than once for the same screen instance;
         // only actually (re)load state the first time a given draftId (or "new report") is seen.
         if (initializedFor == draftId) return
         initializedFor = draftId
 
-        _uiState.update { ReportIncidentUiState(draftId = draftId) }
+        // An SOS-preset entry is pre-filled so the reporter can submit with a single
+        // follow-up tap (description is the only required field for non-sighting types).
+        val presets = if (presetType == IncidentType.SOS && draftId == null) {
+            ReportIncidentUiState(
+                draftId = null,
+                type = IncidentType.SOS,
+                severity = IncidentSeverity.HIGH,
+                description = "SOS — requesting urgent responder assistance.",
+            )
+        } else {
+            ReportIncidentUiState(draftId = draftId, type = presetType ?: IncidentType.SIGHTING)
+        }
+        _uiState.update { presets }
 
         if (draftId != null) {
             viewModelScope.launch {

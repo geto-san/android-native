@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Dangerous
 import androidx.compose.material.icons.filled.Emergency
 import androidx.compose.material.icons.filled.GppBad
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Sos
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
@@ -77,6 +78,7 @@ import com.wildwatch.app.core.ui.component.WildWatchTextField
 @Composable
 fun ReportIncidentScreen(
     draftId: String?,
+    presetType: IncidentType? = null,
     onBack: () -> Unit,
     onSubmitted: (String) -> Unit,
     onNavigateToCamera: () -> Unit,
@@ -97,8 +99,8 @@ fun ReportIncidentScreen(
         if (granted) viewModel.loadCurrentLocation()
     }
 
-    LaunchedEffect(draftId) {
-        viewModel.initialize(draftId)
+    LaunchedEffect(draftId, presetType) {
+        viewModel.initialize(draftId, presetType)
         // GPS is meant to be fully automatic (see the file header comment) - that only
         // actually happens if permission is requested here rather than left to fail
         // silently. initialize() already attempted a (harmless, gracefully-handled) capture
@@ -280,6 +282,7 @@ fun ReportIncidentScreen(
 private data class CategoryOption(val type: IncidentType, val label: String, val icon: ImageVector)
 
 private val categoryOptions = listOf(
+    CategoryOption(IncidentType.SOS, "SOS", Icons.Filled.Sos),
     CategoryOption(IncidentType.SIGHTING, "Sighting", Icons.Filled.Visibility),
     CategoryOption(IncidentType.CONFLICT, "Conflict", Icons.Filled.Warning),
     CategoryOption(IncidentType.POACHING, "Poaching", Icons.Filled.GppBad),

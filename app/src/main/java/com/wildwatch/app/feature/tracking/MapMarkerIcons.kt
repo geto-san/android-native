@@ -19,6 +19,7 @@ internal fun rememberIncidentMarkerIcon(type: IncidentType): IconImage =
             IncidentType.EMERGENCY -> R.drawable.ic_marker_emergency
             IncidentType.POACHING -> R.drawable.ic_marker_poaching
             IncidentType.SNARE -> R.drawable.ic_marker_snare
+            IncidentType.SOS -> R.drawable.ic_marker_emergency
         },
     )
 
