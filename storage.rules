@@ -1,0 +1,88 @@
+rules_version = '2';
+
+// Mirrors firestore.rules' role/park model (same custom claims, same helper
+// names) so the two rule sets stay easy to reason about together. See
+// BRIDGE-CONTRACT.md for the storage path convention this enforces and the
+// one open gap (voice notes have no uploader yet).
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getRole() {
+      return request.auth.token.role;
+    }
+
+    function getParkId() {
+      return request.auth.token.park_id;
+    }
+
+    function isUwaOfficial() {
+      return isSignedIn() && getRole() == 'uwa_official';
+    }
+
+    function isWarden() {
+      return isSignedIn() && getRole() == 'warden';
+    }
+
+    function isRanger() {
+      return isSignedIn() && getRole() == 'ranger';
+    }
+
+    function belongsToPark(parkId) {
+      return isSignedIn() && getParkId() == parkId;
+    }
+
+    // Cross-service read of the corresponding Firestore incident document.
+    // Only safe to call for read/update/delete, which only ever happen after
+    // that document exists - see the create rule below for why create can't
+    // depend on this.
+    function incidentDoc(incidentId) {
+      return firestore.get(/databases/(default)/documents/incidents/$(incidentId)).data;
+    }
+
+    function isIncidentReporter(incidentId) {
+      return isSignedIn() && request.auth.uid == incidentDoc(incidentId).userId;
+    }
+
+    function canReadIncidentMedia(incidentId) {
+      return isUwaOfficial() ||
+        isIncidentReporter(incidentId) ||
+        ((isWarden() || isRanger()) && belongsToPark(incidentDoc(incidentId).park));
+    }
+
+    // Evidence photos and (once that feature lands) voice notes for a single
+    // incident report. Path matches IncidentRemoteDataSourceImpl.kt exactly:
+    // "incidents/{incidentId}/{fileName}", flat, no per-user subfolder.
+    match /incidents/{incidentId}/{fileName} {
+      // IncidentRemoteDataSourceImpl uploads media BEFORE writing the
+      // Firestore incident document (photos first, then the doc with the
+      // resulting download URLs - see BRIDGE-CONTRACT.md), so create can't
+      // check reporter/park against a document that doesn't exist yet. Any
+      // signed-in user may create here, matching "any signed-in user can
+      // report an incident" today; content-type and size are the real
+      // guardrails at this stage. Ownership/park scoping apply below, once
+      // the document exists, for read/overwrite/delete.
+      //
+      // voiceNoteUrl is a plumbed-but-unused schema field today (no mobile
+      // recorder/uploader exists yet) - the audio branch here is written
+      // ahead of that feature so it doesn't need a second rules pass later,
+      // not because it's been exercised against a real upload.
+      allow create: if isSignedIn() && (
+        (request.resource.contentType.matches('image/.*') && request.resource.size < 15 * 1024 * 1024) ||
+        (request.resource.contentType.matches('audio/.*') && request.resource.size < 10 * 1024 * 1024)
+      );
+
+      allow read: if canReadIncidentMedia(incidentId);
+
+      allow update, delete: if isIncidentReporter(incidentId) || isUwaOfficial();
+    }
+
+    // Deny everything else - no implicit access to any other path.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

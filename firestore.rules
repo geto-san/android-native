@@ -1,0 +1,234 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------------------------------------------------
+    // Helper functions
+    // ----------------------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getRole() {
+      return request.auth.token.role;
+    }
+
+    function getParkId() {
+      return request.auth.token.park_id;
+    }
+
+    function isUwaOfficial() {
+      return isSignedIn() && getRole() == 'uwa_official';
+    }
+
+    function isWarden() {
+      return isSignedIn() && getRole() == 'warden';
+    }
+
+    function isRanger() {
+      return isSignedIn() && getRole() == 'ranger';
+    }
+
+    function isPublic() {
+      return isSignedIn() && getRole() == 'public';
+    }
+
+    function belongsToPark(parkId) {
+      return getParkId() == parkId;
+    }
+
+    // ----------------------------------------------------------------------
+    // Incident helpers
+    //
+    // The mobile app writes `park` as the Kotlin enum name (e.g. BWINDI_IMPENETRABLE)
+    // and `reporter_uid`/`userId` as the Firebase UID. `park_id` is the legacy/kebab
+    // form older seeded docs carry. Each helper prefers the field kind the current
+    // client actually writes.
+    // ----------------------------------------------------------------------
+    function incidentParkId(data) {
+      return data.park_id != null ? data.park_id : (data.park != null ? data.park : 'unknown');
+    }
+
+    function incidentReporterUid(data) {
+      return data.reporter_uid != null ? data.reporter_uid : (data.userId != null ? data.userId : 'none');
+    }
+
+    // Staff of the incident's park, or the reporter themself. This is the ownership
+    // gate for updating an incident (field-restricted for everyone else) and the only
+    // body allowed to delete one (plus UWA HQ).
+    function canModerateIncident(data) {
+      return isUwaOfficial() ||
+        (isWarden() && belongsToPark(incidentParkId(data))) ||
+        (isRanger() && belongsToPark(incidentParkId(data))) ||
+        request.auth.uid == incidentReporterUid(data);
+    }
+
+    // Non-moderators may only touch the community-contributable fields on an existing
+    // incident. Everything else (status, assignment, source_system, severity, park,
+    // location, reporter identity) is moderation-only, which also stops a client from
+    // setting source_system: "laravel" to defeat the bridge's echo-prevention.
+    function mayUpdateIncident(data, ndata) {
+      if (!isSignedIn()) {
+        return false;
+      }
+      if (canModerateIncident(data)) {
+        return true;
+      }
+      return ndata.diff(data).affectedKeys().hasOnly(['animalSeen', 'hasEvidence', 'evidenceCount']);
+    }
+
+    // A coordinate may be genuinely absent (the reporting form deliberately still
+    // submits when GPS produced no fix - the mobile client writes null, and the Laravel
+    // bridge stores NULL rather than fabricating (0,0)) or a real value within the
+    // lat/lng ranges. Anything else - e.g. the (0,0) default or (200, 400) - is rejected,
+    // so the rules agree with FirestoreSyncMapper::nullableCoordinate on what counts as
+    // a plausible coordinate.
+    function isValidLatitude(v) {
+      return v == null || (v is number && v >= -90.0 && v <= 90.0);
+    }
+
+    function isValidLongitude(v) {
+      return v == null || (v is number && v >= -180.0 && v <= 180.0);
+    }
+
+    // Users — self-managed docs. A user may create their own doc and, once it exists,
+    // may only update the FCM-token bookkeeping fields (FcmTokenRepository writes
+    // exactly these two). Role/park_id/email etc. are written by the portal via the
+    // Admin SDK (FirebaseService) or Laravel's provisioned accounts, never by clients:
+    // this is what stops a mobile client from self-elevating to warden/ranger doc-side.
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isWarden() || isUwaOfficial());
+
+      allow create: if isSignedIn() && request.auth.uid == userId;
+
+      allow update: if isUwaOfficial() ||
+        (isSignedIn() && request.auth.uid == userId &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['fcm_tokens', 'fcm_token_updated_at']));
+
+      allow delete: if isUwaOfficial();
+    }
+
+    // Parks — public reference data
+    match /parks/{parkId} {
+      allow read: if true;
+      allow write: if isUwaOfficial();
+    }
+
+    // Location hierarchy (village -> parish -> sub-county -> district) — public read,
+    // this collection is seeded read-only reference data.
+    match /location_hierarchy/{entryId} {
+      allow read: if true;
+      allow write: if isUwaOfficial();
+    }
+
+    // Zones
+    match /zones/{zoneId} {
+      allow read: if isSignedIn() && (isRanger() || isWarden() || isUwaOfficial());
+      // `create` has no existing `resource` yet — check request.resource.data, not
+      // resource.data (which is null on create and would silently deny every create).
+      allow create: if isUwaOfficial() ||
+        (isWarden() && belongsToPark(request.resource.data.park_id));
+      allow update: if isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id));
+      allow delete: if isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id));
+    }
+
+    // Incidents — the community incident map. Any authenticated user (including guest
+    // mode) may read and create; writes are moderation-scoped so PII-bearing fields and
+    // the bridge's source_system marker can't be tampered with by strangers.
+    match /incidents/{incidentId} {
+      allow read: if isSignedIn();
+
+      allow create: if isSignedIn() &&
+        request.resource.data.size() < 1024 * 1024 &&
+        request.resource.data.type is string &&
+        request.resource.data.park is string &&
+        isValidLatitude(request.resource.data.lat) &&
+        isValidLongitude(request.resource.data.lng);
+
+      allow update: if mayUpdateIncident(resource.data, request.resource.data);
+
+      allow delete: if isUwaOfficial() || request.auth.uid == incidentReporterUid(resource.data);
+    }
+
+    // Patrol Logs
+    match /patrol_logs/{logId} {
+      // Rangers can read their own logs back; UWA HQ reads everything; wardens read
+      // their own park's (park_id, written by PatrolLog.toFirestoreMap()).
+      allow read: if isSignedIn() && (
+        isUwaOfficial() ||
+        (isWarden() && belongsToPark(resource.data.park_id)) ||
+        request.auth.uid == resource.data.ranger_uid
+      );
+      allow create: if isRanger();
+    }
+
+    // Sightings — the dedicated wildlife_sightings feed. Anyone (ranger or public)
+    // can submit; moderation stays with HQ/park wardens (matches the portal's
+    // approval-status model). Read is staff-only until the mobile sightings screen
+    // exists; the general public already sees sighting-typed incidents via /incidents.
+    match /sightings/{sightingId} {
+      allow read: if isSignedIn() && (
+        isUwaOfficial() ||
+        (isWarden() && belongsToPark(resource.data.park_id)) ||
+        isRanger()
+      );
+      allow create: if isRanger() || isPublic();
+      allow update: if isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id));
+    }
+
+    // SOS alerts
+    match /sos_alerts/{sosAlertId} {
+      allow read: if isSignedIn() && (
+        isUwaOfficial() ||
+        (isWarden() && belongsToPark(resource.data.park_id)) ||
+        request.auth.uid == resource.data.reporter_uid
+      );
+      allow create: if isRanger() || isPublic();
+      allow update: if isSignedIn() && (isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id)));
+    }
+
+    // POIs
+    match /pois/{poiId} {
+      allow read: if true;
+      // `create` has no existing `resource` yet - must check the incoming
+      // `request.resource.data`, not `resource.data` (which was the bug here:
+      // resource.data is null on create, so the old single `write` rule using
+      // it silently denied every create, including warden/UWA ones).
+      // Rangers can add points (e.g. a danger zone flagged on discovery) but
+      // not edit/delete existing ones - that stays warden/UWA moderation.
+      allow create: if isUwaOfficial() ||
+        ((isWarden() || isRanger()) && belongsToPark(request.resource.data.parkId));
+      allow update, delete: if isUwaOfficial() || (isWarden() && belongsToPark(resource.data.parkId));
+    }
+
+    // Tasks
+    match /tasks/{taskId} {
+      allow read: if isSignedIn() && (
+        isUwaOfficial() ||
+        (isWarden() && belongsToPark(resource.data.park_id)) ||
+        request.auth.uid == resource.data.assigned_ranger_uid
+      );
+      // Same create-vs-request.resource trap as zones/POIs above.
+      allow create: if isUwaOfficial() || (isWarden() && belongsToPark(request.resource.data.park_id));
+      allow update: if isUwaOfficial() || (isWarden() && belongsToPark(request.resource.data.park_id));
+      allow delete: if isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id));
+    }
+
+    // Notifications
+    match /notifications/{notifId} {
+      allow read: if isSignedIn() && request.auth.uid == resource.data.target_uid;
+      allow write: if false; // Admin SDK only (Cloud Functions or Laravel FirebaseService)
+    }
+
+    // Community news feed (portal-authored, mobile read-only)
+    match /feed/{articleId} {
+      allow read: if true;
+      // Portal writes bypass rules via the Admin SDK (Laravel's FirebaseService).
+      // Client writes are denied outright — previously `if true`, which let any
+      // anonymous caller spoof articles into the mobile feed and trigger FCM spam.
+      allow write: if false;
+    }
+  }
+}

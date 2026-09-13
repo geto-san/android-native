@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WildWatch</title>
+<!--
+  Landing page for Firebase email-link sign-in (see AuthRepository.sendSignInLinkToEmail).
+  On Android, this URL is registered as an App Link (see AndroidManifest.xml's intent-filter
+  for this host, verified via .well-known/assetlinks.json) - a verified device intercepts the
+  link before it ever loads this page, opening the app directly. This page only actually
+  renders on a device where App Links verification hasn't happened (falls back to the
+  browser's own app-picker instead) or the link was opened somewhere other than the device
+  that requested it.
+-->
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    color: #fff;
+    font-family: -apple-system, Roboto, "Segoe UI", sans-serif;
+    text-align: center;
+    padding: 24px;
+    box-sizing: border-box;
+  }
+  .card { max-width: 360px; }
+  .mark {
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+    border: 3px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 28px;
+    font-weight: 700;
+  }
+  h1 { font-size: 20px; margin: 0 0 8px; }
+  p { color: #b3b3b3; font-size: 14px; line-height: 1.5; margin: 0; }
+  a { color: #4da3ff; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="mark">W</div>
+    <h1>Continue in the WildWatch app</h1>
+    <p>
+      This sign-in link opens automatically in the WildWatch app on the device
+      you requested it from. If nothing happened, make sure WildWatch is
+      installed and open this link again from that same device.
+    </p>
+  </div>
+</body>
+</html>
