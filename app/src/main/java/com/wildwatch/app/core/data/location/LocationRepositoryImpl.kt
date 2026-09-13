@@ -108,24 +108,45 @@ class LocationRepositoryImpl @Inject constructor(
     }
 
     // API 33+ deprecated the synchronous getFromLocation() in favor of this
-    // listener-based overload.
+    // listener-based overload. The old overload must be used below API 33 - calling the
+    // listener version there throws NoSuchMethodError (minSdk is 26), which is exactly
+    // the bug the lint [NewApi] flags in this file (pre-existing, found 2026-09-13).
     private suspend fun geocodeAsync(geocoder: Geocoder, latitude: Double, longitude: Double): Address? =
-        suspendCancellableCoroutine { continuation ->
-            geocoder.getFromLocation(
-                latitude,
-                longitude,
-                1,
-                object : Geocoder.GeocodeListener {
-                    override fun onGeocode(addresses: MutableList<Address>) {
-                        continuation.resume(addresses.firstOrNull())
-                    }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            suspendCancellableCoroutine { continuation ->
+                geocoder.getFromLocation(
+                    latitude,
+                    longitude,
+                    1,
+                    object : Geocoder.GeocodeListener {
+                        override fun onGeocode(addresses: MutableList<Address>) {
+                            continuation.resume(addresses.firstOrNull())
+                        }
 
-                    override fun onError(errorMessage: String?) {
-                        continuation.resume(null)
-                    }
-                },
-            )
+                        override fun onError(errorMessage: String?) {
+                            continuation.resume(null)
+                        }
+                    },
+                )
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            geocodeSynchronously(geocoder, latitude, longitude)
         }
+
+    @Suppress("DEPRECATION")
+    private suspend fun geocodeSynchronously(
+        geocoder: Geocoder,
+        latitude: Double,
+        longitude: Double,
+    ): Address? = suspendCancellableCoroutine { continuation ->
+        val addresses = try {
+            geocoder.getFromLocation(latitude, longitude, 1)
+        } catch (e: Exception) {
+            emptyList()
+        }
+        continuation.resume(addresses?.firstOrNull())
+    }
 
     private fun formatAddress(address: Address): String {
         val parts = listOfNotNull(address.featureName, address.subAdminArea, address.adminArea)

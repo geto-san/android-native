@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wildwatch.app.core.database.IncidentSeverity
 import com.wildwatch.app.core.database.IncidentType
 import com.wildwatch.app.core.ui.component.BackHeader
 import com.wildwatch.app.core.ui.component.FieldLabel
@@ -68,9 +69,10 @@ import com.wildwatch.app.core.ui.component.WildWatchTextField
 
 // Replaces ReportSelectionScreen (the Wildlife Sighting / Human-Wildlife Conflict split) and
 // the whole remote-schema-driven DynamicReportScreen with one fast, fixed-field form: a
-// category picker, description, optional photos, and species (sighting only). GPS/park/
-// timestamp are captured automatically in ReportIncidentViewModel and never shown as fields -
-// see locationStatusText() below for the only UI surface that GPS capture gets at all.
+// category picker, a severity picker, description, optional photos, and species (sighting
+// only). GPS/park/timestamp are captured automatically in ReportIncidentViewModel and never
+// shown as fields - see locationStatusText() below for the only UI surface that GPS capture
+// gets at all.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportIncidentScreen(
@@ -209,6 +211,14 @@ fun ReportIncidentScreen(
                 }
 
                 Column {
+                    FieldLabel("Severity")
+                    SeverityChipRow(
+                        selected = uiState.severity,
+                        onSelect = viewModel::selectSeverity,
+                    )
+                }
+
+                Column {
                     FieldLabel("Photo (optional)")
                     PhotoGrid(
                         photoUris = uiState.photos,
@@ -291,6 +301,44 @@ private fun CategoryChipRow(selected: IncidentType, onSelect: (IncidentType) -> 
                     selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                     selectedLabelColor = MaterialTheme.colorScheme.primary,
                     selectedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                ),
+            )
+        }
+    }
+}
+
+private data class SeverityOption(val severity: IncidentSeverity, val label: String)
+
+// Display order is intentional: LIGHT < LOW < MEDIUM < HIGH (the enum's declaration order is
+// HIGH, LOW, LIGHT, MEDIUM - alphabetical - so it must not be rendered as-is).
+private val severityOptions = listOf(
+    SeverityOption(IncidentSeverity.LIGHT, "Light"),
+    SeverityOption(IncidentSeverity.LOW, "Low"),
+    SeverityOption(IncidentSeverity.MEDIUM, "Medium"),
+    SeverityOption(IncidentSeverity.HIGH, "High"),
+)
+
+// Severity used to be hardcoded to MEDIUM in ReportIncidentViewModel.save() and silently
+// dropped at the portal anyway - the Laravel schema had no severity column. Now the column
+// exists (2026_09_13_000001 migration) and the bridge maps it, so the reporter's triage-able
+// intent is preserved end-to-end instead of every report arriving as "medium".
+@Composable
+private fun SeverityChipRow(selected: IncidentSeverity, onSelect: (IncidentSeverity) -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        severityOptions.forEach { option ->
+            FilterChip(
+                selected = option.severity == selected,
+                onClick = { onSelect(option.severity) },
+                label = { Text(option.label) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = when (option.severity) {
+                        IncidentSeverity.HIGH -> MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
+                        else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                    },
+                    selectedLabelColor = when (option.severity) {
+                        IncidentSeverity.HIGH -> MaterialTheme.colorScheme.error
+                        else -> MaterialTheme.colorScheme.primary
+                    },
                 ),
             )
         }

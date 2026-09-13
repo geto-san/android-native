@@ -7,6 +7,7 @@ import com.wildwatch.app.core.database.IncidentType
 import com.wildwatch.app.core.database.Park
 import com.wildwatch.app.core.database.RangerProgress
 import com.wildwatch.app.core.database.SyncStatus
+import kotlin.math.abs
 
 // The one canonical mapping between Room's IncidentEntity, this domain model,
 // and the Firestore document shape (documented in android-native/README.md).
@@ -114,11 +115,23 @@ data class Incident(
         "severity" to severity.name.lowercase(),
         "category" to category,
         "summary" to summary,
-        "lat" to lat,
-        "lng" to lng,
+        // A "save guard" for fabricated coordinates: if GPS never produced a fix (the report
+        // form intentionally still submits with locationError set), lat/lng sit at the 0.0
+        // default, which used to be written verbatim and become a phantom "null island"
+        // incident at the Gulf of Guinea. Never claim a coordinate we didn't actually get:
+        // write null instead. The Laravel mapper (FirestoreSyncMapper::nullableCoordinate)
+        // uses the same 0.0000001 floor, so this agrees with the server regardless of which
+        // end filters first.
+        "lat" to (if (abs(lat) > 0.0000001) lat else null),
+        "lng" to (if (abs(lng) > 0.0000001) lng else null),
         "locationName" to locationName,
-        "userName" to userName,
-        "userEmail" to userEmail,
+        // userName/userEmail are deliberately NOT written to Firestore: the shared
+        // incident doc is readable by every authenticated user (community map), so
+        // reporter PII is kept local to the reporter's device (Room) and never pushed
+        // to a doc other clients can read. Firestore rules cannot mask fields inside
+        // a document, so the second half of this fix is the read/update rules in
+        // android-native-backend-branch/firestore.rules. The bridge only needs userId
+        // (the Firebase UID) to resolve reported_by server-side.
         "userId" to userId,
         "reportedAt" to reportedAt,
         "synced" to true,

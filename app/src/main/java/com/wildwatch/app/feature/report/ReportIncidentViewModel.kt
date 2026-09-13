@@ -20,6 +20,7 @@ import javax.inject.Inject
 
 data class ReportIncidentUiState(
     val type: IncidentType = IncidentType.SIGHTING,
+    val severity: IncidentSeverity = IncidentSeverity.MEDIUM,
     val draftId: String? = null,
     val species: String = "",
     val description: String = "",
@@ -74,6 +75,7 @@ class ReportIncidentViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             type = incident.type,
+                            severity = incident.severity,
                             species = incident.species,
                             description = incident.summary ?: "",
                             photos = incident.localImageUris,
@@ -89,6 +91,10 @@ class ReportIncidentViewModel @Inject constructor(
 
     fun selectType(type: IncidentType) {
         _uiState.update { it.copy(type = type) }
+    }
+
+    fun selectSeverity(severity: IncidentSeverity) {
+        _uiState.update { it.copy(severity = severity) }
     }
 
     fun updateSpecies(value: String) {
@@ -144,7 +150,7 @@ class ReportIncidentViewModel @Inject constructor(
                     park = state.park,
                     community = state.locationName ?: "Unknown",
                     species = if (state.type == IncidentType.SIGHTING) state.species.ifBlank { "Unknown" } else "N/A",
-                    severity = IncidentSeverity.MEDIUM,
+                    severity = state.severity,
                     category = null,
                     summary = state.description,
                     lat = state.lat,
