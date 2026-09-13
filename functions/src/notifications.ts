@@ -5,14 +5,20 @@ import DocumentSnapshot = FirebaseFirestore.DocumentSnapshot;
 
 type IncidentData = Record<string, unknown>;
 
-function normalizeParkId(park: unknown): string {
+export function normalizeParkId(park: unknown): string {
   if (typeof park !== "string" || park.length === 0) {
     return "unknown";
   }
 
+  // Must produce exactly the same topic suffix as the mobile client's
+  // FcmTopicManager (core/notifications/FcmTopicManager.kt), which replaces
+  // [\s-]+ with "_". The functions side previously omitted the hyphen case, so a
+  // park id like "bwindi-impenetrable" produced "bwindi-impenetrable" here but
+  // "bwindi_impenetrable" on-device - wardens subscribed to one and pushes went to
+  // the other (BRIDGE-CONTRACT.md FCM topics known gap).
   return park
     .replace(/([a-z])([A-Z])/g, "$1_$2")
-    .replace(/\s+/g, "_")
+    .replace(/[\s-]+/g, "_")
     .toLowerCase();
 }
 
