@@ -80,17 +80,6 @@ service firebase.storage {
       allow update, delete: if isIncidentReporter(incidentId) || isUwaOfficial();
     }
 
-    // Community news feed header images used to live here ("feed/{articleId}/{fileName}"),
-    // uploaded via Laravel's Admin SDK (NewsArticleController::uploadImage). Moved to
-    // Cloudinary (CloudinaryService) because Cloud Storage for Firebase requires the Blaze
-    // plan and this project (wildwatch-82abc) is on Spark - no bucket was ever provisioned,
-    // confirmed live (both possible default bucket names 404 from Firebase's own Storage
-    // REST API). Left denying all access below rather than removed outright, in case Storage
-    // is ever provisioned later and something still probes this path.
-    match /feed/{articleId}/{fileName} {
-      allow read, write: if false;
-    }
-
     // Deny everything else - no implicit access to any other path.
     match /{allPaths=**} {
       allow read, write: if false;

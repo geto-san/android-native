@@ -6,4 +6,3 @@ firebase-export-*/
 
 # compiled Cloud Functions output
 functions/lib/
-functions/graphify-out/
