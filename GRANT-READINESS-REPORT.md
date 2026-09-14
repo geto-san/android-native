@@ -1,4 +1,4 @@
-# WildWatch — Grant-Readiness & System-Gap Report
+# SilverBack Sentry — Grant-Readiness & System-Gap Report
 
 **Date:** 2026-09-13
 **Prepared for:** grant panel demo (midday deadline)
@@ -8,7 +8,7 @@
 
 ## 1. Executive summary
 
-WildWatch is a genuinely working, geographically-informed wildlife-conservation platform: a Kotlin/Compose Android app (rangers + public + guests), a Firebase backend (Auth, Firestore, Storage, FCM), and a Laravel/Neon/Postgres web portal for wardens/UWA officials, joined by a documented Firebase↔Laravel bridge. The mobile app's offline-first outbox, patrol tracking, offline maps, and feed are **implementation-complete and verified** (unit tests pass, debug APK builds, live API responds).
+SilverBack Sentry is a genuinely working, geographically-informed wildlife-conservation platform: a Kotlin/Compose Android app (rangers + public + guests), a Firebase backend (Auth, Firestore, Storage, FCM), and a Laravel/Neon/Postgres web portal for wardens/UWA officials, joined by a documented Firebase↔Laravel bridge. The mobile app's offline-first outbox, patrol tracking, offline maps, and feed are **implementation-complete and verified** (unit tests pass, debug APK builds, live API responds).
 
 **This session's change:** the Firebase backend (`backend` branch, previously a separate orphan branch/worktree at `android-native-backend-branch/`) was **merged into `master`**, consolidating both sides into a single repository tree. The merge is committed, pushed, and the CI pipeline (tests → APK build → GitHub release) is running green on the merged tree. All backend references were repointed to in-repo paths.
 
@@ -46,7 +46,7 @@ WildWatch is a genuinely working, geographically-informed wildlife-conservation 
 | Incident reporting (GPS, camera, 5 types, severity) | `ReportIncidentScreen` + `ReportIncidentViewModel` (process-death resilient) |
 | FCM topic subscriptions (park + role topics incl. `park_alerts_all` for guests) | `FcmTopicManager`; synced on auth events + token refresh |
 | Community feed (portal-authored → Firestore → Room + photo grid) | `ArticleRepositoryImpl`, `FeedScreen` staggered image grid |
-| Push UI (inbox, unread badge, tap→deep-link routing) | `NotificationsScreen`, `WildWatchMessagingService`, `NotificationRouting` |
+| Push UI (inbox, unread badge, tap→deep-link routing) | `NotificationsScreen`, `SilverBackSentryMessagingService`, `NotificationRouting` |
 | Live hosted services | Firebase `wildwatch-82abc`, Render API (`wildwatch-api.onrender.com` — responds), Cloudflare portal (`wildwatch-portal…workers.dev`), Neon Postgres |
 | Test coverage (JVM) | 23 unit-test files / 134 tests across ViewModels + repositories |
 | Cloud Functions jest coverage | 26 tests: trigger dispatch, HMAC bridge, echo-prevention, RBAC callable |

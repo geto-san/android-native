@@ -1,7 +1,7 @@
 {
-  "name": "wildwatch-scripts",
+  "name": "silverback-sentry-scripts",
   "version": "1.0.0",
-  "description": "Scripts for WildWatch backend",
+  "description": "Scripts for SilverBack Sentry backend",
   "main": "seed.ts",
   "scripts": {
     "seed": "ts-node seed.ts"

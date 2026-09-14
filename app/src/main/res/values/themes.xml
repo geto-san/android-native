@@ -2,7 +2,7 @@
     <!-- Base application theme. Compose owns all in-app theming (see ui/theme/Theme.kt);
          this XML theme only governs the window before Compose content is set (launch
          background, status/nav bar) and satisfies the manifest's theme reference. -->
-    <style name="Theme.WildWatch" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.SilverBackSentry" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/background</item>
         <item name="android:statusBarColor" tools:targetApi="21">@color/background</item>
         <item name="android:navigationBarColor" tools:targetApi="21">@color/background</item>
@@ -16,6 +16,6 @@
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
-        <item name="postSplashScreenTheme">@style/Theme.WildWatch</item>
+        <item name="postSplashScreenTheme">@style/Theme.SilverBackSentry</item>
     </style>
 </resources>

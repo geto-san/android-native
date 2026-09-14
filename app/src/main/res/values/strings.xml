@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">WildWatch</string>
+    <string name="app_name">SilverBack Sentry</string>
 
     <!-- Dashboard/Tracking -->
     <string name="dash_title">Response Center</string>

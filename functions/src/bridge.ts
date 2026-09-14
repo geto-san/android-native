@@ -52,7 +52,7 @@ export async function postToLaravelWebhook(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-WildWatch-Signature": signature,
+      "X-SilverBackSentry-Signature": signature,
     },
     body,
   });

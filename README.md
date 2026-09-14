@@ -1,6 +1,6 @@
 <div align="center">
-  <img src="./art/icons/Use this as the new icon for the app.webp" width="120" height="120" alt="WildWatch Logo" />
-  <h1>WildWatch</h1>
+  <img src="./art/icons/Use this as the new icon for the app.webp" width="120" height="120" alt="SilverBack Sentry Logo" />
+  <h1>SilverBack Sentry</h1>
   <p>Wildlife conservation reporting and ranger operations in Uganda — native Android app + Firebase backend, one repository.</p>
 </div>
 
@@ -13,7 +13,7 @@
 
 ## What this is
 
-WildWatch is an offline-first Android app serving two audiences: rangers, who use it for incident response, patrol tracking, and evidence collection, and the public, who use it to report wildlife sightings and human-wildlife conflict incidents. It is built with Kotlin and Jetpack Compose, backed by Firebase (Authentication, Firestore, Storage, Cloud Messaging), with Room providing local persistence and an offline outbox so reports and patrol data can be captured with no signal and synced automatically once connectivity returns.
+SilverBack Sentry is an offline-first Android app serving two audiences: rangers, who use it for incident response, patrol tracking, and evidence collection, and the public, who use it to report wildlife sightings and human-wildlife conflict incidents. It is built with Kotlin and Jetpack Compose, backed by Firebase (Authentication, Firestore, Storage, Cloud Messaging), with Room providing local persistence and an offline outbox so reports and patrol data can be captured with no signal and synced automatically once connectivity returns.
 
 This repository is the single home for **both** the Android application and its Firebase backend (Cloud Functions, Firestore/Storage security rules, hosting, and seed scripts) — formerly split across two branches (`master` and `backend`), consolidated into one tree so the app and the platform it runs on evolve together.
 
@@ -41,7 +41,7 @@ Incident and wildlife-sighting reporting with camera capture and GPS tagging, su
 
 ## Backend functions
 
-The `functions/` module implements the Firebase side of WildWatch's two-backend architecture, driving the app's authentication, offline-sync data store, file storage, and push notifications:
+The `functions/` module implements the Firebase side of SilverBack Sentry's two-backend architecture, driving the app's authentication, offline-sync data store, file storage, and push notifications:
 
 - `functions/src/bridge.ts` + on-write triggers in `functions/src/index.ts` — sign and forward incident, sighting, and SOS-alert writes to the Laravel API in `../web-portal/backend/` as HMAC-authenticated webhooks, with an echo-prevention check so a write that originated on the Laravel side doesn't bounce back out as another webhook call.
 - `functions/src/notifications.ts` — topic-based push notification triggers.

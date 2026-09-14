@@ -21,5 +21,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "WildWatch"
+rootProject.name = "SilverBack Sentry"
 include(":app")
