@@ -171,22 +171,32 @@ service cloud.firestore {
     match /sightings/{sightingId} {
       allow read: if isSignedIn() && (
         isUwaOfficial() ||
-        (isWarden() && belongsToPark(resource.data.park_id)) ||
+        (isWarden() && belongsToPark(incidentParkId(resource.data))) ||
         isRanger()
       );
-      allow create: if isRanger() || isPublic();
-      allow update: if isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id));
+      allow create: if isSignedIn() && (isRanger() || isPublic()) &&
+        request.resource.data.size() < 1024 * 1024 &&
+        request.resource.data.type is string &&
+        request.resource.data.park is string &&
+        isValidLatitude(request.resource.data.lat) &&
+        isValidLongitude(request.resource.data.lng);
+      allow update: if isUwaOfficial() || (isWarden() && belongsToPark(incidentParkId(resource.data)));
     }
 
     // SOS alerts
     match /sos_alerts/{sosAlertId} {
       allow read: if isSignedIn() && (
         isUwaOfficial() ||
-        (isWarden() && belongsToPark(resource.data.park_id)) ||
-        request.auth.uid == resource.data.reporter_uid
+        (isWarden() && belongsToPark(incidentParkId(resource.data))) ||
+        request.auth.uid == incidentReporterUid(resource.data)
       );
-      allow create: if isRanger() || isPublic();
-      allow update: if isSignedIn() && (isUwaOfficial() || (isWarden() && belongsToPark(resource.data.park_id)));
+      allow create: if isSignedIn() && (isRanger() || isPublic()) &&
+        request.resource.data.size() < 1024 * 1024 &&
+        request.resource.data.type is string &&
+        request.resource.data.park is string &&
+        isValidLatitude(request.resource.data.lat) &&
+        isValidLongitude(request.resource.data.lng);
+      allow update: if isSignedIn() && (isUwaOfficial() || (isWarden() && belongsToPark(incidentParkId(resource.data))));
     }
 
     // POIs

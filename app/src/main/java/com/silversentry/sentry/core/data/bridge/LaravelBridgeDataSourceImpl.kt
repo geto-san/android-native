@@ -1,6 +1,7 @@
 package com.silversentry.sentry.core.data.bridge
 
 import com.silversentry.sentry.core.data.auth.AuthRepository
+import com.silversentry.sentry.core.database.IncidentType
 import com.silversentry.sentry.core.model.Incident
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -30,7 +31,16 @@ class LaravelBridgeDataSourceImpl @Inject constructor(
         }
         val body = payload.toString().toRequestBody(JSON_MEDIA_TYPE)
 
-        val response = api.postIncidentEvent("Bearer $token", body)
+        // Route to the Laravel bridge endpoint that matches this incident's type. Previously
+        // every type - including SOS and SIGHTING - always hit mobile/incidents, so those two
+        // never reached SosAlertController/WildlifeSighting's own tables even though the
+        // mobile/sos-alerts and mobile/sightings routes already existed server-side (see
+        // WebhookController::mobileSosAlerts/mobileSightings). This is the fix for that gap.
+        val response = when (incident.type) {
+            IncidentType.SOS -> api.postSosAlertEvent("Bearer $token", body)
+            IncidentType.SIGHTING -> api.postSightingEvent("Bearer $token", body)
+            else -> api.postIncidentEvent("Bearer $token", body)
+        }
         if (!response.isSuccessful) {
             throw java.io.IOException("Laravel bridge call failed: HTTP ${response.code()}")
         }

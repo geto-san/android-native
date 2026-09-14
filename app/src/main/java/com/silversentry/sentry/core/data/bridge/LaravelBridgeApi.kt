@@ -20,4 +20,21 @@ interface LaravelBridgeApi {
         @Header("Authorization") bearerToken: String,
         @Body body: RequestBody,
     ): Response<ResponseBody>
+
+    // Counterparts to postIncidentEvent for the two Firestore collections that get their own
+    // purpose-specific backend model (SosAlert / WildlifeSighting) instead of the generic
+    // Incident row - see WebhookController::mobileSosAlerts / mobileSightings on the Laravel
+    // side, which were already built and reachable but never actually called from here until
+    // LaravelBridgeDataSourceImpl started routing to them by IncidentType.
+    @POST("mobile/sos-alerts")
+    suspend fun postSosAlertEvent(
+        @Header("Authorization") bearerToken: String,
+        @Body body: RequestBody,
+    ): Response<ResponseBody>
+
+    @POST("mobile/sightings")
+    suspend fun postSightingEvent(
+        @Header("Authorization") bearerToken: String,
+        @Body body: RequestBody,
+    ): Response<ResponseBody>
 }
