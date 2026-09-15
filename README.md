@@ -17,7 +17,7 @@ SilverBack Sentry is an offline-first Android app serving two audiences: rangers
 
 This repository is the single home for **both** the Android application and its Firebase backend (Cloud Functions, Firestore/Storage security rules, hosting, and seed scripts) — formerly split across two branches (`master` and `backend`), consolidated into one tree so the app and the platform it runs on evolve together.
 
-The app's data reaches a separate Laravel-based web portal (`../web-portal/`) for wardens and UWA officials through a Firebase-to-Laravel bridge; the full contract for what data crosses that bridge and how is documented in `/home/geto/Projects/Documentations/WildWatch/root-contracts/BRIDGE-CONTRACT.md`. Which features and screens a signed-in account can reach depends on its role — ranger, warden, UWA official, or public — documented in `/home/geto/Projects/Documentations/WildWatch/root-contracts/REPOS.md`'s role-model write-up alongside the equivalent portal-side roles.
+The app's data reaches a separate Laravel-based web portal (`../warden-web-portal/`) for wardens and UWA officials through a Firebase-to-Laravel bridge; the full contract for what data crosses that bridge and how is documented in `/home/geto/Projects/Documentations/WildWatch/root-contracts/BRIDGE-CONTRACT.md`. Which features and screens a signed-in account can reach depends on its role — ranger, warden, UWA official, or public — documented in `/home/geto/Projects/Documentations/WildWatch/root-contracts/REPOS.md`'s role-model write-up alongside the equivalent portal-side roles.
 
 The Firebase project runs on the Spark (free) plan, which cannot run Cloud Functions at all — so for incidents (which also covers wildlife sightings and SOS alerts — a one-tap SOS button on Home opens the report form pre-set to the SOS type; all three are just an `Incident` row with a different `type`), this app calls the Laravel API directly right after a successful Firestore write, instead of relying on a Cloud Function to relay it. See `IncidentRepositoryImpl.syncPending()` and `LARAVEL_API_BASE_URL` below. Other Cloud-Functions-dependent behavior (default role/claims on signup, the 3-device session cap, push notification triggers) has not been redesigned for Spark yet and does not currently run.
 
@@ -43,7 +43,7 @@ Incident and wildlife-sighting reporting with camera capture and GPS tagging, su
 
 The `functions/` module implements the Firebase side of SilverBack Sentry's two-backend architecture, driving the app's authentication, offline-sync data store, file storage, and push notifications:
 
-- `functions/src/bridge.ts` + on-write triggers in `functions/src/index.ts` — sign and forward incident, sighting, and SOS-alert writes to the Laravel API in `../web-portal/backend/` as HMAC-authenticated webhooks, with an echo-prevention check so a write that originated on the Laravel side doesn't bounce back out as another webhook call.
+- `functions/src/bridge.ts` + on-write triggers in `functions/src/index.ts` — sign and forward incident, sighting, and SOS-alert writes to the Laravel API in `../warden-web-portal/backend/` as HMAC-authenticated webhooks, with an echo-prevention check so a write that originated on the Laravel side doesn't bounce back out as another webhook call.
 - `functions/src/notifications.ts` — topic-based push notification triggers.
 - `functions/src/deviceSessions.ts` — per-user device session management and the 3-device cap.
 

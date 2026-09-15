@@ -101,7 +101,7 @@ The app follows an **Offline-First Outbox Pattern**:
 
 ## 8. Track C — Web App (Laravel & TanStack)
 
-- **Warden Dashboard**: lives at the sibling `../web-portal/` repo (`backend/` = Laravel, `frontend/` = TanStack Start) — the path this section originally pointed at (`android-native-webaportal`) no longer exists, corrected 2026-08-13.
+- **Warden Dashboard**: lives at the sibling `../warden-web-portal/` repo (`backend/` = Laravel, `frontend/` = TanStack Start) — the path this section originally pointed at (`android-native-webaportal`) no longer exists, corrected 2026-08-13.
 - **Current Status**: live and deployed (Render + Cloudflare, see `/home/geto/Projects/Documentations/WildWatch/root-contracts/HOSTED-CUTOVER-PLAN.md`), well past "UI foundation" — includes incident/claims/personnel management and, as of 2026-08-13, a `/portal/feed` screen for composing the mobile app's community feed.
 - **Warden Dashboard**: Roster management, incident triage, and task assignment.
 - **UWA Official**: Cross-park analytics, map data management, and Warden account oversight.
