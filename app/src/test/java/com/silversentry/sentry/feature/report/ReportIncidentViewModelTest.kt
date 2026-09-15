@@ -1,10 +1,10 @@
 package com.silversentry.sentry.feature.report
 
+import com.silversentry.sentry.core.data.auth.AuthRepository
 import com.silversentry.sentry.core.data.incident.IncidentRepository
 import com.silversentry.sentry.core.data.incident.NewIncidentDetails
 import com.silversentry.sentry.core.data.location.GeoLocation
 import com.silversentry.sentry.core.data.location.LocationRepository
-import com.silversentry.sentry.core.data.notification.NotificationRepository
 import com.silversentry.sentry.core.database.IncidentSeverity
 import com.silversentry.sentry.core.database.IncidentStatus
 import com.silversentry.sentry.core.database.IncidentType
@@ -37,7 +37,7 @@ class ReportIncidentViewModelTest {
     private lateinit var incidentRepository: IncidentRepository
     private lateinit var locationRepository: LocationRepository
     private lateinit var syncScheduler: SyncScheduler
-    private lateinit var notificationRepository: NotificationRepository
+    private lateinit var authRepository: AuthRepository
     private lateinit var viewModel: ReportIncidentViewModel
 
     @Before
@@ -46,12 +46,13 @@ class ReportIncidentViewModelTest {
         incidentRepository = mockk()
         locationRepository = mockk()
         syncScheduler = mockk(relaxUnitFun = true)
-        notificationRepository = mockk(relaxUnitFun = true)
+        authRepository = mockk()
+        coEvery { authRepository.ensureSignedInForSubmission() } returns Result.success(Unit)
         coEvery { locationRepository.getCurrentLocation() } returns
             Result.success(GeoLocation(latitude = -1.05, longitude = 29.7, accuracyMeters = 5f))
         coEvery { locationRepository.reverseGeocode(any(), any()) } returns "Buhoma"
         every { locationRepository.getParkFromLocation(any(), any()) } returns "Bwindi Impenetrable"
-        viewModel = ReportIncidentViewModel(incidentRepository, locationRepository, syncScheduler, notificationRepository)
+        viewModel = ReportIncidentViewModel(incidentRepository, locationRepository, syncScheduler, authRepository)
     }
 
     @After
@@ -119,12 +120,48 @@ class ReportIncidentViewModelTest {
                 false,
             )
         }
+        coVerify { authRepository.ensureSignedInForSubmission() }
         coVerify { syncScheduler.triggerImmediateSync() }
-        coVerify { notificationRepository.notifyPendingSync("new-1") }
     }
 
     @Test
-    fun `save as draft skips sync and notification`() = runTest(testDispatcher) {
+    fun `save as draft does not force an anonymous identity and skips sync`() = runTest(testDispatcher) {
+        val created = incident(id = "new-2", type = IncidentType.SIGHTING, species = "Elephant", summary = "")
+        coEvery { incidentRepository.create(any(), true) } returns created
+
+        viewModel.initialize(draftId = null)
+        advanceUntilIdle()
+        viewModel.updateSpecies("Elephant")
+
+        viewModel.save(asDraft = true)
+        advanceUntilIdle()
+
+        assertEquals("new-2", viewModel.uiState.value.savedIncidentId)
+        coVerify(exactly = 0) { authRepository.ensureSignedInForSubmission() }
+        coVerify(exactly = 0) { syncScheduler.triggerImmediateSync() }
+    }
+
+    @Test
+    fun `cancelSos withdraws the created sos and triggers a sync`() = runTest(testDispatcher) {
+        val created = incident(id = "new-1", type = IncidentType.SOS, species = "N/A", summary = "SOS")
+        coEvery { incidentRepository.create(any(), false) } returns created
+        coEvery { incidentRepository.withdraw(any()) } returns Unit
+
+        viewModel.initialize(draftId = null, presetType = IncidentType.SOS)
+        advanceUntilIdle()
+        viewModel.save()
+        advanceUntilIdle()
+
+        var done = false
+        viewModel.cancelSos { done = true }
+        advanceUntilIdle()
+
+        coVerify { incidentRepository.withdraw("new-1") }
+        assertTrue(done)
+    }
+
+    @Test
+    fun `save as draft skips sync`() = runTest(testDispatcher) {
         val created = incident(id = "new-2", type = IncidentType.SIGHTING, species = "Elephant", summary = "")
         coEvery { incidentRepository.create(any(), true) } returns created
 
@@ -137,7 +174,6 @@ class ReportIncidentViewModelTest {
 
         assertEquals("new-2", viewModel.uiState.value.savedIncidentId)
         coVerify(exactly = 0) { syncScheduler.triggerImmediateSync() }
-        coVerify(exactly = 0) { notificationRepository.notifyPendingSync(any()) }
     }
 
     @Test

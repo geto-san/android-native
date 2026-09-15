@@ -202,6 +202,7 @@ data class Incident(
             when ((data["status"] as? String)?.lowercase()) {
                 "in_progress" -> IncidentStatus.IN_PROGRESS
                 "resolved" -> IncidentStatus.RESOLVED
+                "cancelled", "canceled", "withdrawn" -> IncidentStatus.CANCELLED
                 else -> IncidentStatus.OPEN
             }
 

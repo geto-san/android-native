@@ -1,11 +1,7 @@
 package com.silversentry.sentry.core.notifications
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
@@ -76,33 +72,21 @@ class SilverBackSentryMessagingService : FirebaseMessagingService() {
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-        val channelId = "default_channel"
-        val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_stat_notification)
-            .setContentTitle(title)
-            .setContentText(body)
-            .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
-            .setContentIntent(pendingIntent)
+        // Channels are created once up-front in Notifications.createChannels()
+        // (SilverBackSentryApplication.onCreate) - nothing creates them lazily at
+        // post time anymore, and notify() drops the notification (instead of
+        // crashing) if the Android 13+ POST_NOTIFICATIONS grant is missing.
+        val notification = notificationBuilder(Notifications.CHANNEL_ALERTS) {
+            setSmallIcon(R.drawable.ic_stat_notification)
+            setContentTitle(title)
+            setContentText(body)
+            setAutoCancel(true)
+            setPriority(NotificationCompat.PRIORITY_HIGH)
+            setDefaults(NotificationCompat.DEFAULT_ALL)
+            setContentIntent(pendingIntent)
+        }.build()
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "SilverBack Sentry Alerts",
-                NotificationManager.IMPORTANCE_HIGH,
-            ).apply {
-                description = "Urgent conservation and security updates"
-                enableLights(true)
-                enableVibration(true)
-                setShowBadge(true)
-            }
-            notificationManager.createNotificationChannel(channel)
-        }
-
-        notificationManager.notify(System.currentTimeMillis().toInt(), notificationBuilder.build())
+        notify(System.currentTimeMillis().toInt(), notification)
     }
 
     override fun onNewToken(token: String) {

@@ -32,7 +32,7 @@ service firebase.storage {
     }
 
     function belongsToPark(parkId) {
-      return isSignedIn() && getParkId() == parkId;
+      return isSignedIn() && normalizeParkId(getParkId()) == normalizeParkId(parkId);
     }
 
     // Cross-service read of the corresponding Firestore document.
@@ -43,8 +43,20 @@ service firebase.storage {
       return firestore.get(/databases/(default)/documents/$(collection)/$(docId)).data;
     }
     
+    // Park identifiers arrive in three incompatible shapes (custom-claim kebab slug
+    // "bwindi-impenetrable", mobile docs' enum name "BWINDI_IMPENETRABLE", portal docs'
+    // kebab slug again) - same fix as firestore.rules' normalizeParkId: fold them all to
+    // the slug so park scoping in these rules actually matches.
+    function normalizeParkId(parkId) {
+      if (parkId == null) return 'unknown';
+      if (parkId is string) return parkId.lower().replace('_', '-').trim();
+      return 'unknown';
+    }
+
     function parkId(data) {
-      return data.park_id != null ? data.park_id : (data.park != null ? data.park : 'unknown');
+      return data.park_id != null
+        ? normalizeParkId(data.park_id)
+        : (data.park != null ? normalizeParkId(data.park) : 'unknown');
     }
 
     function reporterUid(data) {

@@ -2,6 +2,7 @@ package com.silversentry.sentry.core.data.incident
 
 import com.silversentry.sentry.core.data.auth.AuthRepository
 import com.silversentry.sentry.core.data.bridge.LaravelBridgeDataSource
+import com.silversentry.sentry.core.data.notification.NotificationRepository
 import com.silversentry.sentry.core.database.IncidentDao
 import com.silversentry.sentry.core.database.IncidentEntity
 import com.silversentry.sentry.core.database.IncidentSeverity
@@ -36,6 +37,7 @@ class IncidentRepositoryImplTest {
     private lateinit var remoteDataSource: IncidentRemoteDataSource
     private lateinit var laravelBridgeDataSource: LaravelBridgeDataSource
     private lateinit var authRepository: AuthRepository
+    private lateinit var notificationRepository: NotificationRepository
     private lateinit var repository: IncidentRepositoryImpl
 
     @Before
@@ -44,6 +46,7 @@ class IncidentRepositoryImplTest {
         remoteDataSource = mockk()
         laravelBridgeDataSource = mockk()
         authRepository = mockk()
+        notificationRepository = mockk(relaxed = true)
         every { authRepository.currentUser } returns MutableStateFlow(
             User(uid = "uid-1", email = "jane@example.com", displayName = "Jane Ranger"),
         )
@@ -53,7 +56,7 @@ class IncidentRepositoryImplTest {
             remoteDataSource,
             laravelBridgeDataSource,
             authRepository,
-            mockk(), // locationRepository not used
+            notificationRepository,
             testDispatcher,
             CoroutineScope(testDispatcher),
         )
@@ -167,8 +170,7 @@ class IncidentRepositoryImplTest {
         runTest(testDispatcher) {
             val row = entity(localImageUris = listOf("file:///photo1.jpg"))
             val uploaded = incident(id = row.id).copy(evidencePhotoUrls = listOf("https://storage/photo1.jpg"))
-            coEvery { dao.getBySyncStatus(SyncStatus.PENDING) } returns listOf(row)
-            coEvery { dao.getBySyncStatus(SyncStatus.PENDING_UPDATE) } returns emptyList()
+            coEvery { dao.getOutbox(any()) } returns listOf(row)
             coEvery { remoteDataSource.upsert(any()) } returns Result.success(uploaded)
             coEvery { laravelBridgeDataSource.postIncidentEvent(any(), any()) } returns Result.success(Unit)
 
@@ -191,12 +193,11 @@ class IncidentRepositoryImplTest {
         }
 
     @Test
-    fun `syncPending keeps the row pending for retry when the Laravel call fails`() =
+    fun `syncPending marks the row FAILED when the Laravel call fails so the next pass retries it`() =
         runTest(testDispatcher) {
             val row = entity()
             val uploaded = incident(id = row.id)
-            coEvery { dao.getBySyncStatus(SyncStatus.PENDING) } returns listOf(row)
-            coEvery { dao.getBySyncStatus(SyncStatus.PENDING_UPDATE) } returns emptyList()
+            coEvery { dao.getOutbox(any()) } returns listOf(row)
             coEvery { remoteDataSource.upsert(any()) } returns Result.success(uploaded)
             coEvery { laravelBridgeDataSource.postIncidentEvent(any(), any()) } returns
                 Result.failure(java.io.IOException("HTTP 401"))
@@ -207,22 +208,85 @@ class IncidentRepositoryImplTest {
             // Evidence bookkeeping still gets saved so a retry doesn't re-upload images -
             // just the sync-status flip to SYNCED is what's withheld.
             coVerify { dao.updateEvidenceBookkeeping(row.id, uploaded.evidencePhotoUrls, false, 0, emptyList()) }
+            coVerify { dao.updateSyncStatus(row.id, SyncStatus.FAILED) }
             coVerify(exactly = 0) { dao.markSynced(any(), any(), any(), any(), any(), any(), any()) }
         }
 
     @Test
-    fun `syncPending counts a Firestore failure without ever calling Laravel`() =
+    fun `syncPending marks the row FAILED on a Firestore failure and never calls Laravel`() =
         runTest(testDispatcher) {
             val row = entity()
-            coEvery { dao.getBySyncStatus(SyncStatus.PENDING) } returns listOf(row)
-            coEvery { dao.getBySyncStatus(SyncStatus.PENDING_UPDATE) } returns emptyList()
+            coEvery { dao.getOutbox(any()) } returns listOf(row)
             coEvery { remoteDataSource.upsert(any()) } returns Result.failure(java.io.IOException("offline"))
 
             val result = repository.syncPending()
 
             assertEquals(SyncResult(succeeded = 0, failed = 1), result)
+            coVerify { dao.updateSyncStatus(row.id, SyncStatus.FAILED) }
             coVerify(exactly = 0) { laravelBridgeDataSource.postIncidentEvent(any(), any()) }
         }
+
+    @Test
+    fun `syncPending picks up FAILED rows from a previous pass and sends an update event`() =
+        runTest(testDispatcher) {
+            val row = entity(syncStatus = SyncStatus.FAILED)
+            val uploaded = incident(id = row.id)
+            coEvery { dao.getOutbox(any()) } returns listOf(row)
+            coEvery { remoteDataSource.upsert(any()) } returns Result.success(uploaded)
+            coEvery { laravelBridgeDataSource.postIncidentEvent(any(), any()) } returns Result.success(Unit)
+
+            val result = repository.syncPending()
+
+            assertEquals(SyncResult(succeeded = 1, failed = 0), result)
+            // A FAILED row is a retry of an already-touched row, so it syncs as "update".
+            coVerify { laravelBridgeDataSource.postIncidentEvent(uploaded, "update") }
+            coVerify { dao.markSynced(match { it == row.id }, SyncStatus.SYNCED, any(), any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `syncPending fails a throwing row but still syncs the remaining rows in the same pass`() =
+        runTest(testDispatcher) {
+            val badRow = entity(id = "bad")
+            val goodRow = entity(id = "good")
+            val uploaded = incident(id = goodRow.id)
+            coEvery { dao.getOutbox(any()) } returns listOf(badRow, goodRow)
+            coEvery { remoteDataSource.upsert(any()) } returns Result.success(uploaded)
+            coEvery { remoteDataSource.upsert(match { it.id == badRow.id }) } throws RuntimeException("boom")
+            coEvery { laravelBridgeDataSource.postIncidentEvent(any(), any()) } returns Result.success(Unit)
+
+            val result = repository.syncPending()
+
+            // The throwing row is marked FAILED rather than aborting the whole pass over it.
+            assertEquals(SyncResult(succeeded = 1, failed = 1), result)
+            coVerify { dao.updateSyncStatus(badRow.id, SyncStatus.FAILED) }
+            coVerify {
+                dao.markSynced(
+                    match { it == goodRow.id },
+                    SyncStatus.SYNCED,
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            }
+        }
+
+    @Test
+    fun `remote change for a row still waiting in the outbox is not clobbered`() = runTest(testDispatcher) {
+        val changes = MutableSharedFlow<RemoteIncidentChange>()
+        every { remoteDataSource.observeChanges() } returns changes
+        coEvery { dao.getById("mine") } returns entity(id = "mine", syncStatus = SyncStatus.PENDING)
+
+        repository.startObservingRemoteChanges()
+        runCurrent()
+        changes.emit(RemoteIncidentChange(incident(id = "mine")))
+        advanceUntilIdle()
+
+        // Firestore echoes our own just-written doc back while the Laravel leg is still
+        // pending; the listener must not flip the local row to SYNCED ahead of the bridge.
+        coVerify(exactly = 0) { dao.insert(match { it.id == "mine" }) }
+    }
 
     @Test
     fun `a new remote item from someone else is inserted into Room`() = runTest(testDispatcher) {
@@ -236,5 +300,56 @@ class IncidentRepositoryImplTest {
         advanceUntilIdle()
 
         coVerify { dao.insert(match { it.id == "remote-1" && it.species == "Buffalo" }) }
+    }
+
+    @Test
+    fun `portal assignment to me records an INCIDENT_ASSIGNED notification`() = runTest(testDispatcher) {
+        val changes = MutableSharedFlow<RemoteIncidentChange>()
+        every { remoteDataSource.observeChanges() } returns changes
+        coEvery { dao.getById("remote-assigned") } returns null
+
+        repository.startObservingRemoteChanges()
+        runCurrent()
+        changes.emit(
+            RemoteIncidentChange(
+                incident = incident(id = "remote-assigned").copy(
+                    assignedTo = "uid-1",
+                    assignedToName = "Jane Ranger",
+                    sourceSystem = "laravel",
+                ),
+            ),
+        )
+        advanceUntilIdle()
+
+        coVerify {
+            notificationRepository.recordIncoming(
+                com.silversentry.sentry.core.database.NotificationType.INCIDENT_ASSIGNED,
+                any(),
+                any(),
+                "remote-assigned",
+            )
+        }
+    }
+
+    @Test
+    fun `a non-laravel assignment denotes no notification and still inserts the row`() = runTest(testDispatcher) {
+        val changes = MutableSharedFlow<RemoteIncidentChange>()
+        every { remoteDataSource.observeChanges() } returns changes
+        coEvery { dao.getById("self-claim") } returns null
+
+        repository.startObservingRemoteChanges()
+        runCurrent()
+        changes.emit(
+            RemoteIncidentChange(
+                incident = incident(id = "self-claim").copy(
+                    assignedTo = "uid-1",
+                    sourceSystem = "firestore",
+                ),
+            ),
+        )
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { notificationRepository.recordIncoming(any(), any(), any(), any()) }
+        coVerify { dao.insert(match { it.id == "self-claim" }) }
     }
 }

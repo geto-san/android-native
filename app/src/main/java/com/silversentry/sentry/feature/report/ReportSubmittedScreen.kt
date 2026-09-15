@@ -60,7 +60,7 @@ fun ReportSubmittedScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                "Thank you for helping protect Bwindi's wildlife. Your report is now available in the community feed.",
+                "Thank you for reporting. Your report is now available in the community feed.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Grey500,
                 textAlign = TextAlign.Center,

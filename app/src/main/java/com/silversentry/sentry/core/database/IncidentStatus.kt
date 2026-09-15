@@ -9,4 +9,10 @@ enum class IncidentStatus {
     OPEN,
     IN_PROGRESS,
     RESOLVED,
+
+    // An alert that was raised and then withdrawn by its reporter (e.g. a false-alarm SOS
+    // cancelled via the long-press HOLD TO CANCEL on the live SOS screen). Written to
+    // Firestore as "cancelled" so the withdrawal is honored everywhere - rangers' maps,
+    // the community's realtime stream, and the web portal - instead of only locally.
+    CANCELLED,
 }

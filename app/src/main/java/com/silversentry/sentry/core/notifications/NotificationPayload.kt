@@ -24,6 +24,7 @@ object NotificationPayload {
     fun targetId(type: NotificationType?, data: Map<String, String>): String? = when (type) {
         NotificationType.SIGHTING_APPROVED -> data["incidentId"]
         NotificationType.NEW_FEED_ARTICLE -> data["articleId"]
+        NotificationType.INCIDENT_ASSIGNED -> data["incidentId"]
         else -> null
     }
 }

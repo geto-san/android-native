@@ -8,6 +8,7 @@ import {
 } from "./bridge";
 import {
   handleFeedArticleCreateNotifications,
+  handleIncidentAssignmentNotifications,
   handleIncidentCreateNotifications,
   handleSightingApprovalNotifications,
   handleSosAlertCreateNotifications,
@@ -148,6 +149,14 @@ export const onIncidentWritten = functions.firestore
   .onWrite(async (change, context) => {
     const payload = buildBridgePayload(change, context.params.incidentId);
     const latest = latestBridgeData(payload);
+
+    // Ranger-assignment notifications run BEFORE the bridge echo guard: portal assignments
+    // arrive already stamped source_system=laravel (FirebaseService::syncIncidentDocument),
+    // which would otherwise skip past every notification below. Self-claims (status
+    // "in_progress") and unchanged/repeated assignments are filtered inside the handler.
+    if (payload.eventType === "update") {
+      await handleIncidentAssignmentNotifications(change, context);
+    }
 
     if (shouldSkipBridge(latest)) {
       console.log(`Skipping incidents bridge echo for ${payload.docId}`);

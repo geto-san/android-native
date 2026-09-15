@@ -8,7 +8,6 @@ interface NotificationRepository {
     fun observeAll(): Flow<List<Notification>>
     fun observeUnreadCount(): Flow<Int>
     suspend fun markRead(id: String)
-    suspend fun notifyPendingSync(incidentId: String)
 
     // Notifications are entirely local/device-scoped (no per-user column - see
     // NotificationEntity), so signing out has nothing else to key a filter on. Called from
@@ -17,7 +16,8 @@ interface NotificationRepository {
     suspend fun clearAll()
 
     // Persists a push notification received via SilverBackSentryMessagingService so
-    // it shows up in NotificationsScreen/unread count - separate from
-    // notifyPendingSync (a locally-originated, device-only notification).
+    // it shows up in NotificationsScreen/unread count. Locally-originated notifications
+    // (e.g. "report queued for upload" on creation) are deliberately NOT persisted -
+    // matching how Mihon never notifies on entity creation, only on progress/errors.
     suspend fun recordIncoming(type: NotificationType, title: String, message: String, targetId: String?)
 }

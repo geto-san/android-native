@@ -1,9 +1,5 @@
 package com.silversentry.sentry.feature.incidentdetail
 
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,18 +17,20 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.NearMe
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,27 +42,33 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.mapbox.geojson.Point
+import com.mapbox.maps.extension.compose.MapboxMap
+import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
+import com.mapbox.maps.extension.compose.annotation.IconImage
+import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
+import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
+import com.mapbox.maps.extension.compose.annotation.rememberIconImage
+import com.mapbox.maps.extension.compose.style.MapStyle
+import com.silversentry.sentry.R
+import com.silversentry.sentry.core.data.map.isMapboxTokenConfigured
 import com.silversentry.sentry.core.model.Incident
-import com.silversentry.sentry.core.tracking.PatrolTrackingService
 import com.silversentry.sentry.core.ui.component.IconBadge
-import com.silversentry.sentry.core.ui.component.PermissionDialog
 import com.silversentry.sentry.core.ui.component.StatusPill
+import com.silversentry.sentry.core.ui.component.displayTitle
 import com.silversentry.sentry.core.ui.component.severityColor
 import com.silversentry.sentry.core.ui.component.statusColor
 import com.silversentry.sentry.core.ui.component.statusLabel
@@ -72,66 +76,23 @@ import com.silversentry.sentry.core.ui.component.typeIcon
 import com.silversentry.sentry.core.ui.theme.Destructive
 import com.silversentry.sentry.core.ui.theme.Grey500
 
-// Redesigned around a single primary action instead of the old three-branch assign/track/
-// nothing block: a ranger who can act on this incident always sees one "Start Response"
-// button, pinned to the bottom so it's reachable regardless of scroll position (the pattern
-// popular trip/delivery-detail screens - Uber, DoorDash - use for their one must-not-miss
-// CTA). Tapping it claims the incident (if not already the ranger's) and starts real GPS
-// tracking - see IncidentDetailViewModel.respondToIncident() and PatrolTrackingService.
+// The detail screen now reads like Google Maps' "ready to navigate" trip preview once you
+// ask for directions: a live mini-map with the driving route from the ranger's current
+// location to the incident drawn on it, a "Your location -> Destination" strip with the
+// ETA/distance, and a single pinned-bottom "START RESPONSE" button (the "Start" of Google
+// Maps) that opens the full-screen navigation view. Tapping it claims the incident (if not
+// already the ranger's) and starts the route guidance - see
+// IncidentDetailViewModel.respondToIncident() and the Route.Navigation screen.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IncidentDetailScreen(
     onBack: () -> Unit,
-    onStartGps: () -> Unit,
+    onStartResponse: () -> Unit,
     viewModel: IncidentDetailViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
-    LaunchedEffect(Unit) { viewModel.loadDistance() }
-
-    var hasLocationPermission by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
-                PackageManager.PERMISSION_GRANTED
-        )
-    }
-    var showPermissionDialog by remember { mutableStateOf(false) }
-
-    fun beginTracking() {
-        context.startForegroundService(PatrolTrackingService.startIntent(context, null))
-        onStartGps()
-    }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-    ) { granted ->
-        hasLocationPermission = granted
-        if (granted) beginTracking()
-    }
-
-    fun respond() {
-        viewModel.respondToIncident()
-        if (hasLocationPermission) {
-            beginTracking()
-        } else {
-            showPermissionDialog = true
-        }
-    }
-
-    if (showPermissionDialog) {
-        PermissionDialog(
-            icon = Icons.Filled.LocationOn,
-            title = "Allow SilverBack Sentry to track your location?",
-            description = "While you're responding, we record your route so the park has an " +
-                "accurate record of your response - even if you switch apps.",
-            onAllow = {
-                showPermissionDialog = false
-                permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-            },
-            onDismiss = { showPermissionDialog = false },
-        )
-    }
+    LaunchedEffect(Unit) { viewModel.loadTrip() }
 
     Scaffold(
         topBar = {
@@ -152,17 +113,24 @@ fun IncidentDetailScreen(
             if (incident != null && uiState.canRespond) {
                 Surface(shadowElevation = 8.dp, color = MaterialTheme.colorScheme.background) {
                     Button(
-                        onClick = ::respond,
+                        onClick = {
+                            viewModel.respondToIncident()
+                            onStartResponse()
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp)
                             .height(52.dp),
                         shape = MaterialTheme.shapes.medium,
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Icon(
+                            Icons.AutoMirrored.Filled.DirectionsRun,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            if (uiState.isAssignedToMe) "Resume Response" else "Start Response",
+                            if (uiState.isAssignedToMe) "RESUME RESPONSE" else "START RESPONSE",
                             fontWeight = FontWeight.Bold,
                         )
                     }
@@ -193,6 +161,21 @@ fun IncidentDetailScreen(
                     item { EvidenceGallery(incident.evidencePhotoUrls) }
                 }
 
+                if (uiState.isRanger) {
+                    item {
+                        TripPreviewCard(
+                            origin = uiState.trip.origin,
+                            destination = uiState.trip.destination,
+                            routePoints = uiState.trip.route?.points.orEmpty(),
+                            durationSeconds = uiState.trip.route?.durationSeconds,
+                            distanceKm = uiState.trip.route?.distanceMeters?.let { it / 1000.0 }
+                                ?: uiState.distanceKm,
+                            isLoading = uiState.trip.isLoading,
+                            destinationName = incident.locationName ?: incident.community,
+                        )
+                    }
+                }
+
                 item { SummaryCard(incident) }
 
                 item { DetailsCard(incident, uiState.distanceKm) }
@@ -215,7 +198,7 @@ private fun IncidentHeader(incident: Incident) {
         Column(modifier = Modifier.padding(start = 14.dp).weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = incident.species,
+                    text = incident.displayTitle(),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
@@ -279,6 +262,153 @@ private fun EvidenceGallery(photoUrls: List<String>) {
     }
 }
 
+// The Google-Maps "directions preview": a live mini-map between the ranger's current
+// location and the incident with the driving route drawn in, plus a "Your location ->
+// Destination" row showing ETA and distance. Falls back to the straight-line haversine
+// distance (no route/token/offline) rather than disappearing.
+@Composable
+private fun TripPreviewCard(
+    origin: Point?,
+    destination: Point?,
+    routePoints: List<Point>,
+    durationSeconds: Double?,
+    distanceKm: Double?,
+    isLoading: Boolean,
+    destinationName: String,
+) {
+    Surface(
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 2.dp,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column {
+            if (isMapboxTokenConfigured() && origin != null && destination != null) {
+                TripMiniMap(origin, destination, routePoints)
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = if (isLoading) "Loading route…" else "Map unavailable",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Grey500,
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Filled.MyLocation,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Your location",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
+                        Icon(
+                            Icons.Filled.Place,
+                            contentDescription = null,
+                            tint = Destructive,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = destinationName,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                        )
+                    }
+                }
+
+                HorizontalDivider(modifier = Modifier.height(36.dp).width(1.dp))
+
+                Column(
+                    modifier = Modifier.padding(start = 16.dp),
+                    horizontalAlignment = Alignment.End,
+                ) {
+                    Text(
+                        text = if (isLoading) "…" else formatEta(durationSeconds, distanceKm),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = if (isLoading) "" else formatDistanceKm(distanceKm),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Grey500,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TripMiniMap(
+    origin: Point,
+    destination: Point,
+    routePoints: List<Point>,
+) {
+    val viewportState = rememberMapViewportState {
+        setCameraOptions {
+            center(TripCamera.centerFor(origin, destination))
+            zoom(TripCamera.zoomFor(origin, destination))
+        }
+    }
+
+    LaunchedEffect(routePoints, origin, destination) {
+        val points = routePoints.ifEmpty { listOf(origin, destination) }
+        viewportState.flyTo(
+            TripCamera.optionsFor(points),
+        )
+    }
+
+    val originIcon: IconImage = rememberIconImage(R.drawable.ic_marker_pending)
+    val destinationIcon: IconImage = rememberIconImage(R.drawable.ic_marker_emergency)
+
+    Box(modifier = Modifier.fillMaxWidth().height(180.dp)) {
+        MapboxMap(
+            modifier = Modifier.fillMaxSize(),
+            mapViewportState = viewportState,
+            style = { MapStyle("mapbox://styles/mapbox/streets-v12") },
+        ) {
+            if (routePoints.size >= 2) {
+                PolylineAnnotation(points = routePoints) {
+                    lineColor = Color(0xFF2563EB)
+                    lineWidth = 4.0
+                }
+            }
+            PointAnnotation(point = origin) {
+                iconImage = originIcon
+                iconSize = 0.55
+            }
+            PointAnnotation(point = destination) {
+                iconImage = destinationIcon
+                iconSize = 0.7
+            }
+        }
+    }
+}
+
 @Composable
 private fun SummaryCard(incident: Incident) {
     Surface(
@@ -315,7 +445,7 @@ private fun DetailsCard(incident: Incident, distanceKm: Double?) {
             DetailRow(Icons.Filled.Person, "Reported by", incident.userName ?: "Anonymous")
             DetailRow(Icons.Filled.Schedule, "Reported at", incident.reportedAt)
             distanceKm?.let {
-                DetailRow(Icons.Filled.NearMe, "Distance", "%.1f km away".format(it))
+                DetailRow(Icons.Filled.Navigation, "Distance", "%.1f km away".format(it))
             }
         }
     }

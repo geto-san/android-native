@@ -23,7 +23,10 @@ internal object CommunityAlertFilter {
             incident.type == IncidentType.CONFLICT ||
             incident.type == IncidentType.EMERGENCY
         val isRecent = runCatching { Instant.parse(incident.reportedAt) }.getOrNull()?.isAfter(twentyFourHoursAgo) == true
-        val isUnresolved = incident.status != IncidentStatus.RESOLVED
+        // Both terminal states pull an alert out of the community feed: resolved is the
+        // natural close, cancelled is a withdrawn alert (e.g. a false-alarm SOS turned off
+        // via HOLD TO CANCEL) - neither should keep nagging the community.
+        val isUnresolved = incident.status != IncidentStatus.RESOLVED && incident.status != IncidentStatus.CANCELLED
         val isSynced = incident.syncStatus == SyncStatus.SYNCED
         val isNotReporter = incident.userId != null && incident.userId != currentUserId
         val animalEligible = incident.animalSeen != false

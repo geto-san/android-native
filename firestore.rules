@@ -34,8 +34,27 @@ service cloud.firestore {
       return isSignedIn() && getRole() == 'public';
     }
 
+    // Park identifiers exist in THREE different shapes across the services that touch this
+    // data, and comparing any two of them directly always mis-matches:
+    //   - custom claims park_id: the portal writes the Firestore slug (kebab), e.g.
+    //     "bwindi-impenetrable" (FirebaseService::provisionMobileAccount); the mechanic for
+    //     generating the token that signs rule decisions - claims are the ONLY park signal
+    //     a rule expression can see.
+    //   - mobile docs write `park` as the Kotlin enum name (uppercase underscore), e.g.
+    //     "BWINDI_IMPENETRABLE" (Incident.toFirestoreMap).
+    //   - portal-authored docs write `park_id` as the kebab slug in a Firestore write.
+    // normalizeParkId() folds every one of these to the slug form so belongsToPark() and the
+    // incident helpers can compare fairly. Without it, a ranger's claim/escalation update on a
+    // mobile-reported incident (park = "BWINDI_IMPENETRABLE") failed with a permission
+    // denied that the app surfaced as a permanent "Upload failed" row.
+    function normalizeParkId(parkId) {
+      if (parkId == null) return 'unknown';
+      if (parkId is string) return parkId.lower().replace('_', '-').trim();
+      return 'unknown';
+    }
+
     function belongsToPark(parkId) {
-      return getParkId() == parkId;
+      return normalizeParkId(getParkId()) == normalizeParkId(parkId);
     }
 
     // ----------------------------------------------------------------------
@@ -44,10 +63,13 @@ service cloud.firestore {
     // The mobile app writes `park` as the Kotlin enum name (e.g. BWINDI_IMPENETRABLE)
     // and `reporter_uid`/`userId` as the Firebase UID. `park_id` is the legacy/kebab
     // form older seeded docs carry. Each helper prefers the field kind the current
-    // client actually writes.
+    // client actually writes. Park values are normalized (see normalizeParkId above)
+    // so the compare sites downstream always see the same slug form.
     // ----------------------------------------------------------------------
     function incidentParkId(data) {
-      return data.park_id != null ? data.park_id : (data.park != null ? data.park : 'unknown');
+      return data.park_id != null
+        ? normalizeParkId(data.park_id)
+        : (data.park != null ? normalizeParkId(data.park) : 'unknown');
     }
 
     function incidentReporterUid(data) {
@@ -164,17 +186,20 @@ service cloud.firestore {
       allow create: if isRanger();
     }
 
-    // Sightings — the dedicated wildlife_sightings feed. Anyone (ranger or public)
-    // can submit; moderation stays with HQ/park wardens (matches the portal's
-    // approval-status model). Read is staff-only until the mobile sightings screen
-    // exists; the general public already sees sighting-typed incidents via /incidents.
+    // Sightings — the dedicated wildlife_sightings feed. Anyone (ranger or public) can
+    // submit; moderation stays with HQ/park wardens (matches the portal's approval-status
+    // model). Signed-in guest users (the never-signed-in "continue without an account" path
+    // gets an anonymous Firebase identity on first submission) can post too - the app
+    // deliberately does not require a claimed role for reporting. Read is staff-only until
+    // the mobile sightings screen exists; the general public already sees sighting-typed
+    // incidents via /incidents.
     match /sightings/{sightingId} {
       allow read: if isSignedIn() && (
         isUwaOfficial() ||
         (isWarden() && belongsToPark(incidentParkId(resource.data))) ||
         isRanger()
       );
-      allow create: if isSignedIn() && (isRanger() || isPublic()) &&
+      allow create: if isSignedIn() &&
         request.resource.data.size() < 1024 * 1024 &&
         request.resource.data.type is string &&
         request.resource.data.park is string &&
@@ -190,13 +215,19 @@ service cloud.firestore {
         (isWarden() && belongsToPark(incidentParkId(resource.data))) ||
         request.auth.uid == incidentReporterUid(resource.data)
       );
-      allow create: if isSignedIn() && (isRanger() || isPublic()) &&
+      allow create: if isSignedIn() &&
         request.resource.data.size() < 1024 * 1024 &&
         request.resource.data.type is string &&
         request.resource.data.park is string &&
         isValidLatitude(request.resource.data.lat) &&
         isValidLongitude(request.resource.data.lng);
-      allow update: if isSignedIn() && (isUwaOfficial() || (isWarden() && belongsToPark(incidentParkId(resource.data))));
+      // Anyone can turn OFF their own alert (the mobile HOLD TO CANCEL writes status
+      // "cancelled"); HQ/park wardens keep full update rights.
+      allow update: if isSignedIn() && (
+        isUwaOfficial() ||
+        (isWarden() && belongsToPark(incidentParkId(resource.data))) ||
+        request.auth.uid == incidentReporterUid(resource.data)
+      );
     }
 
     // POIs

@@ -210,6 +210,7 @@ dependencies {
 
     implementation(libs.retrofit)
     implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
 
     implementation(libs.timber)
 

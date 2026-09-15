@@ -9,6 +9,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.silversentry.sentry.core.data.connectivity.ConnectivityObserver
 import com.silversentry.sentry.core.data.notification.NotificationRepository
 import com.silversentry.sentry.core.data.user.UserDataRepository
+import com.silversentry.sentry.core.data.wipe.LocalDataClearer
 import com.silversentry.sentry.core.di.ApplicationScope
 import com.silversentry.sentry.core.model.User
 import com.silversentry.sentry.core.model.UserRole
@@ -67,6 +68,7 @@ class AuthRepositoryImpl @Inject constructor(
     private val notificationRepository: NotificationRepository,
     private val userDataRepository: UserDataRepository,
     private val connectivityObserver: ConnectivityObserver,
+    private val localDataClearer: LocalDataClearer,
     @ApplicationScope private val applicationScope: CoroutineScope,
 ) : AuthRepository {
 
@@ -160,6 +162,13 @@ class AuthRepositoryImpl @Inject constructor(
         Unit
     }
 
+    override suspend fun ensureSignedInForSubmission(): Result<Unit> {
+        // Already have *some* session (real, anonymous, whatever) - nothing to do. Only a
+        // fully signed-out/never-signed-in user needs a new anonymous identity created.
+        if (firebaseAuth.currentUser != null) return Result.success(Unit)
+        return signInAnonymously()
+    }
+
     override suspend fun signInWithGoogle(idToken: String): Result<Unit> = runCatching {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         firebaseAuth.signInWithCredential(credential).await()
@@ -201,6 +210,10 @@ class AuthRepositoryImpl @Inject constructor(
             fcmTopicManager.clearTopics()
             deviceSessionRepository.clearLocalSession()
             notificationRepository.clearAll()
+            // Wipe-on-signout: the whole local datastore (Room + DataStore) goes with the
+            // session so the next account (or guest) starts from a clean offline-first state
+            // instead of inheriting the previous user's cached reports and notifications.
+            localDataClearer.clearAllLocalData()
         }
         firebaseAuth.signOut()
     }

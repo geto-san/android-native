@@ -11,5 +11,6 @@ fun routeForNotification(type: NotificationType?, targetId: String?): Route? = w
     NotificationType.SECURITY_ALERT -> Route.CommunityAlerts
     NotificationType.NEW_FEED_ARTICLE -> targetId?.let(Route::ArticleDetail)
     NotificationType.SIGHTING_APPROVED -> targetId?.let(Route::IncidentDetail)
+    NotificationType.INCIDENT_ASSIGNED -> targetId?.let(Route::IncidentDetail)
     else -> null
 }

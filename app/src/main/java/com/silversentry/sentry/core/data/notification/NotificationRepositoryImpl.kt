@@ -13,7 +13,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -70,7 +69,6 @@ class NotificationRepositoryImpl @Inject constructor(
 
     override fun observeAll(): Flow<List<Notification>> =
         notificationDao.observeAll()
-            .onStart { seedIfEmpty() }
             .map { entities -> entities.map(Notification::fromEntity) }
 
     override fun observeUnreadCount(): Flow<Int> = notificationDao.observeUnreadCount()
@@ -79,26 +77,22 @@ class NotificationRepositoryImpl @Inject constructor(
         notificationDao.markRead(id)
     }
 
-    override suspend fun notifyPendingSync(incidentId: String) = withContext(ioDispatcher) {
-        notificationDao.insertAll(
-            listOf(
-                NotificationEntity(
-                    id = "pending-sync-$incidentId",
-                    type = NotificationType.PENDING_SYNC,
-                    title = "Report pending upload",
-                    message = "Your report is queued and will sync when connectivity allows.",
-                    createdAt = System.currentTimeMillis(),
-                ),
-            ),
-        )
-    }
-
     override suspend fun recordIncoming(
         type: NotificationType,
         title: String,
         message: String,
         targetId: String?,
     ) = withContext(ioDispatcher) {
+        // The same event can legally arrive twice on this device: once as the FCM push the
+        // messaging service persisted here, and once as the Admin-SDK notification document
+        // this repository's own Firestore listener mirrors into the same Room table. With
+        // random UUID ids, both rows would render as two identical inbox entries (this used
+        // to be a visible duplicate for SIGHTING_APPROVED; assignment notifications hit both
+        // paths by design). Skip the insert when an entry for the exact same (type, target)
+        // already exists.
+        if (targetId != null && notificationDao.countByTypeAndTarget(type, targetId) > 0) {
+            return@withContext
+        }
         notificationDao.insertAll(
             listOf(
                 NotificationEntity(
@@ -116,28 +110,13 @@ class NotificationRepositoryImpl @Inject constructor(
     override suspend fun clearAll() = withContext(ioDispatcher) {
         notificationDao.deleteAll()
     }
-
-    private suspend fun seedIfEmpty() = withContext(ioDispatcher) {
-        if (notificationDao.count() > 0) return@withContext
-        val now = System.currentTimeMillis()
-        notificationDao.insertAll(
-            listOf(
-                NotificationEntity(
-                    id = "seed-notif-1",
-                    type = NotificationType.SYSTEM,
-                    title = "Welcome to SilverBack Sentry",
-                    message = "Start protecting wildlife by reporting your first sighting.",
-                    createdAt = now
-                )
-            )
-        )
-    }
 }
 
 private fun com.google.firebase.firestore.QueryDocumentSnapshot.toNotificationEntity(): NotificationEntity {
     val data = data
     fun type(): NotificationType = when (data["type"] as? String) {
         "SIGHTING_APPROVED", "sighting_approved" -> NotificationType.SIGHTING_APPROVED
+        "INCIDENT_ASSIGNED", "incident_assigned" -> NotificationType.INCIDENT_ASSIGNED
         "SECURITY_ALERT", "security_alert" -> NotificationType.SECURITY_ALERT
         "LIKE", "like" -> NotificationType.LIKE
         "COMMENT", "comment" -> NotificationType.COMMENT

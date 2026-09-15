@@ -20,6 +20,7 @@ import com.silversentry.sentry.feature.auth.AuthScreen
 import com.silversentry.sentry.feature.auth.AuthViewModel
 import com.silversentry.sentry.feature.dashboard.HistoryPlaceholderScreen
 import com.silversentry.sentry.feature.incidentdetail.IncidentDetailScreen
+import com.silversentry.sentry.feature.navigation.NavigationScreen
 import com.silversentry.sentry.feature.feed.ArticleDetailScreen
 import com.silversentry.sentry.feature.notifications.NotificationsScreen
 import com.silversentry.sentry.feature.profile.ProfileScreen
@@ -27,6 +28,7 @@ import com.silversentry.sentry.feature.report.CameraCaptureScreen
 import com.silversentry.sentry.feature.report.ReportIncidentScreen
 import com.silversentry.sentry.feature.report.ReportIncidentViewModel
 import com.silversentry.sentry.feature.report.ReportSubmittedScreen
+import com.silversentry.sentry.feature.sos.SosScreen
 import com.silversentry.sentry.ui.nav.MainTabShell
 import com.silversentry.sentry.ui.nav.NavMotion
 import com.silversentry.sentry.ui.nav.Route
@@ -131,7 +133,7 @@ fun SilverBackSentryNavHost(
                 onIncidentClick = { id -> navController.navigate(Route.IncidentDetail(id)) },
                 onSignInClick = { navController.navigate(Route.Auth) },
                 onReportIncident = { navController.navigate(Route.ReportIncident()) },
-                onSos = { navController.navigate(Route.ReportIncident(presetType = com.silversentry.sentry.core.database.IncidentType.SOS)) },
+                onSos = { navController.navigate(Route.Sos) },
                 onEditDraft = { id, _ -> navController.navigate(Route.ReportIncident(draftId = id)) },
                 onNotificationsClick = { navController.navigate(Route.Notifications) },
                 onArticleClick = { id -> navController.navigate(Route.ArticleDetail(id)) },
@@ -139,10 +141,17 @@ fun SilverBackSentryNavHost(
             )
         }
 
-        composable<Route.IncidentDetail> {
+        composable<Route.IncidentDetail> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.IncidentDetail>()
             IncidentDetailScreen(
                 onBack = { navController.popBackStack() },
-                onStartGps = { navController.popBackStack(Route.Main, inclusive = false) },
+                onStartResponse = { navController.navigate(Route.Navigation(args.id)) },
+            )
+        }
+
+        composable<Route.Navigation> {
+            NavigationScreen(
+                onBack = { navController.popBackStack() },
             )
         }
 
@@ -170,6 +179,12 @@ fun SilverBackSentryNavHost(
                 onReturnHome = {
                     navController.popBackStack(Route.Main, inclusive = false)
                 },
+            )
+        }
+
+        composable<Route.Sos> {
+            SosScreen(
+                onBack = { navController.popBackStack() },
             )
         }
 

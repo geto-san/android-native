@@ -2,6 +2,7 @@ package com.silversentry.sentry.core.feature.incidentdetail
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.silversentry.sentry.core.data.directions.DirectionsRepository
 import com.silversentry.sentry.core.data.incident.IncidentRepository
 import com.silversentry.sentry.core.data.location.GeoLocation
 import com.silversentry.sentry.core.data.location.LocationRepository
@@ -44,6 +45,7 @@ class IncidentDetailViewModelTest {
     private lateinit var locationRepository: LocationRepository
     private lateinit var getIncidentByIdUseCase: GetIncidentByIdUseCase
     private lateinit var observeUserUseCase: ObserveUserUseCase
+    private lateinit var directionsRepository: DirectionsRepository
 
     @Before
     fun setUp() {
@@ -52,6 +54,7 @@ class IncidentDetailViewModelTest {
         locationRepository = mockk()
         getIncidentByIdUseCase = mockk()
         observeUserUseCase = mockk()
+        directionsRepository = mockk()
         every { observeUserUseCase() } returns MutableStateFlow(null)
     }
 
@@ -88,6 +91,7 @@ class IncidentDetailViewModelTest {
             SavedStateHandle(mapOf("id" to id)),
             incidentRepository,
             locationRepository,
+            directionsRepository,
             getIncidentByIdUseCase,
             observeUserUseCase,
         )
@@ -145,7 +149,8 @@ class IncidentDetailViewModelTest {
     }
 
     @Test
-    fun `respondToIncident claims the incident when not already assigned to the current ranger`() = runTest(testDispatcher) {
+    fun `respondToIncident claims the incident when not already assigned to the current ranger`() =
+        runTest(testDispatcher) {
         every { getIncidentByIdUseCase("a") } returns flowOf(incident("a"))
         every { observeUserUseCase() } returns MutableStateFlow(ranger())
         coEvery { incidentRepository.assignToSelf("a") } returns Unit
@@ -188,16 +193,18 @@ class IncidentDetailViewModelTest {
     }
 
     @Test
-    fun `loadDistance computes distance from current location to the incident`() = runTest(testDispatcher) {
+    fun `loadTrip computes distance from current location to the incident`() = runTest(testDispatcher) {
         val testIncident = incident("a") // lat -1.0, lng 29.0
         every { getIncidentByIdUseCase("a") } returns flowOf(testIncident)
         coEvery { incidentRepository.getById("a") } returns testIncident
         // Roughly 1 degree of latitude south of the incident (~111km).
         coEvery { locationRepository.getCurrentLocation() } returns
             Result.success(GeoLocation(latitude = -2.0, longitude = 29.0, accuracyMeters = 5f))
+        coEvery { directionsRepository.getDrivingRoute(any(), any()) } returns
+            Result.failure(IllegalStateException("route unavailable"))
 
         val viewModel = viewModelFor("a")
-        viewModel.loadDistance()
+        viewModel.loadTrip()
 
         viewModel.uiState.test {
             val distance = awaitItem().distanceKm
@@ -206,7 +213,7 @@ class IncidentDetailViewModelTest {
     }
 
     @Test
-    fun `loadDistance leaves distance null when location is unavailable`() = runTest(testDispatcher) {
+    fun `loadTrip leaves distance null when location is unavailable`() = runTest(testDispatcher) {
         val testIncident = incident("a")
         every { getIncidentByIdUseCase("a") } returns flowOf(testIncident)
         coEvery { incidentRepository.getById("a") } returns testIncident
@@ -214,10 +221,38 @@ class IncidentDetailViewModelTest {
             Result.failure(IllegalStateException("Location unavailable"))
 
         val viewModel = viewModelFor("a")
-        viewModel.loadDistance()
+        viewModel.loadTrip()
 
         viewModel.uiState.test {
             assertNull(awaitItem().distanceKm)
+        }
+    }
+
+    @Test
+    fun `loadTrip stores the driving route and origin when directions succeed`() = runTest(testDispatcher) {
+        val testIncident = incident("a")
+        every { getIncidentByIdUseCase("a") } returns flowOf(testIncident)
+        coEvery { incidentRepository.getById("a") } returns testIncident
+        coEvery { locationRepository.getCurrentLocation() } returns
+            Result.success(GeoLocation(latitude = -1.0, longitude = 29.0, accuracyMeters = 5f))
+        val route = com.silversentry.sentry.core.data.directions.DrivingRoute(
+            points = listOf(
+                com.mapbox.geojson.Point.fromLngLat(29.0, -1.0),
+                com.mapbox.geojson.Point.fromLngLat(29.2, -1.1),
+            ),
+            distanceMeters = 22000.0,
+            durationSeconds = 1500.0,
+        )
+        coEvery { directionsRepository.getDrivingRoute(any(), any()) } returns Result.success(route)
+
+        val viewModel = viewModelFor("a")
+        viewModel.loadTrip()
+
+        viewModel.uiState.test {
+            val trip = awaitItem().trip
+            assertEquals(2, trip.route?.points?.size)
+            assertEquals(1500.0, trip.route?.durationSeconds ?: 0.0, 0.1)
+            assertEquals(29.0, trip.origin?.longitude() ?: 0.0, 0.001)
         }
     }
 }

@@ -28,8 +28,21 @@ interface IncidentDao {
     @Query("SELECT * FROM incidents WHERE id = :id")
     suspend fun getById(id: String): IncidentEntity?
 
-    @Query("SELECT * FROM incidents WHERE syncStatus = :syncStatus")
-    suspend fun getBySyncStatus(syncStatus: SyncStatus): List<IncidentEntity>
+    // The complete outbox a sync pass is responsible for: rows still waiting to be
+    // created server-side, rows needing an update, and rows that previously failed and are
+    // therefore eligible to be retried on the next pass. FAILED is deliberately part of the
+    // retry set - "failed last time, try again" - never a terminal "give up forever" state.
+    // Oldest-first ordering means work already waiting the longest finally goes out first,
+    // mirrored on the query side the way mihon's SQLDelight queries keep such bookkeeping
+    // in the data layer rather than scattered through callers.
+    @Query(
+        """
+        SELECT * FROM incidents
+        WHERE syncStatus IN (:statuses)
+        ORDER BY lastModified ASC
+        """,
+    )
+    suspend fun getOutbox(statuses: List<SyncStatus>): List<IncidentEntity>
 
     @Query("UPDATE incidents SET syncStatus = :syncStatus WHERE id = :id")
     suspend fun updateSyncStatus(id: String, syncStatus: SyncStatus)

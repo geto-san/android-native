@@ -1,5 +1,6 @@
 package com.silversentry.sentry.core.sync
 
+import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
@@ -15,6 +16,7 @@ import javax.inject.Singleton
 private const val PERIODIC_SYNC_WORK_NAME = "incident_periodic_sync"
 private const val IMMEDIATE_SYNC_WORK_NAME = "incident_immediate_sync"
 private const val PERIODIC_SYNC_INTERVAL_MINUTES = 15L
+private const val SYNC_RETRY_BACKOFF_SECONDS = 30L
 
 private const val PATROL_PERIODIC_SYNC_WORK_NAME = "patrol_periodic_sync"
 private const val PATROL_IMMEDIATE_SYNC_WORK_NAME = "patrol_immediate_sync"
@@ -37,6 +39,9 @@ class SyncScheduler @Inject constructor(private val workManager: WorkManager) {
             TimeUnit.MINUTES,
         )
             .setConstraints(networkConnectedConstraint())
+            // When a pass returns Result.retry() (some rows still failed), WorkManager
+            // re-runs it after this backoff instead of waiting for the next 15-minute slot.
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, SYNC_RETRY_BACKOFF_SECONDS, TimeUnit.SECONDS)
             .build()
 
         workManager.enqueueUniquePeriodicWork(
@@ -49,11 +54,12 @@ class SyncScheduler @Inject constructor(private val workManager: WorkManager) {
     // For "sync right now" moments (e.g. right after creating an incident
     // while online) rather than waiting for the next periodic cycle. REPLACE is
     // safe here: if one is already pending/running, the newer request only ever
-    // finds the same set of PENDING rows the current run would have anyway.
+    // finds the same set of outbox rows the current run would have anyway.
     fun triggerImmediateSync() {
         val request = OneTimeWorkRequestBuilder<IncidentSyncWorker>()
             .setConstraints(networkConnectedConstraint())
             .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, SYNC_RETRY_BACKOFF_SECONDS, TimeUnit.SECONDS)
             .build()
 
         workManager.enqueueUniqueWork(

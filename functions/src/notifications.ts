@@ -42,6 +42,11 @@ async function writeNotificationDoc(
     time: new Date().toISOString(),
     isRead: false,
     data,
+    // The navigable target for the mobile deep-link layer. The app reads this field
+    // (NotificationRepositoryImpl's toNotificationEntity) so the taps on entries that
+    // reach the inbox via this Admin-SDK document resolve to a screen, exactly like the
+    // FCM push's own type-specific data field does.
+    target_id: data.incidentId ?? data.articleId ?? data.sightingId ?? data.sosId ?? null,
     created_at: FieldValue.serverTimestamp(),
   });
   return ref.id;
@@ -269,5 +274,65 @@ export async function handleSightingApprovalNotifications(
   });
   await sendTokenNotifications(tokens, title, message, "SIGHTING_APPROVED", {
     sightingId,
+  });
+}
+
+/**
+ * Notify the exact ranger a portal assignment names as the incident's responder.
+ *
+ * Portal assignments are stamped at write time by FirebaseService::syncIncidentDocument
+ * with status "assigned", assignedTo (the ranger's Firebase UID), assignedToName, and
+ * source_system "laravel". The trigger runs for every incidents update - including the
+ * portal's own writes - so this must come BEFORE the bridge echo guard that drops
+ * source_system=laravel documents, or assignments would silently skip past it.
+ *
+ * Deliberately not triggered by a mobile self-claim: those write status "in_progress"
+ * (see IncidentRepositoryImpl::assignToSelf), and the claimer hardly needs a push telling
+ * them they claimed their own incident. Re-assignment writes (assignedTo changing to a
+ * different ranger) notify the newly named one; unchanged assignedTo never re-pings.
+ */
+export async function handleIncidentAssignmentNotifications(
+  change: Change<DocumentSnapshot>,
+  context: EventContext
+): Promise<void> {
+  if (!change.before.exists || !change.after.exists) {
+    return;
+  }
+
+  const before = change.before.data() as IncidentData | undefined;
+  const after = change.after.data() as IncidentData | undefined;
+  if (!before || !after) {
+    return;
+  }
+
+  const beforeAssignedTo =
+    (typeof before.assignedTo === "string" && before.assignedTo) ||
+    (typeof before.assigned_ranger_uid === "string" && before.assigned_ranger_uid) ||
+    null;
+  const assignedTo =
+    (typeof after.assignedTo === "string" && after.assignedTo) ||
+    (typeof after.assigned_ranger_uid === "string" && after.assigned_ranger_uid) ||
+    null;
+
+  const isPortalAssignment =
+    after.source_system === "laravel" &&
+    String(after.status ?? "").toLowerCase() === "assigned";
+
+  if (!isPortalAssignment || !assignedTo || assignedTo === beforeAssignedTo) {
+    return;
+  }
+
+  const incidentId = context.params.incidentId as string;
+  const assignedToName =
+    (typeof after.assignedToName === "string" && after.assignedToName) || "a ranger";
+  const title = "You've been assigned an incident";
+  const message = `Incident #${incidentId.slice(0, 8)} was assigned to you. Open it to start responding.`;
+  const tokens = await loadReporterFcmTokens(assignedTo);
+
+  await writeNotificationDoc(assignedTo, "INCIDENT_ASSIGNED", title, message, {
+    incidentId,
+  });
+  await sendTokenNotifications(tokens, title, message, "INCIDENT_ASSIGNED", {
+    incidentId,
   });
 }

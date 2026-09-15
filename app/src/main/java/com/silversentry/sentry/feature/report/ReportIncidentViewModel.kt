@@ -2,10 +2,10 @@ package com.silversentry.sentry.feature.report
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.silversentry.sentry.core.data.auth.AuthRepository
 import com.silversentry.sentry.core.data.incident.IncidentRepository
 import com.silversentry.sentry.core.data.incident.NewIncidentDetails
 import com.silversentry.sentry.core.data.location.LocationRepository
-import com.silversentry.sentry.core.data.notification.NotificationRepository
 import com.silversentry.sentry.core.database.IncidentSeverity
 import com.silversentry.sentry.core.database.IncidentType
 import com.silversentry.sentry.core.database.Park
@@ -53,13 +53,14 @@ class ReportIncidentViewModel @Inject constructor(
     private val incidentRepository: IncidentRepository,
     private val locationRepository: LocationRepository,
     private val syncScheduler: SyncScheduler,
-    private val notificationRepository: NotificationRepository,
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ReportIncidentUiState())
     val uiState: StateFlow<ReportIncidentUiState> = _uiState.asStateFlow()
 
     private var initializedFor: String? = "unset"
+    private var cancelQueued = false
 
     fun initialize(draftId: String?, presetType: IncidentType? = null) {
         // NavHost recomposition can call this more than once for the same screen instance;
@@ -157,6 +158,14 @@ class ReportIncidentViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, saveError = null) }
             try {
+                if (!asDraft) {
+                    // Never-signed-in users can submit too: make sure a Firebase identity
+                    // exists first (anonymous is fine; see AuthRepository.ensureSignedInForSubmission).
+                    // Best-effort - offline it fails fast and the outbox pushes the alert once
+                    // the background path has re-established an identity over connectivity.
+                    authRepository.ensureSignedInForSubmission()
+                }
+
                 val details = NewIncidentDetails(
                     type = state.type,
                     park = state.park,
@@ -180,13 +189,38 @@ class ReportIncidentViewModel @Inject constructor(
 
                 if (!asDraft) {
                     syncScheduler.triggerImmediateSync()
-                    notificationRepository.notifyPendingSync(incidentId)
                 }
 
                 _uiState.update { it.copy(isSaving = false, savedIncidentId = incidentId) }
+
+                // The user held-to-cancel before the SOS save finished (savedIncidentId was
+                // null when cancelSos() ran): withdraw it the moment it exists so no active
+                // alert is ever visible, even transiently.
+                if (cancelQueued) {
+                    cancelQueued = false
+                    incidentRepository.withdraw(incidentId)
+                    syncScheduler.triggerImmediateSync()
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isSaving = false, saveError = e.message) }
             }
+        }
+    }
+
+    // Withdraws the SOS that this screen auto-created (the HOLD TO CANCEL path). Marks it
+    // CANCELLED and re-queues the sync so the "cancelled" status reaches Firestore and every
+    // other client (ranger, public, web portal). If the alert is still being saved, the
+    // withdrawal is queued and applied the instant save() completes.
+    fun cancelSos(onDone: () -> Unit) {
+        viewModelScope.launch {
+            val incidentId = _uiState.value.savedIncidentId
+            if (incidentId != null) {
+                incidentRepository.withdraw(incidentId)
+                syncScheduler.triggerImmediateSync()
+            } else {
+                cancelQueued = true
+            }
+            onDone()
         }
     }
 

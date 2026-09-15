@@ -11,7 +11,9 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import okhttp3.RequestBody
 import okhttp3.ResponseBody.Companion.toResponseBody
+import okio.Buffer
 import org.junit.Before
 import org.junit.Test
 import retrofit2.Response
@@ -85,5 +87,24 @@ class LaravelBridgeDataSourceImplTest {
         coVerify(exactly = 1) { api.postIncidentEvent(any(), any()) }
         coVerify(exactly = 0) { api.postSosAlertEvent(any(), any()) }
         coVerify(exactly = 0) { api.postSightingEvent(any(), any()) }
+    }
+
+    @Test
+    fun `payload is a JSON body carrying docId, eventType and the after map, minus answers`() = runTest {
+        val bodies = mutableListOf<RequestBody>()
+        coEvery { api.postSightingEvent(any(), capture(bodies)) } returns okResponse()
+
+        val result = dataSource.postIncidentEvent(incidentOfType(IncidentType.SIGHTING), "update")
+
+        assert(result.isSuccess)
+        val buffer = Buffer()
+        bodies.single().writeTo(buffer)
+        val text = buffer.readUtf8()
+        assert(text.contains("\"docId\":\"incident-1\""))
+        assert(text.contains("\"eventType\":\"update\""))
+        assert(text.contains("\"after\":{"))
+        assert(text.contains("\"type\":\"sighting\""))
+        // The parsed-answers JsonElement is deliberately not mirrored to the Laravel side.
+        assert(!text.contains("\"answers\""))
     }
 }

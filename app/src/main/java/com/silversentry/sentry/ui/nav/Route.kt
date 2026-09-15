@@ -20,6 +20,11 @@ sealed interface Route {
     @Serializable
     data class IncidentDetail(val id: String) : Route
 
+    // Google-Maps-style turn-by-turn navigation from the ranger's current location to the
+    // incident, opened by the "START RESPONSE" action on the incident detail screen.
+    @Serializable
+    data class Navigation(val incidentId: String) : Route
+
     @Serializable
     data object Profile : Route
 
@@ -28,6 +33,11 @@ sealed interface Route {
 
     @Serializable
     data class ReportSubmitted(val incidentId: String) : Route
+
+    // The SOS emergency flow - a dedicated screen (not the regular report form),
+    // reached from the raised SOS button at the center of the main tab bar.
+    @Serializable
+    data object Sos : Route
 
     @Serializable
     data class CameraCapture(val photoCategory: String? = null, val source: String = "sighting") : Route

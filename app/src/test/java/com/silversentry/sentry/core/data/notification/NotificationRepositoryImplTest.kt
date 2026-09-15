@@ -4,6 +4,7 @@ import com.silversentry.sentry.core.database.NotificationDao
 import com.silversentry.sentry.core.database.NotificationType
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -38,6 +39,7 @@ class NotificationRepositoryImplTest {
 
     @Test
     fun `recordIncoming persists the notification with its targetId`() = runTest(testDispatcher) {
+        coEvery { dao.countByTypeAndTarget(any(), any()) } returns 0
         repository.recordIncoming(
             type = NotificationType.NEW_FEED_ARTICLE,
             title = "New article",
@@ -60,6 +62,7 @@ class NotificationRepositoryImplTest {
 
     @Test
     fun `recordIncoming persists a null targetId for types with no navigable target`() = runTest(testDispatcher) {
+        coEvery { dao.countByTypeAndTarget(any(), any()) } returns 0
         repository.recordIncoming(
             type = NotificationType.SECURITY_ALERT,
             title = "Emergency alert",

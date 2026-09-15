@@ -5,6 +5,7 @@ import com.silversentry.sentry.core.data.notification.NotificationRepository
 import com.silversentry.sentry.core.domain.usecase.GetIncidentsUseCase
 import com.silversentry.sentry.core.domain.usecase.ObserveUserUseCase
 import com.silversentry.sentry.core.database.IncidentStatus
+import com.silversentry.sentry.core.database.Park
 import com.silversentry.sentry.core.database.SyncStatus
 import com.silversentry.sentry.core.model.Article
 import com.silversentry.sentry.core.model.Incident
@@ -23,7 +24,10 @@ import javax.inject.Inject
 
 data class HomeUiState(
     val displayName: String = "Ranger",
-    val park: String = "Bwindi Impenetrable",
+    // Resolved from the signed-in account's park claim (Firestore slug -> readable name).
+    // Empty for accounts without a park claim rather than falling back to a wrong hardcoded
+    // park; HomeScreen simply hides the row when there is nothing real to show.
+    val park: String = "",
     val language: String = "English",
     val reportsThisMonth: Int = 0,
     val resolvedThisMonth: Int = 0,
@@ -111,6 +115,7 @@ class HomeViewModel @Inject constructor(
 
         return HomeUiState(
             displayName = user?.displayNameOrFallback ?: "Ranger",
+            park = Park.fromFirestoreId(user?.parkId)?.displayName.orEmpty(),
             reportsThisMonth = thisMonth.size,
             resolvedThisMonth = thisMonth.count { it.status == IncidentStatus.RESOLVED },
             unreadNotificationCount = core.unreadNotifications,

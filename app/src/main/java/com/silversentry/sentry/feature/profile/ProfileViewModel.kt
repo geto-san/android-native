@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.silversentry.sentry.core.data.auth.AuthRepository
 import com.silversentry.sentry.core.data.user.UserDataRepository
+import com.silversentry.sentry.core.data.wipe.LocalDataClearer
 import com.silversentry.sentry.core.domain.usecase.GetIncidentsUseCase
 import com.silversentry.sentry.core.domain.usecase.ObserveUserUseCase
 import com.silversentry.sentry.core.database.IncidentStatus
+import com.silversentry.sentry.core.database.Park
 import com.silversentry.sentry.core.model.UserRole
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -32,6 +34,9 @@ data class ProfileUiState(
     val primaryCount: Int = 0,
     val resolvedCount: Int = 0,
     val zones: List<String> = emptyList(),
+    // The account's park, resolved from the Firestore slug in custom claims to a
+    // readable name. Null when the account has no park claim (e.g. a public user).
+    val parkName: String? = null,
 )
 
 // wireframe community.profile vs ranger.profile: same shell, different stat
@@ -42,6 +47,7 @@ data class ProfileUiState(
 class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userDataRepository: UserDataRepository,
+    private val localDataClearer: LocalDataClearer,
     observeUserUseCase: ObserveUserUseCase,
     getIncidentsUseCase: GetIncidentsUseCase,
 ) : ViewModel() {
@@ -66,6 +72,7 @@ class ProfileViewModel @Inject constructor(
             primaryCount = mine.size,
             resolvedCount = mine.count { it.status == IncidentStatus.RESOLVED },
             zones = mine.map { it.community }.distinct(),
+            parkName = Park.fromFirestoreId(user?.parkId)?.displayName,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ProfileUiState())
 
@@ -77,5 +84,13 @@ class ProfileViewModel @Inject constructor(
 
     fun signOut() {
         authRepository.signOut()
+    }
+
+    // Clears every piece of on-device state (Room + DataStore) while keeping the current
+    // Firebase sign-in session - Firestore re-fills the offline cache through its listeners.
+    fun clearLocalData() {
+        viewModelScope.launch {
+            localDataClearer.clearAllLocalData()
+        }
     }
 }

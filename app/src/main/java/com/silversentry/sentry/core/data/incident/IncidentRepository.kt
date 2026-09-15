@@ -34,6 +34,7 @@ interface IncidentRepository {
     suspend fun create(details: NewIncidentDetails, asDraft: Boolean = false): Incident
     suspend fun update(id: String, details: NewIncidentDetails, asDraft: Boolean = false)
     suspend fun assignToSelf(id: String)
+    suspend fun withdraw(id: String)
     suspend fun syncPending(): SyncResult
     fun startObservingRemoteChanges()
 }

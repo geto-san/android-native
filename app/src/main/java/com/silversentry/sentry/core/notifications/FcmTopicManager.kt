@@ -54,11 +54,16 @@ class FcmTopicManager @Inject constructor() {
             topics += "park_alerts_$normalizedPark"
         }
 
+        // The community-feed fan-out (functions/src/notifications.ts sends every NEW_FEED_ARTICLE
+        // push to park_alerts_all) must reach every signed-in device, ranger or public. This used
+        // to be public-only, so a ranger's phone never got a feed notification - subscribed here
+        // alongside the role-specific topics so both audiences stay in range.
+        topics += "park_alerts_all"
+
         when (normalizedRole) {
             "ranger" -> if (normalizedPark != null) topics += "ranger_$normalizedPark"
             "warden" -> if (normalizedPark != null) topics += "warden_$normalizedPark"
             "uwa_official" -> topics += "uwa_official"
-            else -> topics += "park_alerts_all"
         }
 
         return topics

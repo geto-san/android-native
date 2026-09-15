@@ -3,6 +3,7 @@ package com.silversentry.sentry.feature.profile
 import app.cash.turbine.test
 import com.silversentry.sentry.core.data.auth.AuthRepository
 import com.silversentry.sentry.core.data.user.UserDataRepository
+import com.silversentry.sentry.core.data.wipe.LocalDataClearer
 import com.silversentry.sentry.core.database.IncidentSeverity
 import com.silversentry.sentry.core.database.IncidentStatus
 import com.silversentry.sentry.core.database.IncidentType
@@ -35,6 +36,7 @@ class ProfileViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var authRepository: AuthRepository
     private lateinit var userDataRepository: UserDataRepository
+    private lateinit var localDataClearer: LocalDataClearer
     private lateinit var observeUserUseCase: ObserveUserUseCase
     private lateinit var getIncidentsUseCase: GetIncidentsUseCase
 
@@ -43,6 +45,7 @@ class ProfileViewModelTest {
         Dispatchers.setMain(testDispatcher)
         authRepository = mockk(relaxUnitFun = true)
         userDataRepository = mockk()
+        localDataClearer = mockk()
         observeUserUseCase = mockk()
         getIncidentsUseCase = mockk()
         every { userDataRepository.darkThemeConfig } returns flowOf(false)
@@ -86,7 +89,13 @@ class ProfileViewModelTest {
         )
         every { getIncidentsUseCase() } returns flowOf(incidents)
 
-        val viewModel = ProfileViewModel(authRepository, userDataRepository, observeUserUseCase, getIncidentsUseCase)
+        val viewModel = ProfileViewModel(
+            authRepository,
+            userDataRepository,
+            localDataClearer,
+            observeUserUseCase,
+            getIncidentsUseCase,
+        )
 
         viewModel.uiState.test {
             val state = awaitItem()
@@ -100,7 +109,13 @@ class ProfileViewModelTest {
     fun `signOut delegates to the repository`() = runTest(testDispatcher) {
         every { observeUserUseCase() } returns MutableStateFlow(null)
         every { getIncidentsUseCase() } returns flowOf(emptyList())
-        val viewModel = ProfileViewModel(authRepository, userDataRepository, observeUserUseCase, getIncidentsUseCase)
+        val viewModel = ProfileViewModel(
+            authRepository,
+            userDataRepository,
+            localDataClearer,
+            observeUserUseCase,
+            getIncidentsUseCase,
+        )
 
         viewModel.signOut()
 

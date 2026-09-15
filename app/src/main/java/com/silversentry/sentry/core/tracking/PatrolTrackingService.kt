@@ -1,8 +1,6 @@
 package com.silversentry.sentry.core.tracking
 
 import android.Manifest
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
@@ -20,6 +18,7 @@ import com.silversentry.sentry.core.data.auth.AuthRepository
 import com.silversentry.sentry.core.data.location.LocationRepository
 import com.silversentry.sentry.core.data.patrol.PatrolRepository
 import com.silversentry.sentry.core.database.RoutePoint
+import com.silversentry.sentry.core.notifications.Notifications
 import com.silversentry.sentry.core.sync.SyncScheduler
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -35,7 +34,6 @@ import timber.log.Timber
 import java.time.Instant
 import javax.inject.Inject
 
-private const val NOTIFICATION_CHANNEL_ID = "patrol_tracking"
 private const val NOTIFICATION_ID = 42
 private const val LOCATION_UPDATE_INTERVAL_MS = 30_000L
 
@@ -133,16 +131,9 @@ class PatrolTrackingService : Service() {
     }
 
     private fun startForegroundWithNotification() {
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                NOTIFICATION_CHANNEL_ID,
-                "Patrol tracking",
-                NotificationManager.IMPORTANCE_LOW,
-            ).apply { description = "Shown while background patrol GPS tracking is active" }
-            notificationManager.createNotificationChannel(channel)
-        }
-
+        // The patrol channel is registered centrally in Notifications.createChannels()
+        // (SilverBackSentryApplication.onCreate), so this service only builds the
+        // notification - nothing creates the channel lazily at start time.
         val openAppIntent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
@@ -150,7 +141,7 @@ class PatrolTrackingService : Service() {
             this, 0, openAppIntent,
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE,
         )
-        val notification = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+        val notification = NotificationCompat.Builder(this, Notifications.CHANNEL_PATROL)
             .setSmallIcon(R.drawable.ic_stat_notification)
             .setContentTitle("Patrol tracking active")
             .setContentText("Recording your route in the background")

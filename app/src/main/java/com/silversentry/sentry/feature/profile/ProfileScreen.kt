@@ -40,6 +40,7 @@ fun ProfileScreen(
         onSignOut = viewModel::signOut,
         onSignIn = onSignInClick,
         onThemeToggle = viewModel::setDarkTheme,
+        onResetLocalData = viewModel::clearLocalData,
     )
 }
 
@@ -50,6 +51,7 @@ private fun ProfileContent(
     onSignOut: () -> Unit,
     onSignIn: () -> Unit,
     onThemeToggle: (Boolean) -> Unit,
+    onResetLocalData: () -> Unit,
 ) {
     // uiState.isDarkTheme is null until the user picks an explicit preference - resolve
     // against the system default here so this switch always matches what's actually on
@@ -62,6 +64,7 @@ private fun ProfileContent(
     // registered" - gives instant visual feedback instead of the row looking unresponsive
     // while the auth-state listener/nav effect catches up.
     var isSigningOut by remember { mutableStateOf(false) }
+    var showResetDataDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -107,8 +110,14 @@ private fun ProfileContent(
                         ),
                         SettingsItemData(
                             title = "App language",
-                            icon = Icons.Default.Language, 
+                            icon = Icons.Default.Language,
                             trailingText = "English"
+                        ),
+                        SettingsItemData(
+                            title = "Reset data",
+                            icon = Icons.Default.DeleteSweep,
+                            tint = MaterialTheme.colorScheme.error,
+                            onClick = { showResetDataDialog = true }
                         )
                     )
                 )
@@ -144,6 +153,34 @@ private fun ProfileContent(
             }
         }
     }
+
+    if (showResetDataDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetDataDialog = false },
+            title = { Text("Reset local data?") },
+            text = {
+                Text(
+                    "This clears all reports, alerts, and activity cached on this device. " +
+                        "Synced data will reload from the server, and you'll stay signed in."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showResetDataDialog = false
+                        onResetLocalData()
+                    }
+                ) {
+                    Text("Reset", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetDataDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -173,7 +210,7 @@ private fun GuestJoinCard(onSignIn: () -> Unit) {
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Sign in to track your reports, earn badges, and help rangers protect Bwindi.",
+                text = "Sign in to track your reports, earn badges, and help rangers protect your community.",
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -235,7 +272,7 @@ private fun ProfileHeader(uiState: ProfileUiState) {
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "Bwindi Impenetrable",
+                text = uiState.parkName ?: "No park assigned",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -380,6 +417,7 @@ fun RegisteredProfilePreview() {
             onSignOut = {},
             onSignIn = {},
             onThemeToggle = {},
+            onResetLocalData = {},
         )
     }
 }
@@ -395,6 +433,7 @@ fun GuestProfilePreview() {
             onSignOut = {},
             onSignIn = {},
             onThemeToggle = {},
+            onResetLocalData = {},
         )
     }
 }
@@ -415,6 +454,7 @@ fun DarkRegisteredProfilePreview() {
             onSignOut = {},
             onSignIn = {},
             onThemeToggle = {},
+            onResetLocalData = {},
         )
     }
 }

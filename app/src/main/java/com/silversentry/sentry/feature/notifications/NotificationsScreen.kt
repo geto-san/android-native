@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.Handshake
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
@@ -88,6 +89,8 @@ fun NotificationsScreen(
                             NotificationType.SECURITY_ALERT -> onNavigateToAlerts()
                             NotificationType.SIGHTING_APPROVED ->
                                 notification.targetId?.let(onNavigateToIncident)
+                            NotificationType.INCIDENT_ASSIGNED ->
+                                notification.targetId?.let(onNavigateToIncident)
                             NotificationType.NEW_FEED_ARTICLE ->
                                 notification.targetId?.let(onNavigateToArticle)
                             else -> {}
@@ -102,6 +105,7 @@ fun NotificationsScreen(
 private fun iconFor(type: NotificationType): ImageVector = when (type) {
     NotificationType.SECURITY_ALERT -> Icons.Filled.Warning
     NotificationType.SIGHTING_APPROVED -> Icons.Filled.CheckCircle
+    NotificationType.INCIDENT_ASSIGNED -> Icons.Filled.Handshake
     NotificationType.NEW_FEED_ARTICLE -> Icons.AutoMirrored.Filled.Article
     NotificationType.PENDING_SYNC -> Icons.Filled.CloudUpload
     NotificationType.SYSTEM, NotificationType.LIKE, NotificationType.COMMENT -> Icons.Filled.Info

@@ -30,6 +30,7 @@ import com.silversentry.sentry.core.model.Incident
 import com.silversentry.sentry.core.ui.component.CountBadge
 import com.silversentry.sentry.core.ui.component.IncidentListItem
 import com.silversentry.sentry.core.ui.component.QuickReportCard
+import com.silversentry.sentry.core.ui.component.displayTitle
 import com.silversentry.sentry.core.ui.theme.*
 import com.silversentry.sentry.core.util.relativeDay
 
@@ -38,7 +39,6 @@ import com.silversentry.sentry.core.util.relativeDay
 fun HomeScreen(
     onIncidentClick: (String) -> Unit,
     onReportIncident: () -> Unit,
-    onSos: () -> Unit,
     onEditDraft: (String, com.silversentry.sentry.core.database.IncidentType) -> Unit,
     onNotificationsClick: () -> Unit,
     onArticleClick: (String) -> Unit,
@@ -131,12 +131,9 @@ fun HomeScreen(
                 }
             }
 
-            // SOS Quick Action — the platform's top-priority channel. Composes a report
-            // pre-set to the SOS type (see ReportIncidentViewModel) so a responder can
-            // submit with a single follow-up tap.
-            item {
-                SosQuickActionCard(onClick = onSos)
-            }
+            // SOS moved up into the always-visible raised button at the center of the main tab
+            // bar (MainTabShell.SosCenterButton) - it no longer competes for vertical space
+            // as a card in the Home feed.
 
             // Quick Report Section - Consolidated
             item {
@@ -183,7 +180,7 @@ fun HomeScreen(
                             uiState.recentReports.forEach { incident ->
                                 key(incident.id) {
                                     IncidentListItem(
-                                    title = incident.species,
+                                    title = incident.displayTitle(),
                                     subtitle = buildReportSubtitle(incident),
                                     status = incident.status.name,
                                     statusColor = if (incident.status.name == "RESOLVED") Success else Warning,
@@ -220,61 +217,6 @@ fun HomeScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun SosQuickActionCard(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(110.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick),
-        color = MaterialTheme.colorScheme.error,
-        contentColor = MaterialTheme.colorScheme.onError
-    ) {
-        Row(
-            modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Filled.Sos,
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp),
-                    tint = Color.White
-                )
-            }
-            Spacer(modifier = Modifier.width(20.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "SOS — Emergency",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Send an urgent alert to responders now",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.85f)
-                )
-            }
-            Icon(
-                Icons.Filled.Emergency,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                tint = Color.White
-            )
         }
     }
 }
@@ -438,7 +380,13 @@ private fun CommunityAlertsCard(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = if (isExpanded) "Tap to collapse" else "Active alerts near $parkName",
+                        text = if (isExpanded) {
+                            "Tap to collapse"
+                        } else if (parkName.isBlank()) {
+                            "Active alerts in your area"
+                        } else {
+                            "Active alerts near $parkName"
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

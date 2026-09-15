@@ -13,6 +13,16 @@ interface AuthRepository {
     // AuthContext.jsx, just via a StateFlow instead of a React state hook).
     val currentUser: StateFlow<User?>
 
+    /**
+     * Best-effort guarantee that some Firebase identity exists before an incident/SOS is
+     * submitted or synced, so they work for people who never signed in at all. If no user is
+     * currently signed in, this silently signs in anonymously (Firestore rules accept
+     * anonymous sessions for incidents/sightings/sos_alerts creates; see firestore.rules). When
+     * offline the anonymous attempt fails fast and is retried later by the outbox/background
+     * sync path, so the report still gets queued locally - this never blocks submission.
+     */
+    suspend fun ensureSignedInForSubmission(): Result<Unit>
+
     /** Firebase anonymous auth — use for guest browse, reporting, and notifications. */
     suspend fun signInAnonymously(): Result<Unit>
 

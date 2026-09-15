@@ -3,6 +3,7 @@ package com.silversentry.sentry.core.database
 enum class NotificationType {
     SYSTEM,
     SIGHTING_APPROVED,
+    INCIDENT_ASSIGNED,
     SECURITY_ALERT,
     LIKE,
     COMMENT,

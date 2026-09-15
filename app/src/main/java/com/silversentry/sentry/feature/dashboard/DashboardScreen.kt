@@ -58,6 +58,7 @@ import com.silversentry.sentry.R
 import com.silversentry.sentry.core.model.Incident
 import com.silversentry.sentry.core.ui.component.CountBadge
 import com.silversentry.sentry.core.ui.component.IconBadge
+import com.silversentry.sentry.core.ui.component.displayTitle
 import com.silversentry.sentry.core.ui.component.StatusPill
 import com.silversentry.sentry.core.ui.component.severityColor
 import com.silversentry.sentry.core.ui.component.statusColor
@@ -202,7 +203,7 @@ private fun IncidentCard(incident: Incident, onClick: () -> Unit) {
                         }
                     }
                     Text(
-                        text = incident.species,
+                        text = incident.displayTitle(),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(top = 2.dp),

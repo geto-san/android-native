@@ -27,6 +27,9 @@ interface NotificationDao {
     @Query("SELECT COUNT(*) FROM notifications")
     suspend fun count(): Int
 
+    @Query("SELECT COUNT(*) FROM notifications WHERE type = :type AND targetId = :targetId LIMIT 1")
+    suspend fun countByTypeAndTarget(type: NotificationType, targetId: String): Int
+
     @Query("DELETE FROM notifications")
     suspend fun deleteAll()
 }

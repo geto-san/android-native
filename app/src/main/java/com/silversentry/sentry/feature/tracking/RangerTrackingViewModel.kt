@@ -10,6 +10,7 @@ import com.silversentry.sentry.core.data.map.geometryToRings
 import com.silversentry.sentry.core.data.map.parseBoundaryGeometry
 import com.silversentry.sentry.core.data.patrol.PatrolRepository
 import com.silversentry.sentry.core.data.repository.ParkRepository
+import com.silversentry.sentry.core.database.IncidentStatus
 import com.silversentry.sentry.core.database.SyncStatus
 import com.silversentry.sentry.core.domain.usecase.GetIncidentsUseCase
 import com.silversentry.sentry.core.domain.usecase.ObserveUserUseCase
@@ -76,7 +77,11 @@ class RangerTrackingViewModel @Inject constructor(
         getIncidentsUseCase()
             .map { incidents ->
                 incidents.filter {
-                    it.syncStatus == SyncStatus.SYNCED && it.lat != 0.0 && it.lng != 0.0
+                    // A cancelled (withdrawn) alert must stop showing as an urgent dot on the
+                    // ranger map the moment it syncs in - the reporter turned the SOS off.
+                    it.syncStatus == SyncStatus.SYNCED &&
+                        it.lat != 0.0 && it.lng != 0.0 &&
+                        it.status != IncidentStatus.CANCELLED
                 }
             }
             .onEach { filtered -> _uiState.update { it.copy(incidents = filtered) } }
